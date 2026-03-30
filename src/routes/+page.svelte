@@ -1,156 +1,275 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
 
-  let name = $state("");
-  let greetMsg = $state("");
+  import type { Game } from "$lib/models/game";
+  import { gameStore } from "$lib/stores/gameStore";
+  import { FALLBACK_COVER_IMAGE } from "$lib/utils/constants";
+  import { launchGame } from "$lib/services/tauriService";
 
-  async function greet(event: Event) {
-    event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
+  let launchMessage = $state("");
+
+  onMount(() => {
+    void gameStore.fetchGames();
+  });
+
+  async function handleLaunch(game: Game) {
+    try {
+      launchMessage = await launchGame(game.exePath);
+    } catch (error) {
+      launchMessage = error instanceof Error ? error.message : String(error);
+    }
   }
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
+<svelte:head>
+  <title>Game Launcher</title>
+</svelte:head>
 
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
-  </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
+<main class="page">
+  <section class="hero">
+    <p class="eyebrow">Desktop Game Launcher</p>
+    <h1>Local game library</h1>
+    <p class="intro">
+      Games are loaded from <code>games.json</code> through the Svelte store, then launched through a Tauri
+      command.
+    </p>
+    <div class="meta">
+      <span>{$gameStore.loading ? "Loading games..." : `${$gameStore.games.length} games loaded`}</span>
+      {#if $gameStore.selectedGame}
+        <span>Selected: {$gameStore.selectedGame.title}</span>
+      {/if}
+    </div>
+    {#if launchMessage}
+      <p class="message">{launchMessage}</p>
+    {/if}
+  </section>
 
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
+  <section class="content">
+    <div class="panel">
+      <h2>Library</h2>
+
+      {#if $gameStore.games.length === 0 && !$gameStore.loading}
+        <p class="empty">No games found yet.</p>
+      {/if}
+
+      <div class="grid">
+        {#each $gameStore.games as game}
+          <article class:selected={$gameStore.selectedGame?.id === game.id} class="card">
+            <button class="select-button" type="button" on:click={() => gameStore.selectGame(game.id)}>
+              <img src={game.coverArt || FALLBACK_COVER_IMAGE} alt={game.title} />
+              <div class="card-copy">
+                <h3>{game.title}</h3>
+                <p>{game.platform} • {game.status}</p>
+                <p>{game.genres.join(", ")}</p>
+              </div>
+            </button>
+          </article>
+        {/each}
+      </div>
+    </div>
+
+    <div class="panel detail">
+      <h2>Selected game</h2>
+
+      {#if $gameStore.selectedGame}
+        <h3>{$gameStore.selectedGame.title}</h3>
+        <p>{$gameStore.selectedGame.description}</p>
+        <dl>
+          <div>
+            <dt>Executable</dt>
+            <dd>{$gameStore.selectedGame.exePath}</dd>
+          </div>
+          <div>
+            <dt>Total playtime</dt>
+            <dd>{$gameStore.selectedGame.totalPlaytime} minutes</dd>
+          </div>
+          <div>
+            <dt>Last played</dt>
+            <dd>{$gameStore.selectedGame.lastPlayed ?? "Never"}</dd>
+          </div>
+        </dl>
+        <button
+          class="launch"
+          type="button"
+          disabled={!$gameStore.selectedGame}
+          on:click={() => {
+            if ($gameStore.selectedGame) {
+              void handleLaunch($gameStore.selectedGame);
+            }
+          }}
+        >
+          Launch Game
+        </button>
+      {:else}
+        <p class="empty">Select a game to see its details.</p>
+      {/if}
+    </div>
+  </section>
 </main>
 
 <style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
+  :global(body) {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background:
+      radial-gradient(circle at top, rgba(41, 98, 255, 0.18), transparent 35%),
+      linear-gradient(180deg, #08111f 0%, #101a2c 100%);
+    color: #edf2ff;
   }
 
-  a:hover {
-    color: #24c8db;
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
   }
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
+  .hero {
+    margin-bottom: 32px;
   }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
 
+  .eyebrow {
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: #9db7ff;
+    font-size: 0.78rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .intro,
+  .meta,
+  .message,
+  .empty,
+  .card-copy p,
+  dd {
+    color: #c6d2f4;
+  }
+
+  .meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .message {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid rgba(157, 183, 255, 0.3);
+    border-radius: 14px;
+    background: rgba(10, 23, 46, 0.72);
+  }
+
+  .content {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: 1.8fr 1fr;
+  }
+
+  .panel {
+    padding: 22px;
+    border-radius: 24px;
+    background: rgba(8, 17, 31, 0.78);
+    border: 1px solid rgba(157, 183, 255, 0.12);
+    backdrop-filter: blur(18px);
+  }
+
+  .grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .card {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(157, 183, 255, 0.12);
+    background: rgba(17, 28, 48, 0.92);
+  }
+
+  .card.selected {
+    border-color: rgba(157, 183, 255, 0.75);
+    box-shadow: 0 0 0 1px rgba(157, 183, 255, 0.3);
+  }
+
+  .select-button,
+  .launch {
+    cursor: pointer;
+    border: 0;
+    color: inherit;
+  }
+
+  .select-button {
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    text-align: left;
+  }
+
+  img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+    background: #13213b;
+  }
+
+  .card-copy {
+    padding: 16px;
+  }
+
+  .detail dl {
+    margin: 0 0 24px;
+  }
+
+  .detail div {
+    margin-bottom: 16px;
+  }
+
+  dt {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9db7ff;
+    margin-bottom: 4px;
+  }
+
+  dd {
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .launch {
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #79a7ff 0%, #4b7dff 100%);
+    color: #08111f;
+    font-weight: 700;
+  }
+
+  .launch:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  code {
+    font-family: Consolas, "Courier New", monospace;
+  }
+
+  @media (max-width: 900px) {
+    .content {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>

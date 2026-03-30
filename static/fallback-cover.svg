@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
+  <title id="title">Fallback game cover</title>
+  <desc id="desc">A simple placeholder image for a game without cover art.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#13213b" />
+      <stop offset="100%" stop-color="#27477c" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)" />
+  <circle cx="620" cy="110" r="90" fill="#9db7ff" fill-opacity="0.18" />
+  <circle cx="160" cy="360" r="120" fill="#9db7ff" fill-opacity="0.1" />
+  <text x="50%" y="47%" fill="#edf2ff" font-family="Segoe UI, Arial, sans-serif" font-size="56" text-anchor="middle">
+    Game Cover
+  </text>
+  <text x="50%" y="60%" fill="#c6d2f4" font-family="Segoe UI, Arial, sans-serif" font-size="24" text-anchor="middle">
+    Placeholder artwork
+  </text>
+</svg>
