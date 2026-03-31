@@ -1,26 +1,26 @@
 ﻿<script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { coopOptions, genreOptions, statusOptions } from '$lib/utils/constants';
+import { createEventDispatcher } from "svelte";
+import { coopOptions, genreOptions, statusOptions } from "$lib/utils/constants";
 
-  const dispatch = createEventDispatcher();
+const dispatch = createEventDispatcher();
 
-  let showFavorites = false;
-  let status = '';
-  let genre = '';
-  let coop = '';
+let showFavorites = false;
+let status = "";
+let genre = "";
+let coop = "";
 
-  function applyFilters() {
-    dispatch('apply', {
-      showFavorites,
-      status,
-      genre,
-      coop
-    });
-  }
+function applyFilters() {
+	dispatch("apply", {
+		showFavorites,
+		status,
+		genre,
+		coop,
+	});
+}
 
-  function close() {
-    dispatch('close');
-  }
+function close() {
+	dispatch("close");
+}
 </script>
 
 <button type="button" class="overlay" aria-label="Close filters" on:click={close}></button>

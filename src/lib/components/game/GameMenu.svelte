@@ -1,123 +1,150 @@
 <script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import type { Game } from '$lib/stores/libraryStore';
-  import { activeGameId, activeMenuKey, isGameRunning, uiStore } from '$lib/stores/uiStore';
+import { createEventDispatcher, onDestroy, onMount } from "svelte";
+import type { Game } from "$lib/stores/libraryStore";
+import {
+	activeGameId,
+	activeMenuKey,
+	isGameRunning,
+	uiStore,
+} from "$lib/stores/uiStore";
 
-  type GameMenuContext = 'library' | 'explore' | 'home';
-  type MenuPlacement = 'below-right' | 'side-right' | 'above-right';
+type GameMenuContext = "library" | "explore" | "home";
+type MenuPlacement = "below-right" | "side-right" | "above-right";
 
-  interface MenuAction {
-    id: string;
-    label: string;
-    tone?: 'danger';
-    disabled?: boolean;
-  }
+interface MenuAction {
+	id: string;
+	label: string;
+	tone?: "danger";
+	disabled?: boolean;
+}
 
-  const dispatch = createEventDispatcher<{
-    action: { id: string; game: Game };
-  }>();
+const dispatch = createEventDispatcher<{
+	action: { id: string; game: Game };
+}>();
 
-  export let game: Game;
-  export let context: GameMenuContext = 'library';
-  export let placement: MenuPlacement = 'below-right';
+export let game: Game;
+export let context: GameMenuContext = "library";
+export let placement: MenuPlacement = "below-right";
 
-  let root: HTMLDivElement;
-  let menuKey = '';
-  $: isActiveGame = $isGameRunning && $activeGameId === game.id;
-  $: if (!menuKey && game?.id) {
-    menuKey = `${game.id}-${Math.random().toString(36).slice(2, 10)}`;
-  }
-  $: open = menuKey !== '' && $activeMenuKey === menuKey;
-  $: menuGroups = actionsForContext();
+let root: HTMLDivElement;
+let menuKey = "";
+$: isActiveGame = $isGameRunning && $activeGameId === game.id;
+$: if (!menuKey && game?.id) {
+	menuKey = `${game.id}-${Math.random().toString(36).slice(2, 10)}`;
+}
+$: open = menuKey !== "" && $activeMenuKey === menuKey;
+$: menuGroups = actionsForContext();
 
-  function actionsForContext(): MenuAction[][] {
-    if (context === 'explore') {
-      return [
-        [
-          { id: 'status-want', label: 'Want to Play' },
-          { id: 'status-playing', label: 'Playing' },
-          { id: 'status-played', label: 'Played' }
-        ]
-      ];
-    }
+function actionsForContext(): MenuAction[][] {
+	if (context === "explore") {
+		return [
+			[
+				{ id: "status-want", label: "Want to Play" },
+				{ id: "status-playing", label: "Playing" },
+				{ id: "status-played", label: "Played" },
+			],
+		];
+	}
 
-    if (context === 'home') {
-      return [
-        [
-          { id: 'play', label: isActiveGame ? 'Playing' : 'Play', disabled: isActiveGame },
-          { id: 'toggle-favorite', label: game.favorite ? 'Remove Favorite' : 'Favorite' },
-          {
-            id: game.resumeState === 'restart' ? 'restart' : 'resume',
-            label: game.resumeState === 'restart' ? 'Restart' : 'Resume',
-            disabled: isActiveGame
-          }
-        ],
-        [{ id: 'open-folder', label: 'Open Folder' }],
-        [{ id: 'view-playtime', label: 'View Playtime Details' }],
-        [{ id: 'hide-continue', label: 'Remove from Continue Playing', tone: 'danger' }]
-      ];
-    }
+	if (context === "home") {
+		return [
+			[
+				{
+					id: "play",
+					label: isActiveGame ? "Playing" : "Play",
+					disabled: isActiveGame,
+				},
+				{
+					id: "toggle-favorite",
+					label: game.favorite ? "Remove Favorite" : "Favorite",
+				},
+				{
+					id: game.resumeState === "restart" ? "restart" : "resume",
+					label: game.resumeState === "restart" ? "Restart" : "Resume",
+					disabled: isActiveGame,
+				},
+			],
+			[{ id: "open-folder", label: "Open Folder" }],
+			[{ id: "view-playtime", label: "View Playtime Details" }],
+			[
+				{
+					id: "hide-continue",
+					label: "Remove from Continue Playing",
+					tone: "danger",
+				},
+			],
+		];
+	}
 
-    return [
-      [
-        { id: 'play', label: isActiveGame ? 'Playing' : 'Play', disabled: isActiveGame },
-        { id: 'toggle-favorite', label: game.favorite ? 'Remove Favorite' : 'Add Favorite' }
-      ],
-      [
-        { id: 'open-folder', label: 'Open Game Folder' },
-        { id: 'open-save-folder', label: 'Open Save Folder' }
-      ],
-      [
-        { id: 'edit-details', label: 'Edit Details' },
-        { id: 'change-cover', label: 'Change Cover Art' }
-      ],
-      [
-        { id: 'sync-now', label: 'Sync Now' },
-        {
-          id: 'toggle-cloud-sync',
-          label: game.cloudSyncEnabled ? 'Disable Cloud Sync' : 'Toggle Cloud Sync'
-        }
-      ],
-      [
-        { id: 'launch-options', label: 'Launch Options' },
-        { id: 'create-shortcut', label: 'Create Desktop Shortcut' }
-      ],
-      [{ id: 'remove-library', label: 'Remove from Library', tone: 'danger' }]
-    ];
-  }
+	return [
+		[
+			{
+				id: "play",
+				label: isActiveGame ? "Playing" : "Play",
+				disabled: isActiveGame,
+			},
+			{
+				id: "toggle-favorite",
+				label: game.favorite ? "Remove Favorite" : "Add Favorite",
+			},
+		],
+		[
+			{ id: "open-folder", label: "Open Game Folder" },
+			{ id: "open-save-folder", label: "Open Save Folder" },
+		],
+		[
+			{ id: "edit-details", label: "Edit Details" },
+			{ id: "change-cover", label: "Change Cover Art" },
+		],
+		[
+			{ id: "sync-now", label: "Sync Now" },
+			{
+				id: "toggle-cloud-sync",
+				label: game.cloudSyncEnabled
+					? "Disable Cloud Sync"
+					: "Toggle Cloud Sync",
+			},
+		],
+		[
+			{ id: "launch-options", label: "Launch Options" },
+			{ id: "create-shortcut", label: "Create Desktop Shortcut" },
+		],
+		[{ id: "remove-library", label: "Remove from Library", tone: "danger" }],
+	];
+}
 
-  function select(actionId: string) {
-    uiStore.closeOpenMenu();
-    dispatch('action', { id: actionId, game });
-  }
+function select(actionId: string) {
+	uiStore.closeOpenMenu();
+	dispatch("action", { id: actionId, game });
+}
 
-  function toggleMenu() {
-    if (!menuKey) return;
+function toggleMenu() {
+	if (!menuKey) return;
 
-    if (open) {
-      uiStore.closeOpenMenu();
-      return;
-    }
+	if (open) {
+		uiStore.closeOpenMenu();
+		return;
+	}
 
-    uiStore.setOpenMenu(menuKey);
-  }
+	uiStore.setOpenMenu(menuKey);
+}
 
-  onMount(() => {
-    const close = (event: MouseEvent) => {
-      if (open && root && !root.contains(event.target as Node)) {
-        uiStore.closeOpenMenu();
-      }
-    };
+onMount(() => {
+	const close = (event: MouseEvent) => {
+		if (open && root && !root.contains(event.target as Node)) {
+			uiStore.closeOpenMenu();
+		}
+	};
 
-    window.addEventListener('click', close);
-    return () => window.removeEventListener('click', close);
-  });
+	window.addEventListener("click", close);
+	return () => window.removeEventListener("click", close);
+});
 
-  onDestroy(() => {
-    if (open) {
-      uiStore.closeOpenMenu();
-    }
-  });
+onDestroy(() => {
+	if (open) {
+		uiStore.closeOpenMenu();
+	}
+});
 </script>
 
 <div class="menu-root" bind:this={root}>

@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import GameGrid from '$lib/components/game/GameGrid.svelte';
-  import GamePlayButton from '$lib/components/game/GamePlayButton.svelte';
-  import type { Game } from '$lib/stores/libraryStore';
+import { goto } from "$app/navigation";
+import GameGrid from "$lib/components/game/GameGrid.svelte";
+import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
+import type { Game } from "$lib/stores/libraryStore";
 
-  export let game: Game;
-  export let similarGames: Game[] = [];
+export let game: Game;
+export let similarGames: Game[] = [];
 
-  let launchError = '';
+let launchError = "";
 </script>
 
 <section class={`details ${game.accent}`} style={`--hero-image: url('${game.hero || game.cover}')`}>

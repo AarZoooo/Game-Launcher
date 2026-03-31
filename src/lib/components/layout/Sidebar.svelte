@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
-  import type { AccentTone } from '$lib/stores/libraryStore';
-  import { navItems } from '$lib/utils/constants';
+import { goto } from "$app/navigation";
+import { page } from "$app/stores";
+import type { AccentTone } from "$lib/stores/libraryStore";
+import { navItems } from "$lib/utils/constants";
 
-  export let accent: AccentTone = 'silver';
+export let accent: AccentTone = "silver";
 </script>
 
 <aside class={`sidebar ${accent}`}>

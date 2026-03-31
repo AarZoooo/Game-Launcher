@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let status = 'Up to date';
+export let status = "Up to date";
 </script>
 
 <span class="badge">{status}</span>

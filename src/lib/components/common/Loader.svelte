@@ -1,13 +1,18 @@
 <script lang="ts">
-  import { isGameRunning, performanceMode, resolveVariant, type UIModeVariant } from '$lib/stores/uiStore';
+import {
+	isGameRunning,
+	performanceMode,
+	resolveVariant,
+	type UIModeVariant,
+} from "$lib/stores/uiStore";
 
-  export let loading = false;
-  export let message = 'Loading';
-  export let inline = false;
-  export let variant: UIModeVariant = 'auto';
-  export let size: 'sm' | 'md' | 'lg' = 'md';
+export let loading = false;
+export let message = "Loading";
+export let inline = false;
+export let variant: UIModeVariant = "auto";
+export let size: "sm" | "md" | "lg" = "md";
 
-  $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
+$: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
 </script>
 
 {#if loading}

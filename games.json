@@ -1,62 +1,62 @@
 [
-    {
-    "id": "game-golf",
-    "title": "Golf With Your Friends",
-    "exePath": "D:\\SteamLibrary\\steamapps\\common\\Golf With Your Friends\\Golf With Your Friends.exe",
-    "coverArt": "/fallback-cover.svg",
-    "platform": "steam",
-    "totalPlaytime": 0,
-    "lastPlayed": null,
-    "status": "installed",
-    "genres": ["Sports", "Party"],
-    "description": "Local test entry for launcher integration."
-  },
-  {
-    "id": "game-hades",
-    "title": "Hades",
-    "exePath": "C:\\Games\\Hades\\Hades.exe",
-    "coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.png",
-    "platform": "steam",
-    "totalPlaytime": 1240,
-    "lastPlayed": "2026-03-28T19:30:00Z",
-    "status": "playing",
-    "genres": ["Roguelike", "Action"],
-    "description": "Fight your way out of the Underworld in fast, replayable runs."
-  },
-  {
-    "id": "game-celeste",
-    "title": "Celeste",
-    "exePath": "C:\\Games\\Celeste\\Celeste.exe",
-    "coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5q3r.png",
-    "platform": "gog",
-    "totalPlaytime": 640,
-    "lastPlayed": "2026-03-10T12:15:00Z",
-    "status": "completed",
-    "genres": ["Platformer", "Indie"],
-    "description": "A precise climbing platformer with a great story and soundtrack."
-  },
-  {
-    "id": "game-witcher-3",
-    "title": "The Witcher 3",
-    "exePath": "D:\\Games\\TheWitcher3\\bin\\x64\\witcher3.exe",
-    "coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.png",
-    "platform": "epic",
-    "totalPlaytime": 3120,
-    "lastPlayed": "2026-02-21T21:05:00Z",
-    "status": "installed",
-    "genres": ["RPG", "Open World"],
-    "description": "A large story-driven RPG with exploration, combat, and quests."
-  },
-  {
-    "id": "game-hollow-knight",
-    "title": "Hollow Knight",
-    "exePath": "C:\\Games\\HollowKnight\\Hollow Knight.exe",
-    "coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.png",
-    "platform": "pc",
-    "totalPlaytime": 0,
-    "lastPlayed": null,
-    "status": "backlog",
-    "genres": ["Metroidvania", "Action"],
-    "description": "A moody exploration game with challenging combat and beautiful art."
-  }
+	{
+		"id": "game-golf",
+		"title": "Golf With Your Friends",
+		"exePath": "D:\\SteamLibrary\\steamapps\\common\\Golf With Your Friends\\Golf With Your Friends.exe",
+		"coverArt": "/fallback-cover.svg",
+		"platform": "steam",
+		"totalPlaytime": 0,
+		"lastPlayed": null,
+		"status": "installed",
+		"genres": ["Sports", "Party"],
+		"description": "Local test entry for launcher integration."
+	},
+	{
+		"id": "game-hades",
+		"title": "Hades",
+		"exePath": "C:\\Games\\Hades\\Hades.exe",
+		"coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.png",
+		"platform": "steam",
+		"totalPlaytime": 1240,
+		"lastPlayed": "2026-03-28T19:30:00Z",
+		"status": "playing",
+		"genres": ["Roguelike", "Action"],
+		"description": "Fight your way out of the Underworld in fast, replayable runs."
+	},
+	{
+		"id": "game-celeste",
+		"title": "Celeste",
+		"exePath": "C:\\Games\\Celeste\\Celeste.exe",
+		"coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5q3r.png",
+		"platform": "gog",
+		"totalPlaytime": 640,
+		"lastPlayed": "2026-03-10T12:15:00Z",
+		"status": "completed",
+		"genres": ["Platformer", "Indie"],
+		"description": "A precise climbing platformer with a great story and soundtrack."
+	},
+	{
+		"id": "game-witcher-3",
+		"title": "The Witcher 3",
+		"exePath": "D:\\Games\\TheWitcher3\\bin\\x64\\witcher3.exe",
+		"coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.png",
+		"platform": "epic",
+		"totalPlaytime": 3120,
+		"lastPlayed": "2026-02-21T21:05:00Z",
+		"status": "installed",
+		"genres": ["RPG", "Open World"],
+		"description": "A large story-driven RPG with exploration, combat, and quests."
+	},
+	{
+		"id": "game-hollow-knight",
+		"title": "Hollow Knight",
+		"exePath": "C:\\Games\\HollowKnight\\Hollow Knight.exe",
+		"coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.png",
+		"platform": "pc",
+		"totalPlaytime": 0,
+		"lastPlayed": null,
+		"status": "backlog",
+		"genres": ["Metroidvania", "Action"],
+		"description": "A moody exploration game with challenging combat and beautiful art."
+	}
 ]

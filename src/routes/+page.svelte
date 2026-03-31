@@ -1,43 +1,45 @@
 <script lang="ts">
-  import ContinuePlaying from '$lib/components/game/ContinuePlaying.svelte';
-  import GameGrid from '$lib/components/game/GameGrid.svelte';
-  import StatsDashboard from '$lib/components/stats/StatsDashboard.svelte';
-  import { launchGame, openGameFolder } from '$lib/services/tauriService';
-  import {
-    continuePlayingGames,
-    games,
-    getAllGames,
-    getGameById,
-    getGamesByIds,
-    homeExploreIds,
-    type Game
-  } from '$lib/stores/libraryStore';
+import ContinuePlaying from "$lib/components/game/ContinuePlaying.svelte";
+import GameGrid from "$lib/components/game/GameGrid.svelte";
+import StatsDashboard from "$lib/components/stats/StatsDashboard.svelte";
+import { launchGame, openGameFolder } from "$lib/services/tauriService";
+import {
+	continuePlayingGames,
+	type Game,
+	games,
+	getAllGames,
+	getGameById,
+	getGamesByIds,
+	homeExploreIds,
+} from "$lib/stores/libraryStore";
 
-  let featuredGame = getGameById('sekiro');
-  const suggestedGames = getGamesByIds(homeExploreIds);
+let featuredGame = getGameById("sekiro");
+const suggestedGames = getGamesByIds(homeExploreIds);
 
-  function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
-    const { id, game } = event.detail;
+function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
+	const { id, game } = event.detail;
 
-    if (id === 'status-want') return games.setStatus(game.id, 'want');
-    if (id === 'status-playing') return games.setStatus(game.id, 'playing');
-    if (id === 'status-played') return games.setStatus(game.id, 'played');
-    if ((id === 'play' || id === 'resume' || id === 'restart') && game.path) {
-      return launchGame(game.path, game.id);
-    }
-    if (id === 'toggle-favorite') return games.toggleFavorite(game.id);
-    if (id === 'open-folder') return openGameFolder(game.path);
-    if (id === 'hide-continue') return games.hideFromContinuePlaying(game.id);
-    if (id === 'view-playtime') {
-      window.alert(`${game.title}: ${game.totalPlaytime || game.hours} total playtime.`);
-    }
-  }
+	if (id === "status-want") return games.setStatus(game.id, "want");
+	if (id === "status-playing") return games.setStatus(game.id, "playing");
+	if (id === "status-played") return games.setStatus(game.id, "played");
+	if ((id === "play" || id === "resume" || id === "restart") && game.path) {
+		return launchGame(game.path, game.id);
+	}
+	if (id === "toggle-favorite") return games.toggleFavorite(game.id);
+	if (id === "open-folder") return openGameFolder(game.path);
+	if (id === "hide-continue") return games.hideFromContinuePlaying(game.id);
+	if (id === "view-playtime") {
+		window.alert(
+			`${game.title}: ${game.totalPlaytime || game.hours} total playtime.`,
+		);
+	}
+}
 
-  $: featuredGame =
-    $continuePlayingGames[0] ||
-    getAllGames().find((game) => game.inLibrary !== false) ||
-    getGameById(homeExploreIds[0]) ||
-    getGameById('sekiro');
+$: featuredGame =
+	$continuePlayingGames[0] ||
+	getAllGames().find((game) => game.inLibrary !== false) ||
+	getGameById(homeExploreIds[0]) ||
+	getGameById("sekiro");
 </script>
 
 {#if featuredGame}

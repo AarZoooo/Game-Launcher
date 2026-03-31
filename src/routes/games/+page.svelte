@@ -1,189 +1,217 @@
 <script lang="ts">
-  import Button from '$lib/components/common/Button.svelte';
-  import ImportGamesModal from '$lib/components/game/ImportGamesModal.svelte';
-  import FilterPanel from '$lib/components/game/FilterPanel.svelte';
-  import GameGrid from '$lib/components/game/GameGrid.svelte';
-  import { scanEpicGames, scanSteamGames } from '$lib/services/gameService';
-  import { launchGame, openGameFolder, openSaveFolder, scanLocalGames } from '$lib/services/tauriService';
-  import {
-    catalogGames,
-    games,
-    hasDuplicateGame,
-    installedGames,
-    type Game,
-    type ImportedGameResult
-  } from '$lib/stores/libraryStore';
-  import { scanningState, uiStore } from '$lib/stores/uiStore';
-  import { sortOptions } from '$lib/utils/constants';
+import Button from "$lib/components/common/Button.svelte";
+import FilterPanel from "$lib/components/game/FilterPanel.svelte";
+import GameGrid from "$lib/components/game/GameGrid.svelte";
+import ImportGamesModal from "$lib/components/game/ImportGamesModal.svelte";
+import { scanEpicGames, scanSteamGames } from "$lib/services/gameService";
+import {
+	launchGame,
+	openGameFolder,
+	openSaveFolder,
+	scanLocalGames,
+} from "$lib/services/tauriService";
+import {
+	catalogGames,
+	type Game,
+	games,
+	hasDuplicateGame,
+	type ImportedGameResult,
+	installedGames,
+} from "$lib/stores/libraryStore";
+import { scanningState, uiStore } from "$lib/stores/uiStore";
+import { sortOptions } from "$lib/utils/constants";
 
-  let showFilters = false;
-  let sortBy = 'default';
-  let scannedPlatform: 'steam' | 'epic' | 'local' = 'steam';
-  let showImportModal = false;
-  let scanError = '';
-  let scanResults: ImportedGameResult[] = [];
-  let autoSearchMessage = '';
-  let filteredInstalledGames: Game[] = [];
-  let filteredCatalogGames: Game[] = [];
-  let filters = {
-    genre: '',
-    coop: '',
-    status: '',
-    showFavorites: false
-  };
+let showFilters = false;
+let sortBy = "default";
+let scannedPlatform: "steam" | "epic" | "local" = "steam";
+let showImportModal = false;
+let scanError = "";
+let scanResults: ImportedGameResult[] = [];
+let autoSearchMessage = "";
+let filteredInstalledGames: Game[] = [];
+let filteredCatalogGames: Game[] = [];
+let filters = {
+	genre: "",
+	coop: "",
+	status: "",
+	showFavorites: false,
+};
 
-  async function startScan(platform: 'steam' | 'epic') {
-    scannedPlatform = platform;
-    scanError = '';
-    scanResults = [];
-    showImportModal = true;
-    uiStore.setScanning(platform, true);
+async function startScan(platform: "steam" | "epic") {
+	scannedPlatform = platform;
+	scanError = "";
+	scanResults = [];
+	showImportModal = true;
+	uiStore.setScanning(platform, true);
 
-    try {
-      const results = platform === 'steam' ? await scanSteamGames() : await scanEpicGames();
-      scanResults = results.filter((item) => !hasDuplicateGame(item));
-    } catch (error) {
-      scanError = error instanceof Error ? error.message : 'Scan failed. Please try again.';
-    } finally {
-      uiStore.setScanning(platform, false);
-    }
-  }
+	try {
+		const results =
+			platform === "steam" ? await scanSteamGames() : await scanEpicGames();
+		scanResults = results.filter((item) => !hasDuplicateGame(item));
+	} catch (error) {
+		scanError =
+			error instanceof Error ? error.message : "Scan failed. Please try again.";
+	} finally {
+		uiStore.setScanning(platform, false);
+	}
+}
 
-  function startAutoSearch() {
-    if ($scanningState.local) {
-      return;
-    }
+function startAutoSearch() {
+	if ($scanningState.local) {
+		return;
+	}
 
-    scannedPlatform = 'local';
-    showImportModal = true;
-    scanError = '';
-    scanResults = [];
-    autoSearchMessage = '';
-    uiStore.setScanning('local', true);
+	scannedPlatform = "local";
+	showImportModal = true;
+	scanError = "";
+	scanResults = [];
+	autoSearchMessage = "";
+	uiStore.setScanning("local", true);
 
-    void scanLocalGames()
-      .then((results) => {
-        scanResults = results.filter((item) => !hasDuplicateGame(item));
-      })
-      .catch((error) => {
-        scanError = error instanceof Error ? error.message : 'Auto search failed. Please try again.';
-      })
-      .finally(() => {
-        uiStore.setScanning('local', false);
-      });
-  }
+	void scanLocalGames()
+		.then((results) => {
+			scanResults = results.filter((item) => !hasDuplicateGame(item));
+		})
+		.catch((error) => {
+			scanError =
+				error instanceof Error
+					? error.message
+					: "Auto search failed. Please try again.";
+		})
+		.finally(() => {
+			uiStore.setScanning("local", false);
+		});
+}
 
-  function addManualGame() {
-    const title = window.prompt('Game title');
-    if (!title) {
-      return;
-    }
+function addManualGame() {
+	const title = window.prompt("Game title");
+	if (!title) {
+		return;
+	}
 
-    const path = window.prompt('Executable path', 'C:\\Games\\MyGame\\Game.exe');
-    if (!path) {
-      return;
-    }
+	const path = window.prompt("Executable path", "C:\\Games\\MyGame\\Game.exe");
+	if (!path) {
+		return;
+	}
 
-    games.addManualGame(title.trim(), path.trim());
-    autoSearchMessage = `Added ${title.trim()} to your installed games list.`;
-  }
+	games.addManualGame(title.trim(), path.trim());
+	autoSearchMessage = `Added ${title.trim()} to your installed games list.`;
+}
 
-  function addSelected(event: CustomEvent<string[]>) {
-    const selected = scanResults.filter((item) => event.detail.includes(item.id));
-    games.addImportedGames(selected);
-    autoSearchMessage = `Added ${selected.length} local game${selected.length === 1 ? '' : 's'} to your installed list.`;
-    closeImport();
-  }
+function addSelected(event: CustomEvent<string[]>) {
+	const selected = scanResults.filter((item) => event.detail.includes(item.id));
+	games.addImportedGames(selected);
+	autoSearchMessage = `Added ${selected.length} local game${selected.length === 1 ? "" : "s"} to your installed list.`;
+	closeImport();
+}
 
-  function addAll() {
-    games.addImportedGames(scanResults);
-    autoSearchMessage = `Added ${scanResults.length} local game${scanResults.length === 1 ? '' : 's'} to your installed list.`;
-    closeImport();
-  }
+function addAll() {
+	games.addImportedGames(scanResults);
+	autoSearchMessage = `Added ${scanResults.length} local game${scanResults.length === 1 ? "" : "s"} to your installed list.`;
+	closeImport();
+}
 
-  function closeImport() {
-    showImportModal = false;
-    scanResults = [];
-    scanError = '';
-  }
+function closeImport() {
+	showImportModal = false;
+	scanResults = [];
+	scanError = "";
+}
 
-  function applyFilters(event: CustomEvent<{ genre?: string; coop?: string; status?: string; showFavorites?: boolean }>) {
-    filters = {
-      genre: event.detail.genre || '',
-      coop: event.detail.coop || '',
-      status: event.detail.status || '',
-      showFavorites: Boolean(event.detail.showFavorites)
-    };
+function applyFilters(
+	event: CustomEvent<{
+		genre?: string;
+		coop?: string;
+		status?: string;
+		showFavorites?: boolean;
+	}>,
+) {
+	filters = {
+		genre: event.detail.genre || "",
+		coop: event.detail.coop || "",
+		status: event.detail.status || "",
+		showFavorites: Boolean(event.detail.showFavorites),
+	};
 
-    showFilters = false;
-  }
+	showFilters = false;
+}
 
-  function handleMenuAction(event: CustomEvent<{ id: string; game: Game }>) {
-    const { id, game } = event.detail;
+function handleMenuAction(event: CustomEvent<{ id: string; game: Game }>) {
+	const { id, game } = event.detail;
 
-    if (id === 'play' && game.path) return launchGame(game.path, game.id);
-    if (id === 'toggle-favorite') return games.toggleFavorite(game.id);
-    if (id === 'open-folder') return openGameFolder(game.path);
-    if (id === 'open-save-folder') return openSaveFolder(game.savePath);
-    if (id === 'toggle-cloud-sync') return games.toggleCloudSync(game.id);
-    if (id === 'remove-library') return games.removeFromLibrary(game.id);
+	if (id === "play" && game.path) return launchGame(game.path, game.id);
+	if (id === "toggle-favorite") return games.toggleFavorite(game.id);
+	if (id === "open-folder") return openGameFolder(game.path);
+	if (id === "open-save-folder") return openSaveFolder(game.savePath);
+	if (id === "toggle-cloud-sync") return games.toggleCloudSync(game.id);
+	if (id === "remove-library") return games.removeFromLibrary(game.id);
 
-    if (id === 'edit-details') {
-      const title = window.prompt('Game title', game.title);
-      if (title) games.updateDetails(game.id, { title });
-      return;
-    }
+	if (id === "edit-details") {
+		const title = window.prompt("Game title", game.title);
+		if (title) games.updateDetails(game.id, { title });
+		return;
+	}
 
-    if (id === 'change-cover') {
-      const cover = window.prompt('Cover image URL or local asset path', game.cover);
-      if (cover) games.updateDetails(game.id, { cover });
-      return;
-    }
+	if (id === "change-cover") {
+		const cover = window.prompt(
+			"Cover image URL or local asset path",
+			game.cover,
+		);
+		if (cover) games.updateDetails(game.id, { cover });
+		return;
+	}
 
-    if (id === 'launch-options') {
-      const value = window.prompt('Launch arguments', game.launchOptions || '');
-      if (value !== null) games.setLaunchOptions(game.id, value);
-      return;
-    }
+	if (id === "launch-options") {
+		const value = window.prompt("Launch arguments", game.launchOptions || "");
+		if (value !== null) games.setLaunchOptions(game.id, value);
+		return;
+	}
 
-    if (id === 'create-shortcut') {
-      window.alert(`Desktop shortcut will be supported by the backend layer for ${game.title}.`);
-      return;
-    }
+	if (id === "create-shortcut") {
+		window.alert(
+			`Desktop shortcut will be supported by the backend layer for ${game.title}.`,
+		);
+		return;
+	}
 
-    if (id === 'sync-now') {
-      window.alert(`Cloud sync for ${game.title} will be handled once backend sync is connected.`);
-    }
-  }
+	if (id === "sync-now") {
+		window.alert(
+			`Cloud sync for ${game.title} will be handled once backend sync is connected.`,
+		);
+	}
+}
 
-  function filterGames(items: Game[]) {
-    return items.filter((game) => {
-      const matchesGenre = !filters.genre || game.genres.toLowerCase().includes(filters.genre);
-      const matchesCoop = !filters.coop || game.coop.toLowerCase() === filters.coop;
-      const matchesStatus = !filters.status || game.status === filters.status;
-      const matchesFavorites = !filters.showFavorites || game.favorite;
-      return matchesGenre && matchesCoop && matchesStatus && matchesFavorites;
-    });
-  }
+function filterGames(items: Game[]) {
+	return items.filter((game) => {
+		const matchesGenre =
+			!filters.genre || game.genres.toLowerCase().includes(filters.genre);
+		const matchesCoop =
+			!filters.coop || game.coop.toLowerCase() === filters.coop;
+		const matchesStatus = !filters.status || game.status === filters.status;
+		const matchesFavorites = !filters.showFavorites || game.favorite;
+		return matchesGenre && matchesCoop && matchesStatus && matchesFavorites;
+	});
+}
 
-  function sortGames(items: Game[]) {
-    if (sortBy === 'title') {
-      return [...items].sort((a, b) => a.title.localeCompare(b.title));
-    }
+function sortGames(items: Game[]) {
+	if (sortBy === "title") {
+		return [...items].sort((a, b) => a.title.localeCompare(b.title));
+	}
 
-    if (sortBy === 'hours') {
-      return [...items].sort((a, b) => parseInt(b.hours) - parseInt(a.hours));
-    }
+	if (sortBy === "hours") {
+		return [...items].sort((a, b) => parseInt(b.hours) - parseInt(a.hours));
+	}
 
-    if (sortBy === 'rating') {
-      return [...items].sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
-    }
+	if (sortBy === "rating") {
+		return [...items].sort(
+			(a, b) => parseFloat(b.rating) - parseFloat(a.rating),
+		);
+	}
 
-    return items;
-  }
+	return items;
+}
 
-  $: filteredInstalledGames = sortGames(filterGames($installedGames));
-  $: filteredCatalogGames = sortGames(filterGames($catalogGames));
+$: filteredInstalledGames = sortGames(filterGames($installedGames));
+$: filteredCatalogGames = sortGames(filterGames($catalogGames));
 </script>
 
 <div class="games">

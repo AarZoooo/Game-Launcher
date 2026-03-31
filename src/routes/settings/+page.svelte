@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-  import { settingsSections } from '$lib/utils/constants';
+import { settingsSections } from "$lib/utils/constants";
 </script>
 
 <div class="settings">

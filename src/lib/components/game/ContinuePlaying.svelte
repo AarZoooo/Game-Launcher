@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import GameMenu from '$lib/components/game/GameMenu.svelte';
-  import GamePlayButton from '$lib/components/game/GamePlayButton.svelte';
-  import SyncBadge from '$lib/components/sync/SyncBadge.svelte';
-  import type { Game } from '$lib/stores/libraryStore';
+import { createEventDispatcher } from "svelte";
+import GameMenu from "$lib/components/game/GameMenu.svelte";
+import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
+import SyncBadge from "$lib/components/sync/SyncBadge.svelte";
+import type { Game } from "$lib/stores/libraryStore";
 
-  const dispatch = createEventDispatcher<{
-    action: { id: string; game: Game };
-  }>();
+const dispatch = createEventDispatcher<{
+	action: { id: string; game: Game };
+}>();
 
-  export let game: Game;
+export let game: Game;
 </script>
 
 <section class="hero" style={`--hero-image: url('${game.hero || game.cover}')`}>

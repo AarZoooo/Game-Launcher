@@ -1,22 +1,22 @@
 ﻿<script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { goto } from '$app/navigation';
-  import type { Game } from '$lib/stores/libraryStore';
-  import GameMenu from '$lib/components/game/GameMenu.svelte';
+import { createEventDispatcher } from "svelte";
+import { goto } from "$app/navigation";
+import GameMenu from "$lib/components/game/GameMenu.svelte";
+import type { Game } from "$lib/stores/libraryStore";
 
-  type GameMenuContext = 'library' | 'explore' | 'home';
+type GameMenuContext = "library" | "explore" | "home";
 
-  const dispatch = createEventDispatcher<{
-    action: { id: string; game: Game };
-  }>();
+const dispatch = createEventDispatcher<{
+	action: { id: string; game: Game };
+}>();
 
-  export let game: Game;
-  export let compact = false;
-  export let context: GameMenuContext = 'library';
+export let game: Game;
+export let compact = false;
+export let context: GameMenuContext = "library";
 
-  function openGame() {
-    goto(`/game/${game.id}`);
-  }
+function openGame() {
+	goto(`/game/${game.id}`);
+}
 </script>
 
 <article class:compact class={`card ${game.accent}`} style={`--accent:${game.accentHex || '#b69b57'}`}>

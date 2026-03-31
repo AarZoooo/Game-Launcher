@@ -1,45 +1,45 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import Button from '$lib/components/common/Button.svelte';
-  import Loader from '$lib/components/common/Loader.svelte';
-  import Modal from '$lib/components/common/Modal.svelte';
-  import type { ImportedGameResult } from '$lib/stores/libraryStore';
+import { createEventDispatcher } from "svelte";
+import Button from "$lib/components/common/Button.svelte";
+import Loader from "$lib/components/common/Loader.svelte";
+import Modal from "$lib/components/common/Modal.svelte";
+import type { ImportedGameResult } from "$lib/stores/libraryStore";
 
-  const dispatch = createEventDispatcher<{
-    close: void;
-    cancel: void;
-    addall: void;
-    addselected: string[];
-  }>();
+const dispatch = createEventDispatcher<{
+	close: void;
+	cancel: void;
+	addall: void;
+	addselected: string[];
+}>();
 
-  export let open = false;
-  export let platform: 'steam' | 'epic' | 'local' = 'steam';
-  export let loading = false;
-  export let error = '';
-  export let results: ImportedGameResult[] = [];
+export let open = false;
+export let platform: "steam" | "epic" | "local" = "steam";
+export let loading = false;
+export let error = "";
+export let results: ImportedGameResult[] = [];
 
-  let selectedIds: string[] = [];
+let selectedIds: string[] = [];
 
-  $: if (!open) {
-    selectedIds = [];
-  }
+$: if (!open) {
+	selectedIds = [];
+}
 
-  $: if (results.length && !selectedIds.length) {
-    selectedIds = results.map((item) => item.id);
-  }
+$: if (results.length && !selectedIds.length) {
+	selectedIds = results.map((item) => item.id);
+}
 
-  $: platformLabel =
-    platform === 'steam' ? 'Steam' : platform === 'epic' ? 'Epic' : 'Auto Search';
+$: platformLabel =
+	platform === "steam" ? "Steam" : platform === "epic" ? "Epic" : "Auto Search";
 
-  function toggle(id: string) {
-    selectedIds = selectedIds.includes(id)
-      ? selectedIds.filter((value) => value !== id)
-      : [...selectedIds, id];
-  }
+function toggle(id: string) {
+	selectedIds = selectedIds.includes(id)
+		? selectedIds.filter((value) => value !== id)
+		: [...selectedIds, id];
+}
 
-  function truncate(path: string) {
-    return path.length > 58 ? `${path.slice(0, 55)}...` : path;
-  }
+function truncate(path: string) {
+	return path.length > 58 ? `${path.slice(0, 55)}...` : path;
+}
 </script>
 
 <Modal

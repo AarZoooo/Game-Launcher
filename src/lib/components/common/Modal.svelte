@@ -1,45 +1,50 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { isGameRunning, performanceMode, resolveVariant, type UIModeVariant } from '$lib/stores/uiStore';
+import { createEventDispatcher } from "svelte";
+import {
+	isGameRunning,
+	performanceMode,
+	resolveVariant,
+	type UIModeVariant,
+} from "$lib/stores/uiStore";
 
-  const dispatch = createEventDispatcher<{
-    close: void;
-    cancel: void;
-    confirm: void;
-  }>();
+const dispatch = createEventDispatcher<{
+	close: void;
+	cancel: void;
+	confirm: void;
+}>();
 
-  export let open = false;
-  export let title = '';
-  export let message = '';
-  export let content = '';
-  export let confirmLabel = 'Confirm';
-  export let cancelLabel = 'Cancel';
-  export let showCancel = true;
-  export let hideActions = false;
-  export let closeOnBackdrop = true;
-  export let variant: UIModeVariant = 'auto';
-  export let size: 'sm' | 'md' | 'lg' = 'md';
+export let open = false;
+export let title = "";
+export let message = "";
+export let content = "";
+export let confirmLabel = "Confirm";
+export let cancelLabel = "Cancel";
+export let showCancel = true;
+export let hideActions = false;
+export let closeOnBackdrop = true;
+export let variant: UIModeVariant = "auto";
+export let size: "sm" | "md" | "lg" = "md";
 
-  $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
+$: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
 
-  function close() {
-    dispatch('close');
-  }
+function close() {
+	dispatch("close");
+}
 
-  function cancel() {
-    dispatch('cancel');
-    close();
-  }
+function cancel() {
+	dispatch("cancel");
+	close();
+}
 
-  function confirm() {
-    dispatch('confirm');
-  }
+function confirm() {
+	dispatch("confirm");
+}
 
-  function handleBackdropClick() {
-    if (closeOnBackdrop) {
-      close();
-    }
-  }
+function handleBackdropClick() {
+	if (closeOnBackdrop) {
+		close();
+	}
+}
 </script>
 
 {#if open}

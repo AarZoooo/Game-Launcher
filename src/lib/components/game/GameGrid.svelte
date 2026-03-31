@@ -1,18 +1,18 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import GameCard from '$lib/components/game/GameCard.svelte';
-  import type { Game } from '$lib/stores/libraryStore';
+import { createEventDispatcher } from "svelte";
+import GameCard from "$lib/components/game/GameCard.svelte";
+import type { Game } from "$lib/stores/libraryStore";
 
-  type GameMenuContext = 'library' | 'explore' | 'home';
+type GameMenuContext = "library" | "explore" | "home";
 
-  const dispatch = createEventDispatcher<{
-    action: { id: string; game: Game };
-  }>();
+const dispatch = createEventDispatcher<{
+	action: { id: string; game: Game };
+}>();
 
-  export let games: Game[] = [];
-  export let horizontal = false;
-  export let compact = false;
-  export let context: GameMenuContext = 'library';
+export let games: Game[] = [];
+export let horizontal = false;
+export let compact = false;
+export let context: GameMenuContext = "library";
 </script>
 
 <div class:horizontal class="grid">

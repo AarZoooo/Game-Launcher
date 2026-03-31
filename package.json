@@ -31,8 +31,8 @@
 		"vite": "^6.0.3"
 	},
 	"lint-staged": {
-    	"*.{ts,js,svelte}": [
-      	"biome check --write"
-    	]
-  	}
+		"*.{ts,js,svelte}": [
+			"biome check --write"
+		]
+	}
 }

@@ -1,28 +1,30 @@
 <script lang="ts">
-  import { games } from '$lib/stores/libraryStore';
-  import { genreShares } from '$lib/utils/constants';
-  import {
-    buildActivityCalendar,
-    formatActivityDate,
-    mockPlayActivityHours
-  } from '$lib/utils/playActivity';
+import { games } from "$lib/stores/libraryStore";
+import { genreShares } from "$lib/utils/constants";
+import {
+	buildActivityCalendar,
+	formatActivityDate,
+	mockPlayActivityHours,
+} from "$lib/utils/playActivity";
 
-  function parseHours(value: string) {
-    const match = value.match(/\d+/);
-    return match ? parseInt(match[0], 10) : 0;
-  }
+function parseHours(value: string) {
+	const match = value.match(/\d+/);
+	return match ? parseInt(match[0], 10) : 0;
+}
 
-  $: calendar = buildActivityCalendar(mockPlayActivityHours);
-  $: playedCount = $games.filter((game) => game.status === 'played').length;
-  $: playingCount = $games.filter((game) => game.status === 'playing').length;
-  $: favoriteCount = $games.filter((game) => game.favorite).length;
-  $: mostPlayed = [...$games].sort((left, right) => parseHours(right.hours) - parseHours(left.hours))[0];
-  $: insightMetrics = [
-    { label: 'Games Played', value: String(playedCount) },
-    { label: 'Active Right Now', value: `${playingCount} games` },
-    { label: 'Favorites', value: `${favoriteCount} picks` },
-    { label: 'Most Played', value: mostPlayed?.title || 'No data yet' }
-  ];
+$: calendar = buildActivityCalendar(mockPlayActivityHours);
+$: playedCount = $games.filter((game) => game.status === "played").length;
+$: playingCount = $games.filter((game) => game.status === "playing").length;
+$: favoriteCount = $games.filter((game) => game.favorite).length;
+$: mostPlayed = [...$games].sort(
+	(left, right) => parseHours(right.hours) - parseHours(left.hours),
+)[0];
+$: insightMetrics = [
+	{ label: "Games Played", value: String(playedCount) },
+	{ label: "Active Right Now", value: `${playingCount} games` },
+	{ label: "Favorites", value: `${favoriteCount} picks` },
+	{ label: "Most Played", value: mostPlayed?.title || "No data yet" },
+];
 </script>
 
 <section class="stats">

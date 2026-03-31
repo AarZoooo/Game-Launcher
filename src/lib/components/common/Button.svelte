@@ -1,15 +1,15 @@
 <script lang="ts">
-  import type { AccentTone } from '$lib/stores/libraryStore';
+import type { AccentTone } from "$lib/stores/libraryStore";
 
-  export let type: 'button' | 'submit' = 'button';
-  export let accent: AccentTone = 'gold';
-  export let quiet = false;
-  export let wide = false;
-  export let compact = false;
-  export let iconFirst = false;
-  export let iconOnly = false;
-  export let disabled = false;
-  export let ariaLabel: string | undefined = undefined;
+export let type: "button" | "submit" = "button";
+export let accent: AccentTone = "gold";
+export let quiet = false;
+export let wide = false;
+export let compact = false;
+export let iconFirst = false;
+export let iconOnly = false;
+export let disabled = false;
+export let ariaLabel: string | undefined = undefined;
 </script>
 
 <button

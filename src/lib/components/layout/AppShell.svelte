@@ -1,20 +1,24 @@
 <script lang="ts">
-  import { page } from '$app/stores';
-  import Loader from '$lib/components/common/Loader.svelte';
-  import Sidebar from '$lib/components/layout/Sidebar.svelte';
-  import { effectiveUIMode, libraryBusy, libraryBusyMessage } from '$lib/stores/uiStore';
-  import { footerColumns, routeAccents } from '$lib/utils/constants';
-  import { getGameById } from '$lib/stores/libraryStore';
+import { page } from "$app/stores";
+import Loader from "$lib/components/common/Loader.svelte";
+import Sidebar from "$lib/components/layout/Sidebar.svelte";
+import { getGameById } from "$lib/stores/libraryStore";
+import {
+	effectiveUIMode,
+	libraryBusy,
+	libraryBusyMessage,
+} from "$lib/stores/uiStore";
+import { footerColumns, routeAccents } from "$lib/utils/constants";
 
-  $: accent = pageToAccent($page.url.pathname, $page.params.id);
+$: accent = pageToAccent($page.url.pathname, $page.params.id);
 
-  function pageToAccent(pathname: string, gameId?: string) {
-    if (pathname.startsWith('/game/') && gameId) {
-      return getGameById(gameId)?.accent || 'silver';
-    }
+function pageToAccent(pathname: string, gameId?: string) {
+	if (pathname.startsWith("/game/") && gameId) {
+		return getGameById(gameId)?.accent || "silver";
+	}
 
-    return routeAccents[pathname] || 'silver';
-  }
+	return routeAccents[pathname] || "silver";
+}
 </script>
 
 <svelte:body class:gaming-mode={$effectiveUIMode === 'gaming'} />

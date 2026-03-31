@@ -1,47 +1,47 @@
 <script lang="ts">
-  import { browser } from '$app/environment';
-  import { onMount } from 'svelte';
-  import Button from '$lib/components/common/Button.svelte';
-  import GameGrid from '$lib/components/game/GameGrid.svelte';
-  import {
-    explorePrimaryIds,
-    exploreSecondaryIds,
-    games,
-    getGamesByIds,
-    type Game
-  } from '$lib/stores/libraryStore';
-  import { recommendationPrompt } from '$lib/utils/constants';
+import { onMount } from "svelte";
+import { browser } from "$app/environment";
+import Button from "$lib/components/common/Button.svelte";
+import GameGrid from "$lib/components/game/GameGrid.svelte";
+import {
+	explorePrimaryIds,
+	exploreSecondaryIds,
+	type Game,
+	games,
+	getGamesByIds,
+} from "$lib/stores/libraryStore";
+import { recommendationPrompt } from "$lib/utils/constants";
 
-  const primary = getGamesByIds(explorePrimaryIds);
-  const featuredRecommendation = primary[0];
-  const primaryGrid = primary.slice(1);
-  const secondary = getGamesByIds(exploreSecondaryIds);
-  let isOnline = true;
-  let prompt = recommendationPrompt;
+const primary = getGamesByIds(explorePrimaryIds);
+const featuredRecommendation = primary[0];
+const primaryGrid = primary.slice(1);
+const secondary = getGamesByIds(exploreSecondaryIds);
+let isOnline = true;
+let prompt = recommendationPrompt;
 
-  function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
-    const { id, game } = event.detail;
+function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
+	const { id, game } = event.detail;
 
-    if (id === 'status-want') return games.setStatus(game.id, 'want');
-    if (id === 'status-playing') return games.setStatus(game.id, 'playing');
-    if (id === 'status-played') return games.setStatus(game.id, 'played');
-  }
+	if (id === "status-want") return games.setStatus(game.id, "want");
+	if (id === "status-playing") return games.setStatus(game.id, "playing");
+	if (id === "status-played") return games.setStatus(game.id, "played");
+}
 
-  onMount(() => {
-    if (!browser) return;
-    isOnline = navigator.onLine;
+onMount(() => {
+	if (!browser) return;
+	isOnline = navigator.onLine;
 
-    const onOnline = () => (isOnline = true);
-    const onOffline = () => (isOnline = false);
+	const onOnline = () => (isOnline = true);
+	const onOffline = () => (isOnline = false);
 
-    window.addEventListener('online', onOnline);
-    window.addEventListener('offline', onOffline);
+	window.addEventListener("online", onOnline);
+	window.addEventListener("offline", onOffline);
 
-    return () => {
-      window.removeEventListener('online', onOnline);
-      window.removeEventListener('offline', onOffline);
-    };
-  });
+	return () => {
+		window.removeEventListener("online", onOnline);
+		window.removeEventListener("offline", onOffline);
+	};
+});
 </script>
 
 {#if isOnline}
