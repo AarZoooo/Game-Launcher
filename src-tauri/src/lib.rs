@@ -8,6 +8,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::storage::read_games,
             commands::storage::write_games,
+            commands::storage::scan_local_games,
             commands::launch_game::launch_game
         ])
         .run(tauri::generate_context!())

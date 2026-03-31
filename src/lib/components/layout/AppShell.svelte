@@ -1,6 +1,8 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import Loader from '$lib/components/common/Loader.svelte';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
+  import { libraryBusy, libraryBusyMessage } from '$lib/stores/uiStore';
   import { footerColumns, routeAccents } from '$lib/utils/constants';
   import { getGameById } from '$lib/stores/libraryStore';
 
@@ -35,6 +37,8 @@
     </footer>
   </div>
 </div>
+
+<Loader loading={$libraryBusy} message={$libraryBusyMessage} size="lg" />
 
 <style>
   :global(body) {

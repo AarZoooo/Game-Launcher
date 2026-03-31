@@ -1,5 +1,5 @@
 [
-    {
+  {
     "id": "game-golf",
     "title": "Golf With Your Friends",
     "exePath": "D:\\SteamLibrary\\steamapps\\common\\Golf With Your Friends\\Golf With Your Friends.exe",
@@ -8,17 +8,19 @@
     "totalPlaytime": 0,
     "lastPlayed": null,
     "status": "installed",
-    "genres": ["Sports", "Party"],
+    "genres": [
+      "Sports",
+      "Party"
+    ],
     "description": "Local test entry for launcher integration."
   },
-
   {
     "id": "game-hades",
     "title": "Hades",
     "exePath": "C:\\Games\\Hades\\Hades.exe",
     "coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.png",
     "platform": "steam",
-    "totalPlaytime": 1240,
+    "totalPlaytime": 1260,
     "lastPlayed": "2026-03-28T19:30:00Z",
     "status": "playing",
     "genres": [
@@ -32,8 +34,8 @@
     "title": "Celeste",
     "exePath": "C:\\Games\\Celeste\\Celeste.exe",
     "coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5q3r.png",
-    "platform": "gog",
-    "totalPlaytime": 640,
+    "platform": "local",
+    "totalPlaytime": 660,
     "lastPlayed": "2026-03-10T12:15:00Z",
     "status": "completed",
     "genres": [
@@ -62,7 +64,7 @@
     "title": "Hollow Knight",
     "exePath": "C:\\Games\\HollowKnight\\Hollow Knight.exe",
     "coverArt": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.png",
-    "platform": "pc",
+    "platform": "local",
     "totalPlaytime": 0,
     "lastPlayed": null,
     "status": "backlog",
@@ -71,5 +73,19 @@
       "Action"
     ],
     "description": "A moody exploration game with challenging combat and beautiful art."
+  },
+  {
+    "id": "local-factorygamesteam",
+    "title": "Factorygamesteam",
+    "exePath": "D:\\Games\\Satisfactory\\FactoryGameSteam.exe",
+    "coverArt": "/mock/elden-card.png",
+    "platform": "local",
+    "totalPlaytime": 0,
+    "lastPlayed": null,
+    "status": "installed",
+    "genres": [
+      "Uncategorized"
+    ],
+    "description": ""
   }
 ]

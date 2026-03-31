@@ -4,7 +4,7 @@
   import FilterPanel from '$lib/components/game/FilterPanel.svelte';
   import GameGrid from '$lib/components/game/GameGrid.svelte';
   import { scanEpicGames, scanSteamGames } from '$lib/services/gameService';
-  import { launchGame, openGameFolder, openSaveFolder } from '$lib/services/tauriService';
+  import { launchGame, openGameFolder, openSaveFolder, scanLocalGames } from '$lib/services/tauriService';
   import {
     catalogGames,
     games,
@@ -18,10 +18,11 @@
 
   let showFilters = false;
   let sortBy = 'default';
-  let scannedPlatform: 'steam' | 'epic' = 'steam';
+  let scannedPlatform: 'steam' | 'epic' | 'local' = 'steam';
   let showImportModal = false;
   let scanError = '';
   let scanResults: ImportedGameResult[] = [];
+  let autoSearchMessage = '';
   let filteredInstalledGames: Game[] = [];
   let filteredCatalogGames: Game[] = [];
   let filters = {
@@ -48,14 +49,55 @@
     }
   }
 
+  function startAutoSearch() {
+    if ($scanningState.local) {
+      return;
+    }
+
+    scannedPlatform = 'local';
+    showImportModal = true;
+    scanError = '';
+    scanResults = [];
+    autoSearchMessage = '';
+    uiStore.setScanning('local', true);
+
+    void scanLocalGames()
+      .then((results) => {
+        scanResults = results.filter((item) => !hasDuplicateGame(item));
+      })
+      .catch((error) => {
+        scanError = error instanceof Error ? error.message : 'Auto search failed. Please try again.';
+      })
+      .finally(() => {
+        uiStore.setScanning('local', false);
+      });
+  }
+
+  function addManualGame() {
+    const title = window.prompt('Game title');
+    if (!title) {
+      return;
+    }
+
+    const path = window.prompt('Executable path', 'C:\\Games\\MyGame\\Game.exe');
+    if (!path) {
+      return;
+    }
+
+    games.addManualGame(title.trim(), path.trim());
+    autoSearchMessage = `Added ${title.trim()} to your installed games list.`;
+  }
+
   function addSelected(event: CustomEvent<string[]>) {
     const selected = scanResults.filter((item) => event.detail.includes(item.id));
     games.addImportedGames(selected);
+    autoSearchMessage = `Added ${selected.length} local game${selected.length === 1 ? '' : 's'} to your installed list.`;
     closeImport();
   }
 
   function addAll() {
     games.addImportedGames(scanResults);
+    autoSearchMessage = `Added ${scanResults.length} local game${scanResults.length === 1 ? '' : 's'} to your installed list.`;
     closeImport();
   }
 
@@ -155,6 +197,10 @@
       <Button quiet compact on:click={() => startScan('epic')}>
         {$scanningState.epic ? 'Scanning...' : 'Import Epic'}
       </Button>
+      <Button quiet compact on:click={startAutoSearch}>
+        {$scanningState.local ? 'Searching...' : 'Auto search'}
+      </Button>
+      <Button quiet compact on:click={addManualGame}>Add manually</Button>
 
       <label>
         <span>Sort by:</span>
@@ -173,7 +219,12 @@
     <div class="section-header">
       <div>
         <h2>Installed Games</h2>
-        <p>Loaded from your local backend storage.</p>
+        <p>
+          Loaded from your local backend storage.
+          {#if autoSearchMessage}
+            <span class="status-copy">{autoSearchMessage}</span>
+          {/if}
+        </p>
       </div>
       <span>{filteredInstalledGames.length} shown</span>
     </div>
@@ -262,6 +313,12 @@
     font-size: 0.8rem;
   }
 
+  .status-copy {
+    display: inline-block;
+    margin-left: 0.5rem;
+    color: rgba(244, 242, 247, 0.8);
+  }
+
   .controls {
     display: flex;
     align-items: center;
@@ -314,6 +371,12 @@
     .section-header {
       flex-direction: column;
       align-items: flex-start;
+    }
+
+    .status-copy {
+      display: block;
+      margin-left: 0;
+      margin-top: 0.35rem;
     }
   }
 </style>

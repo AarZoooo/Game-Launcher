@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { openPath } from '@tauri-apps/plugin-opener';
+import type { ImportedGameResult } from '$lib/stores/libraryStore';
 import { uiStore } from '$lib/stores/uiStore';
 
 export interface StoredGame {
@@ -15,12 +16,18 @@ export interface StoredGame {
   description: string;
 }
 
+export interface LocalScanResult extends ImportedGameResult {}
+
 export async function getGames(): Promise<StoredGame[]> {
   return invoke<StoredGame[]>('read_games');
 }
 
 export async function saveGames(games: StoredGame[]): Promise<string> {
   return invoke<string>('write_games', { games });
+}
+
+export async function scanLocalGames(): Promise<LocalScanResult[]> {
+  return invoke<LocalScanResult[]>('scan_local_games');
 }
 
 export async function launchGame(exePath: string) {

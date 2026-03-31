@@ -2,11 +2,12 @@ import { derived, writable } from 'svelte/store';
 
 export type UIModeVariant = 'auto' | 'normal' | 'gaming';
 export type ResolvedUIMode = 'normal' | 'gaming';
-export type ScanPlatform = 'steam' | 'epic';
+export type ScanPlatform = 'steam' | 'epic' | 'local';
 
 interface ScanState {
   steam: boolean;
   epic: boolean;
+  local: boolean;
 }
 
 interface UIState {
@@ -14,6 +15,8 @@ interface UIState {
   performanceMode: boolean;
   scanning: ScanState;
   activeAccent: string;
+  libraryBusy: boolean;
+  libraryBusyMessage: string;
 }
 
 const initialState: UIState = {
@@ -21,9 +24,12 @@ const initialState: UIState = {
   performanceMode: false,
   scanning: {
     steam: false,
-    epic: false
+    epic: false,
+    local: false
   },
-  activeAccent: '#b69b57'
+  activeAccent: '#b69b57',
+  libraryBusy: false,
+  libraryBusyMessage: 'Updating library...'
 };
 
 function createUIStore() {
@@ -46,6 +52,12 @@ function createUIStore() {
           [platform]: value
         }
       })),
+    setLibraryBusy: (libraryBusy: boolean, libraryBusyMessage = 'Updating library...') =>
+      update((state) => ({
+        ...state,
+        libraryBusy,
+        libraryBusyMessage
+      })),
     setActiveAccent: (activeAccent: string) =>
       update((state) => ({ ...state, activeAccent }))
   };
@@ -57,6 +69,8 @@ export const isGameRunning = derived(uiStore, ($uiStore) => $uiStore.isGameRunni
 export const performanceMode = derived(uiStore, ($uiStore) => $uiStore.performanceMode);
 export const scanningState = derived(uiStore, ($uiStore) => $uiStore.scanning);
 export const activeAccent = derived(uiStore, ($uiStore) => $uiStore.activeAccent);
+export const libraryBusy = derived(uiStore, ($uiStore) => $uiStore.libraryBusy);
+export const libraryBusyMessage = derived(uiStore, ($uiStore) => $uiStore.libraryBusyMessage);
 export const effectiveUIMode = derived(
   uiStore,
   ($uiStore): ResolvedUIMode =>

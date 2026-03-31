@@ -5,6 +5,7 @@ import {
   saveGames as saveStoredGames,
   type StoredGame
 } from '$lib/services/tauriService';
+import { uiStore } from '$lib/stores/uiStore';
 
 export type AccentTone = 'gold' | 'olive' | 'silver';
 export type PlatformType = 'steam' | 'epic' | 'local' | 'suggested' | 'wishlist';
@@ -20,7 +21,7 @@ export interface ImportedGameResult {
   id: string;
   title: string;
   path: string;
-  platform: 'steam' | 'epic';
+  platform: 'steam' | 'epic' | 'local';
 }
 
 export interface Game {
@@ -73,8 +74,16 @@ function parseHours(value: string) {
   return match ? parseInt(match[0], 10) : 0;
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function buildImportedGame(input: ImportedGameResult): Game {
-  const platformLabel = input.platform === 'steam' ? 'Steam' : 'Epic';
+  const platformLabel =
+    input.platform === 'steam' ? 'Steam' : input.platform === 'epic' ? 'Epic' : 'Local';
+  const accent = input.platform === 'steam' ? 'gold' : input.platform === 'epic' ? 'silver' : 'olive';
+  const accentHex =
+    input.platform === 'steam' ? '#b69b57' : input.platform === 'epic' ? '#d6d7dc' : '#8a9a54';
 
   return {
     id: input.id || slugify(input.title),
@@ -87,8 +96,8 @@ function buildImportedGame(input: ImportedGameResult): Game {
     coop: 'Unknown',
     completion: 'Unknown',
     cover: '/mock/elden-card.png',
-    accent: input.platform === 'steam' ? 'gold' : 'silver',
-    accentHex: input.platform === 'steam' ? '#b69b57' : '#d6d7dc',
+    accent,
+    accentHex,
     path: input.path,
     inLibrary: true,
     status: 'none',
@@ -844,12 +853,32 @@ function createGameStore() {
     }));
   }
 
-  function updateAndPersist(transform: (items: Game[]) => Game[]) {
+  async function updateAndPersist(
+    transform: (items: Game[]) => Game[],
+    message = 'Updating library...'
+  ) {
+    let nextItems = get(games);
+
     update((items) => {
-      const nextItems = withMetrics(transform(items));
-      void persistLibrary(nextItems);
+      nextItems = withMetrics(transform(items));
       return nextItems;
     });
+
+    uiStore.setLibraryBusy(true, message);
+    const startedAt = Date.now();
+
+    try {
+      await persistLibrary(nextItems);
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < 450) {
+        await wait(450 - elapsed);
+      }
+    } catch (error) {
+      console.error('Failed to persist library changes:', error);
+      throw error;
+    } finally {
+      uiStore.setLibraryBusy(false);
+    }
   }
 
   return {
@@ -867,7 +896,8 @@ function createGameStore() {
       updateAndPersist((items) =>
         items.map((game) =>
           game.id === id ? { ...game, status, hiddenFromContinue: false } : game
-        )
+        ),
+      'Saving game status...'
       ),
     toggleCloudSync: (id: string) =>
       update((items) =>
@@ -899,10 +929,11 @@ function createGameStore() {
                 storageGenres: game.storageGenres ?? splitGenres(game.genres)
               }
             : game
-        )
+        ),
+      'Saving game details...'
       ),
     removeFromLibrary: (id: string) =>
-      updateAndPersist((items) => items.filter((game) => game.id !== id)),
+      updateAndPersist((items) => items.filter((game) => game.id !== id), 'Removing game...'),
     hideFromContinuePlaying: (id: string) =>
       update((items) =>
         items.map((game) => (game.id === id ? { ...game, hiddenFromContinue: true } : game))
@@ -922,7 +953,24 @@ function createGameStore() {
           .map(buildImportedGame);
 
         return [...items, ...additions];
-      })
+      }, 'Adding games...'),
+    addManualGame: (title: string, path: string) =>
+      updateAndPersist((items) => {
+        const candidate: ImportedGameResult = {
+          id: `local-${slugify(title)}`,
+          title,
+          path,
+          platform: 'local'
+        };
+
+        const exists = items.some(
+          (game) =>
+            game.id.toLowerCase() === candidate.id.toLowerCase() ||
+            (game.path && game.path.toLowerCase() === candidate.path.toLowerCase())
+        );
+
+        return exists ? items : [...items, buildImportedGame(candidate)];
+      }, 'Adding game...')
   };
 }
 

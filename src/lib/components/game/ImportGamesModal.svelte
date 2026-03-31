@@ -13,7 +13,7 @@
   }>();
 
   export let open = false;
-  export let platform: 'steam' | 'epic' = 'steam';
+  export let platform: 'steam' | 'epic' | 'local' = 'steam';
   export let loading = false;
   export let error = '';
   export let results: ImportedGameResult[] = [];
@@ -27,6 +27,9 @@
   $: if (results.length && !selectedIds.length) {
     selectedIds = results.map((item) => item.id);
   }
+
+  $: platformLabel =
+    platform === 'steam' ? 'Steam' : platform === 'epic' ? 'Epic' : 'Auto Search';
 
   function toggle(id: string) {
     selectedIds = selectedIds.includes(id)
@@ -43,8 +46,12 @@
   {open}
   hideActions
   showCancel={false}
-  title={`Import ${platform === 'steam' ? 'Steam' : 'Epic'} Games`}
-  message={loading ? 'Scanning local libraries across available drives...' : error ? '' : 'Choose the detected games you want to add to your library.'}
+  title={platform === 'local' ? platformLabel : `Import ${platformLabel} Games`}
+  message={loading
+    ? 'Searching likely game folders and checking for known game files...'
+    : error
+      ? ''
+      : 'Review the detected games below. Checked items will be added to your library.'}
   on:close={() => dispatch('close')}
 >
   {#if loading}
