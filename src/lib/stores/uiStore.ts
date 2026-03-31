@@ -12,6 +12,7 @@ interface ScanState {
 
 interface UIState {
   isGameRunning: boolean;
+  activeGameId: string | null;
   performanceMode: boolean;
   scanning: ScanState;
   activeAccent: string;
@@ -21,6 +22,7 @@ interface UIState {
 
 const initialState: UIState = {
   isGameRunning: false,
+  activeGameId: null,
   performanceMode: false,
   scanning: {
     steam: false,
@@ -38,8 +40,30 @@ function createUIStore() {
   return {
     subscribe,
     reset: () => set(initialState),
-    setGameRunning: (isGameRunning: boolean) =>
-      update((state) => ({ ...state, isGameRunning })),
+    setGameRunning: (isGameRunning: boolean, activeGameId: string | null = null) =>
+      update((state) => ({
+        ...state,
+        isGameRunning,
+        activeGameId: isGameRunning ? activeGameId ?? state.activeGameId : null
+      })),
+    startGame: (activeGameId: string) =>
+      update((state) => ({
+        ...state,
+        isGameRunning: true,
+        activeGameId
+      })),
+    finishGame: (activeGameId?: string | null) =>
+      update((state) => {
+        if (activeGameId && state.activeGameId && state.activeGameId !== activeGameId) {
+          return state;
+        }
+
+        return {
+          ...state,
+          isGameRunning: false,
+          activeGameId: null
+        };
+      }),
     setPerformanceMode: (performanceMode: boolean) =>
       update((state) => ({ ...state, performanceMode })),
     togglePerformanceMode: () =>
@@ -66,6 +90,7 @@ function createUIStore() {
 export const uiStore = createUIStore();
 
 export const isGameRunning = derived(uiStore, ($uiStore) => $uiStore.isGameRunning);
+export const activeGameId = derived(uiStore, ($uiStore) => $uiStore.activeGameId);
 export const performanceMode = derived(uiStore, ($uiStore) => $uiStore.performanceMode);
 export const scanningState = derived(uiStore, ($uiStore) => $uiStore.scanning);
 export const activeAccent = derived(uiStore, ($uiStore) => $uiStore.activeAccent);

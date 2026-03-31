@@ -23,7 +23,7 @@
     if (id === 'status-playing') return games.setStatus(game.id, 'playing');
     if (id === 'status-played') return games.setStatus(game.id, 'played');
     if ((id === 'play' || id === 'resume' || id === 'restart') && game.path) {
-      return launchGame(game.path);
+      return launchGame(game.path, game.id);
     }
     if (id === 'toggle-favorite') return games.toggleFavorite(game.id);
     if (id === 'open-folder') return openGameFolder(game.path);

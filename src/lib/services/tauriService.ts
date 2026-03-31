@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { openPath } from '@tauri-apps/plugin-opener';
 import type { ImportedGameResult } from '$lib/stores/libraryStore';
 import { uiStore } from '$lib/stores/uiStore';
@@ -18,6 +19,13 @@ export interface StoredGame {
 
 export interface LocalScanResult extends ImportedGameResult {}
 
+export interface GameProcessEvent {
+  gameId: string | null;
+  exePath: string;
+  state: 'started' | 'exited' | 'error';
+  message?: string;
+}
+
 export async function getGames(): Promise<StoredGame[]> {
   return invoke<StoredGame[]>('read_games');
 }
@@ -30,23 +38,41 @@ export async function scanLocalGames(): Promise<LocalScanResult[]> {
   return invoke<LocalScanResult[]>('scan_local_games');
 }
 
-export async function launchGame(exePath: string) {
+export async function launchGame(exePath: string, gameId?: string) {
   if (!exePath) {
     throw new Error('No executable path was provided for this game.');
   }
 
   try {
-    uiStore.setGameRunning(true);
-    await invoke('launch_game', { exePath });
+    if (gameId) {
+      uiStore.startGame(gameId);
+    } else {
+      uiStore.setGameRunning(true);
+    }
+
+    await invoke('launch_game', { exePath, gameId: gameId || null });
   } catch (err) {
-    uiStore.setGameRunning(false);
+    if (gameId) {
+      uiStore.finishGame(gameId);
+    } else {
+      uiStore.setGameRunning(false);
+    }
+
     console.error('Failed to launch game:', err);
     throw err instanceof Error ? err : new Error(String(err));
   }
 }
 
-export function setGameRunning(isRunning: boolean) {
-  uiStore.setGameRunning(isRunning);
+export async function listenForGameProcessEvents(
+  callback: (event: GameProcessEvent) => void
+) {
+  return listen<GameProcessEvent>('game-process-state', (event) => {
+    callback(event.payload);
+  });
+}
+
+export function setGameRunning(isRunning: boolean, gameId?: string | null) {
+  uiStore.setGameRunning(isRunning, gameId ?? null);
 }
 
 function getFolderPath(path: string) {

@@ -10,11 +10,6 @@ export interface FooterColumn {
   links: string[];
 }
 
-export interface StatMetric {
-  label: string;
-  value: string;
-}
-
 export interface GenreShare {
   label: string;
   value: string;
@@ -86,26 +81,6 @@ export const routeAccents: Record<string, AccentTone> = {
   '/explore': 'silver',
   '/settings': 'silver'
 };
-
-export const statsHeatmap = [
-  0.16, 0.12, 0.18, 0.14, 0.1, 0.12, 0.08,
-  0.32, 0.28, 0.24, 0.16, 0.12, 0.1, 0.18,
-  0.48, 0.42, 0.38, 0.22, 0.16, 0.12, 0.14,
-  0.34, 0.52, 0.6, 0.44, 0.22, 0.18, 0.12,
-  0.16, 0.24, 0.3, 0.4, 0.46, 0.18, 0.08,
-  0.22, 0.24, 0.34, 0.28, 0.18, 0.12, 0.1,
-  0.1, 0.08, 0.12, 0.14, 0.16, 0.18, 0.24
-];
-
-export const statMetrics: StatMetric[] = [
-  { label: 'Longest Streak', value: '4 days' },
-  { label: 'Current Streak', value: '4 days' },
-  { label: 'Longest Session', value: '10 hours' },
-  { label: 'Favorite Game', value: 'Counter Strike 2' },
-  { label: 'Games Played', value: '55' },
-  { label: 'Hours Played', value: '2569' },
-  { label: 'Average Playtime', value: '5 hours' }
-];
 
 export const genreShares: GenreShare[] = [
   { label: 'Action', value: '40%', percent: 40 },

@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import Loader from '$lib/components/common/Loader.svelte';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
-  import { libraryBusy, libraryBusyMessage } from '$lib/stores/uiStore';
+  import { effectiveUIMode, libraryBusy, libraryBusyMessage } from '$lib/stores/uiStore';
   import { footerColumns, routeAccents } from '$lib/utils/constants';
   import { getGameById } from '$lib/stores/libraryStore';
 
@@ -17,7 +17,9 @@
   }
 </script>
 
-<div class={`shell ${accent}`}>
+<svelte:body class:gaming-mode={$effectiveUIMode === 'gaming'} />
+
+<div class={`shell ${accent} ${$effectiveUIMode}`}>
   <Sidebar {accent} />
 
   <div class="frame">
@@ -42,11 +44,27 @@
 
 <style>
   :global(body) {
+    --surface-glass: rgba(30, 30, 30, 0.6);
+    --surface-glass-strong: rgba(24, 24, 27, 0.82);
+    --surface-border: rgba(255, 255, 255, 0.1);
+    --surface-shadow: 0 1rem 2.2rem rgba(0, 0, 0, 0.3);
+    --surface-hover: rgba(255, 255, 255, 0.05);
+    --surface-card: rgba(255, 255, 255, 0.04);
+    --surface-card-strong: rgba(255, 255, 255, 0.06);
+    --field-border: rgba(255, 255, 255, 0.1);
+    --field-background: rgba(255, 255, 255, 0.08);
+    --field-background-strong: rgba(255, 255, 255, 0.1);
+    --text-secondary: rgba(226, 223, 231, 0.68);
+    --text-muted: rgba(226, 223, 231, 0.48);
+    --ui-blur: 10px;
+    --motion-fast: 140ms;
+    --motion-base: 180ms;
     margin: 0;
     min-height: 100vh;
     background: #404149;
     color: #f3f1f7;
     font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
+    transition: background-color var(--motion-base) ease;
   }
 
   :global(*) {
@@ -66,6 +84,7 @@
     background:
       radial-gradient(circle at left top, rgba(255, 255, 255, 0.06) 0%, transparent 35%),
       #404149;
+    transition: background var(--motion-base) ease;
   }
 
   .shell.gold {
@@ -74,6 +93,15 @@
 
   .shell.olive {
     --page-accent: #8a9a54;
+  }
+
+  .shell.gaming {
+    --surface-glass: rgba(24, 24, 24, 0.88);
+    --surface-glass-strong: rgba(22, 22, 22, 0.94);
+    --surface-shadow: 0 0.7rem 1.4rem rgba(0, 0, 0, 0.2);
+    --ui-blur: 0px;
+    --motion-fast: 90ms;
+    --motion-base: 120ms;
   }
 
   .frame {
@@ -85,7 +113,7 @@
   main {
     flex: 1;
     padding: 1.4rem 1.7rem 1rem;
-    animation: rise 360ms ease;
+    animation: rise var(--motion-base) ease;
   }
 
   footer {
@@ -106,6 +134,14 @@
 
   .column span {
     color: rgba(217, 213, 224, 0.34);
+  }
+
+  :global(body.gaming-mode *) {
+    scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+  }
+
+  :global(body.gaming-mode) {
+    background: #2c2d33;
   }
 
   @keyframes rise {

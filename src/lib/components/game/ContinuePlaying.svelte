@@ -1,8 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { goto } from '$app/navigation';
-  import Button from '$lib/components/common/Button.svelte';
   import GameMenu from '$lib/components/game/GameMenu.svelte';
+  import GamePlayButton from '$lib/components/game/GamePlayButton.svelte';
   import SyncBadge from '$lib/components/sync/SyncBadge.svelte';
   import type { Game } from '$lib/stores/libraryStore';
 
@@ -20,10 +19,7 @@
     <h1>{game.title}</h1>
 
     <div class="actions">
-      <Button accent={game.accent} compact iconFirst on:click={() => goto(`/game/${game.id}`)}>
-        <span>▶</span>
-        <span>Play</span>
-      </Button>
+      <GamePlayButton {game} compact />
       <GameMenu {game} context="home" on:action={(event) => dispatch('action', event.detail)} />
     </div>
 
@@ -52,6 +48,7 @@
       var(--hero-image) center top / cover no-repeat;
     overflow: hidden;
     box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+    transition: transform var(--motion-base) ease, box-shadow var(--motion-base) ease;
   }
 
   .veil {
@@ -60,7 +57,7 @@
     background:
       linear-gradient(90deg, rgba(11, 11, 14, 0.6) 0%, rgba(11, 11, 14, 0.22) 45%, rgba(11, 11, 14, 0.08) 100%),
       radial-gradient(circle at 50% 0%, rgba(255, 173, 98, 0.18) 0%, rgba(255, 173, 98, 0) 48%);
-    backdrop-filter: blur(0.5px);
+    backdrop-filter: blur(calc(var(--ui-blur) * 0.08));
   }
 
   .content {
@@ -128,3 +125,4 @@
     }
   }
 </style>
+

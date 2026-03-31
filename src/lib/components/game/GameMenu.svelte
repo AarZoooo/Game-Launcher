@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
   import type { Game } from '$lib/stores/libraryStore';
+  import { activeGameId, isGameRunning } from '$lib/stores/uiStore';
 
   type GameMenuContext = 'library' | 'explore' | 'home';
 
@@ -8,6 +9,7 @@
     id: string;
     label: string;
     tone?: 'danger';
+    disabled?: boolean;
   }
 
   const dispatch = createEventDispatcher<{
@@ -19,6 +21,7 @@
 
   let open = false;
   let root: HTMLDivElement;
+  $: isActiveGame = $isGameRunning && $activeGameId === game.id;
   $: menuGroups = actionsForContext();
 
   function actionsForContext(): MenuAction[][] {
@@ -35,11 +38,12 @@
     if (context === 'home') {
       return [
         [
-          { id: 'play', label: 'Play' },
+          { id: 'play', label: isActiveGame ? 'Playing' : 'Play', disabled: isActiveGame },
           { id: 'toggle-favorite', label: game.favorite ? 'Remove Favorite' : 'Favorite' },
           {
             id: game.resumeState === 'restart' ? 'restart' : 'resume',
-            label: game.resumeState === 'restart' ? 'Restart' : 'Resume'
+            label: game.resumeState === 'restart' ? 'Restart' : 'Resume',
+            disabled: isActiveGame
           }
         ],
         [{ id: 'open-folder', label: 'Open Folder' }],
@@ -50,7 +54,7 @@
 
     return [
       [
-        { id: 'play', label: 'Play' },
+        { id: 'play', label: isActiveGame ? 'Playing' : 'Play', disabled: isActiveGame },
         { id: 'toggle-favorite', label: game.favorite ? 'Remove Favorite' : 'Add Favorite' }
       ],
       [
@@ -96,11 +100,16 @@
 <div class="menu-root" bind:this={root}>
   <button
     type="button"
+    class:open
     class="menu-trigger"
     aria-label={`Open menu for ${game.title}`}
     on:click|stopPropagation={() => (open = !open)}
   >
-    ...
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="3" cy="8" r="1.2"></circle>
+      <circle cx="8" cy="8" r="1.2"></circle>
+      <circle cx="13" cy="8" r="1.2"></circle>
+    </svg>
   </button>
 
   {#if open}
@@ -111,6 +120,7 @@
             <button
               type="button"
               class:danger={action.tone === 'danger'}
+              disabled={action.disabled}
               on:click={() => select(action.id)}
             >
               {action.label}
@@ -133,29 +143,59 @@
   }
 
   .menu-trigger {
-    min-width: auto;
+    display: inline-grid;
+    place-items: center;
     border: 0;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(239, 236, 243, 0.78);
-    width: 1.8rem;
-    height: 1.55rem;
+    background: transparent;
+    color: rgba(239, 236, 243, 0.62);
+    width: 2rem;
+    height: 2rem;
     padding: 0;
     cursor: pointer;
     font: inherit;
     font-weight: 700;
     line-height: 1;
+    border-radius: 0.7rem;
+    opacity: 0.16;
+    transform: scale(0.92);
+    transition:
+      opacity var(--motion-fast) ease,
+      transform var(--motion-fast) ease,
+      background-color var(--motion-fast) ease,
+      color var(--motion-fast) ease;
+  }
+
+  .menu-root:hover .menu-trigger,
+  .menu-root:focus-within .menu-trigger,
+  .menu-trigger.open {
+    opacity: 0.92;
+    transform: scale(1);
+  }
+
+  .menu-trigger:hover,
+  .menu-trigger:focus-visible,
+  .menu-trigger.open {
+    background: rgba(132, 136, 146, 0.38);
+    color: #f4f2f7;
+  }
+
+  .menu-trigger svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: currentColor;
   }
 
   .menu {
     position: absolute;
     right: 0;
-    bottom: calc(100% + 0.45rem);
+    top: calc(100% + 0.45rem);
     min-width: 13.5rem;
     padding: 0.5rem;
-    background: rgba(54, 55, 62, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.28);
-    backdrop-filter: blur(10px);
+    border-radius: 0.95rem;
+    background: var(--surface-glass);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--surface-shadow);
+    backdrop-filter: blur(var(--ui-blur));
   }
 
   .group {
@@ -172,14 +212,24 @@
     font: inherit;
     font-size: 0.78rem;
     cursor: pointer;
+    border-radius: 0.6rem;
+    transition:
+      background-color var(--motion-fast) ease,
+      color var(--motion-fast) ease,
+      opacity var(--motion-fast) ease;
   }
 
   .group button:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--surface-hover);
   }
 
   .group button.danger {
     color: #ffb0a6;
+  }
+
+  .group button:disabled {
+    cursor: default;
+    opacity: 0.55;
   }
 
   .separator {

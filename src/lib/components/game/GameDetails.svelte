@@ -1,29 +1,13 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import Button from '$lib/components/common/Button.svelte';
   import GameGrid from '$lib/components/game/GameGrid.svelte';
-  import { launchGame } from '$lib/services/tauriService';
+  import GamePlayButton from '$lib/components/game/GamePlayButton.svelte';
   import type { Game } from '$lib/stores/libraryStore';
 
   export let game: Game;
   export let similarGames: Game[] = [];
 
   let launchError = '';
-
-  async function play() {
-    launchError = '';
-
-    if (!game.path) {
-      goto('/games');
-      return;
-    }
-
-    try {
-      await launchGame(game.path);
-    } catch (error) {
-      launchError = error instanceof Error ? error.message : String(error);
-    }
-  }
 </script>
 
 <section class={`details ${game.accent}`} style={`--hero-image: url('${game.hero || game.cover}')`}>
@@ -37,7 +21,13 @@
 
     <div class="hero-copy">
       <h1>{game.title}</h1>
-      <Button accent={game.accent} wide on:click={play}>Play</Button>
+      <div class="actions">
+        <GamePlayButton
+          {game}
+          compact
+          on:launcherror={(event) => (launchError = event.detail)}
+        />
+      </div>
       {#if launchError}
         <p class="error">{launchError}</p>
       {/if}
@@ -73,6 +63,7 @@
       linear-gradient(180deg, rgba(6, 6, 8, 0.06) 0%, rgba(48, 48, 55, 0.72) 72%),
       var(--hero-image) center / cover no-repeat;
     box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+    transition: box-shadow var(--motion-base) ease;
   }
 
   .hero::after {
@@ -122,6 +113,12 @@
     gap: 1rem;
     min-height: 22rem;
     padding: 0 1.4rem 1.6rem;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
   }
 
   h1,
