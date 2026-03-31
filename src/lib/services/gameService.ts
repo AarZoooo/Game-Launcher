@@ -1,51 +1,56 @@
-import type { Game, GameDraft } from "$lib/models/game";
-import { FALLBACK_COVER_IMAGE } from "$lib/utils/constants";
+import type { ImportedGameResult } from '$lib/stores/libraryStore';
 
-import * as tauriService from "./tauriService";
-
-function createGameId(): string {
-  return `game-${crypto.randomUUID()}`;
+function simulateDelay() {
+  return new Promise((resolve) => setTimeout(resolve, 900));
 }
 
-function normalizeGame(input: GameDraft): Game {
-  return {
-    id: input.id ?? createGameId(),
-    title: input.title.trim(),
-    exePath: input.exePath.trim(),
-    coverArt: input.coverArt?.trim() || FALLBACK_COVER_IMAGE,
-    platform: input.platform,
-    totalPlaytime: input.totalPlaytime ?? 0,
-    lastPlayed: input.lastPlayed ?? null,
-    status: input.status,
-    genres: input.genres ?? [],
-    description: input.description?.trim() || "",
-  };
+// TODO: Replace these mock scans with backend commands once library scanning is implemented.
+export async function scanSteamGames(): Promise<ImportedGameResult[]> {
+  await simulateDelay();
+
+  return [
+    {
+      id: 'steam-portal-2',
+      title: 'Portal 2',
+      path: 'D:\\SteamLibrary\\steamapps\\common\\Portal 2\\portal2.exe',
+      platform: 'steam'
+    },
+    {
+      id: 'steam-dark-souls-3',
+      title: 'Dark Souls III',
+      path: 'E:\\SteamLibrary\\steamapps\\common\\DARK SOULS III\\Game\\DarkSoulsIII.exe',
+      platform: 'steam'
+    },
+    {
+      id: 'steam-hades',
+      title: 'Hades',
+      path: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Hades\\Hades.exe',
+      platform: 'steam'
+    }
+  ];
 }
 
-export async function loadGames(): Promise<Game[]> {
-  return tauriService.getGames();
-}
+export async function scanEpicGames(): Promise<ImportedGameResult[]> {
+  await simulateDelay();
 
-export async function saveGameList(games: Game[]): Promise<Game[]> {
-  await tauriService.saveGames(games);
-  return games;
-}
-
-export async function addGame(currentGames: Game[], gameInput: GameDraft): Promise<Game[]> {
-  const nextGames = [...currentGames, normalizeGame(gameInput)];
-  return saveGameList(nextGames);
-}
-
-export async function updateGame(currentGames: Game[], updatedGame: Game): Promise<Game[]> {
-  const nextGames = currentGames.map((game) => (game.id === updatedGame.id ? normalizeGame(updatedGame) : game));
-  return saveGameList(nextGames);
-}
-
-export async function deleteGame(currentGames: Game[], gameId: string): Promise<Game[]> {
-  const nextGames = currentGames.filter((game) => game.id !== gameId);
-  return saveGameList(nextGames);
-}
-
-export async function launchSelectedGame(game: Game): Promise<string> {
-  return tauriService.launchGame(game.exePath);
+  return [
+    {
+      id: 'epic-alan-wake-2',
+      title: 'Alan Wake 2',
+      path: 'D:\\Epic Games\\AlanWake2\\AlanWake2.exe',
+      platform: 'epic'
+    },
+    {
+      id: 'epic-fortnite',
+      title: 'Fortnite',
+      path: 'E:\\Epic Games\\Fortnite\\FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping.exe',
+      platform: 'epic'
+    },
+    {
+      id: 'epic-satisfactory',
+      title: 'Satisfactory',
+      path: 'C:\\Epic Games\\SatisfactoryEarlyAccess\\FactoryGame.exe',
+      platform: 'epic'
+    }
+  ];
 }
