@@ -121,7 +121,7 @@
   function handleMenuAction(event: CustomEvent<{ id: string; game: Game }>) {
     const { id, game } = event.detail;
 
-    if (id === 'play' && game.path) return launchGame(game.path);
+    if (id === 'play' && game.path) return launchGame(game.path, game.id);
     if (id === 'toggle-favorite') return games.toggleFavorite(game.id);
     if (id === 'open-folder') return openGameFolder(game.path);
     if (id === 'open-save-folder') return openSaveFolder(game.savePath);
@@ -280,6 +280,10 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    padding: 1.2rem 1.25rem 1.3rem;
+    border-radius: 1.15rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .header {
@@ -343,16 +347,30 @@
   select,
   .controls > button {
     min-width: 7.2rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--surface-border);
+    background: var(--surface-glass);
     color: #f4f2f7;
-    padding: 0.52rem 0.8rem;
-    border-radius: 0.12rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.8rem;
+    box-shadow: var(--surface-shadow);
+    backdrop-filter: blur(var(--ui-blur));
   }
 
   .controls > button {
     cursor: pointer;
     font-weight: 700;
+    transition:
+      background-color var(--motion-fast) ease,
+      transform var(--motion-fast) ease;
+  }
+
+  .controls > button:hover,
+  select:hover {
+    background: rgba(255, 255, 255, 0.09);
+  }
+
+  .controls > button:hover {
+    transform: translateY(-1px);
   }
 
   .empty {

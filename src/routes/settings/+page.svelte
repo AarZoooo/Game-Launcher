@@ -42,6 +42,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
+    padding: 1.2rem 1.25rem;
+    border-radius: 1.1rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   h2 {
@@ -70,18 +74,47 @@
   input,
   .radio-line {
     width: 100%;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--surface-border);
+    background: var(--surface-glass);
     color: #f4f2f7;
-    min-height: 2rem;
-    padding: 0.45rem 0.75rem;
+    min-height: 2.45rem;
+    padding: 0.55rem 0.8rem;
     font: inherit;
+    border-radius: 0.78rem;
+    box-shadow: var(--surface-shadow);
+    backdrop-filter: blur(var(--ui-blur));
+    transition:
+      background-color var(--motion-fast) ease,
+      border-color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease;
+  }
+
+  select {
+    appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(244, 242, 247, 0.8) 50%),
+      linear-gradient(135deg, rgba(244, 242, 247, 0.8) 50%, transparent 50%);
+    background-position:
+      calc(100% - 1.05rem) calc(50% - 0.12rem),
+      calc(100% - 0.72rem) calc(50% - 0.12rem);
+    background-size: 0.4rem 0.4rem;
+    background-repeat: no-repeat;
   }
 
   .radio-line {
     display: flex;
     align-items: center;
     color: rgba(235, 232, 239, 0.68);
+  }
+
+  select:hover,
+  input:hover,
+  .radio-line:hover,
+  select:focus,
+  input:focus {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.14);
+    outline: none;
   }
 
   @media (max-width: 820px) {

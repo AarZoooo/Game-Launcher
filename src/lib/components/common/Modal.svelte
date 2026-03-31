@@ -99,7 +99,7 @@
 
   .backdrop.normal {
     background: rgba(10, 10, 13, 0.48);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(calc(var(--ui-blur) * 0.8));
   }
 
   .backdrop.gaming {
@@ -108,15 +108,15 @@
 
   .modal {
     width: min(100%, 32rem);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: #1e1e1e;
+    border: 1px solid var(--surface-border);
+    background: var(--surface-glass-strong);
     color: #f5f3f8;
     transform-origin: center;
     transition:
-      transform 160ms ease,
-      opacity 160ms ease,
-      background-color 160ms ease,
-      box-shadow 160ms ease;
+      transform var(--motion-fast) ease,
+      opacity var(--motion-fast) ease,
+      background-color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease;
   }
 
   .modal.sm {
@@ -134,9 +134,8 @@
   .modal.normal {
     border-radius: 1rem;
     padding: 1.3rem 1.35rem 1.1rem;
-    box-shadow:
-      0 1.4rem 3.5rem rgba(0, 0, 0, 0.34),
-      0 0.2rem 1rem rgba(0, 0, 0, 0.18);
+    box-shadow: var(--surface-shadow);
+    backdrop-filter: blur(var(--ui-blur));
     animation: modalIn 180ms ease;
   }
 

@@ -74,7 +74,7 @@
     border: 0;
     padding: 0;
     background: rgba(9, 9, 12, 0.36);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(calc(var(--ui-blur) * 0.4));
   }
 
   .panel {
@@ -88,7 +88,7 @@
       rgba(58, 59, 66, 0.72);
     border-left: 1px solid rgba(228, 223, 236, 0.2);
     box-shadow: -1rem 0 3rem rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(calc(var(--ui-blur) * 1.6));
     padding: 1.8rem;
     display: flex;
     flex-direction: column;
@@ -116,10 +116,12 @@
 
   select {
     padding: 0.68rem 0.85rem;
-    border-radius: 0.45rem;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.75rem;
+    background: var(--surface-glass);
+    border: 1px solid var(--surface-border);
     color: white;
+    backdrop-filter: blur(var(--ui-blur));
+    box-shadow: var(--surface-shadow);
   }
 
   .apply {

@@ -24,18 +24,29 @@
 </div>
 
 <style>
+  .item {
+    position: relative;
+    z-index: 0;
+  }
+
+  .item:hover,
+  .item:focus-within {
+    z-index: 18;
+  }
+
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
-    gap: 1.7rem;
+    grid-template-columns: repeat(auto-fill, minmax(12.25rem, 1fr));
+    gap: 1.45rem;
+    align-items: start;
   }
 
   .horizontal {
     display: flex;
-    gap: 1.85rem;
+    gap: 1.45rem;
     overflow-x: auto;
     scrollbar-width: none;
-    padding-bottom: 0.25rem;
+    padding: 0.15rem 0 0.35rem;
   }
 
   .horizontal::-webkit-scrollbar {
@@ -43,6 +54,23 @@
   }
 
   .horizontal .item {
-    min-width: 11.6rem;
+    flex: 0 0 12rem;
+    min-width: 12rem;
+  }
+
+  @media (max-width: 720px) {
+    .grid {
+      grid-template-columns: repeat(auto-fill, minmax(10.4rem, 1fr));
+      gap: 1rem;
+    }
+
+    .horizontal {
+      gap: 1rem;
+    }
+
+    .horizontal .item {
+      flex-basis: 10.8rem;
+      min-width: 10.8rem;
+    }
   }
 </style>

@@ -20,8 +20,17 @@
 </script>
 
 <article class:compact class={`card ${game.accent}`} style={`--accent:${game.accentHex || '#b69b57'}`}>
+  <div class="menu-shell">
+    <GameMenu
+      {game}
+      {context}
+      placement="side-right"
+      on:action={(event) => dispatch('action', event.detail)}
+    />
+  </div>
+
   <button type="button" class="poster" aria-label={`Open ${game.title}`} on:click={openGame}>
-  <div class="image" style={`background-image: url('${game.cover}')`}></div>
+    <img class="image" src={game.cover} alt="" loading="lazy" />
   </button>
 
   <div class="info">
@@ -36,23 +45,44 @@
       {/if}
     </div>
   </div>
-
-  <GameMenu {game} {context} on:action={(event) => dispatch('action', event.detail)} />
 </article>
 
 <style>
   .card {
     position: relative;
+    z-index: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 0.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    min-width: 0;
+    background: transparent;
+    border-radius: 1rem;
     transition:
-      transform 180ms ease,
-      opacity 180ms ease;
+      transform var(--motion-base) ease,
+      opacity var(--motion-base) ease;
   }
 
   .card:hover {
     transform: translateY(-0.24rem);
+  }
+
+  .card:hover,
+  .card:focus-within {
+    z-index: 24;
+  }
+
+  .menu-shell {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.9rem;
+    z-index: 12;
+  }
+
+  .card:hover .menu-shell :global(.menu-trigger),
+  .card:focus-within .menu-shell :global(.menu-trigger) {
+    opacity: 0.92;
+    transform: scale(1);
   }
 
   .poster {
@@ -66,19 +96,21 @@
   }
 
   .image {
-    aspect-ratio: 0.63;
+    display: block;
     width: 100%;
+    aspect-ratio: 0.63;
+    object-fit: cover;
     background-color: #33343a;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 -1rem 2rem color-mix(in srgb, var(--accent) 18%, transparent);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      inset 0 -1.2rem 2rem color-mix(in srgb, var(--accent) 18%, transparent),
+      0 0.9rem 2rem rgba(0, 0, 0, 0.16);
   }
 
   .info {
-    min-height: 3.55rem;
-    padding: 0.85rem 0.15rem 0 0.1rem;
+    min-height: 3.9rem;
+    padding: 0 0.15rem 0 0.1rem;
   }
 
   .title-row {
@@ -98,12 +130,20 @@
     font-weight: 650;
     color: #efedf3;
     line-height: 1.2;
+    display: -webkit-box;
+    overflow: hidden;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   p {
     margin: 0.42rem 0 0;
     color: rgba(223, 220, 230, 0.56);
     font-size: 0.76rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .favorite {
@@ -113,6 +153,6 @@
   }
 
   .compact .info {
-    padding-top: 0.7rem;
+    min-height: 3.55rem;
   }
 </style>
