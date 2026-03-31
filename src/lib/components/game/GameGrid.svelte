@@ -24,6 +24,16 @@
 </div>
 
 <style>
+  .item {
+    position: relative;
+    z-index: 0;
+  }
+
+  .item:hover,
+  .item:focus-within {
+    z-index: 18;
+  }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(12.25rem, 1fr));

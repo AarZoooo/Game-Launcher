@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import type { Game } from '$lib/stores/libraryStore';
-  import { activeGameId, isGameRunning } from '$lib/stores/uiStore';
+  import { activeGameId, activeMenuKey, isGameRunning, uiStore } from '$lib/stores/uiStore';
 
   type GameMenuContext = 'library' | 'explore' | 'home';
+  type MenuPlacement = 'below-right' | 'side-right' | 'above-right';
 
   interface MenuAction {
     id: string;
@@ -18,10 +19,15 @@
 
   export let game: Game;
   export let context: GameMenuContext = 'library';
+  export let placement: MenuPlacement = 'below-right';
 
-  let open = false;
   let root: HTMLDivElement;
+  let menuKey = '';
   $: isActiveGame = $isGameRunning && $activeGameId === game.id;
+  $: if (!menuKey && game?.id) {
+    menuKey = `${game.id}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+  $: open = menuKey !== '' && $activeMenuKey === menuKey;
   $: menuGroups = actionsForContext();
 
   function actionsForContext(): MenuAction[][] {
@@ -81,19 +87,36 @@
   }
 
   function select(actionId: string) {
-    open = false;
+    uiStore.closeOpenMenu();
     dispatch('action', { id: actionId, game });
+  }
+
+  function toggleMenu() {
+    if (!menuKey) return;
+
+    if (open) {
+      uiStore.closeOpenMenu();
+      return;
+    }
+
+    uiStore.setOpenMenu(menuKey);
   }
 
   onMount(() => {
     const close = (event: MouseEvent) => {
-      if (root && !root.contains(event.target as Node)) {
-        open = false;
+      if (open && root && !root.contains(event.target as Node)) {
+        uiStore.closeOpenMenu();
       }
     };
 
     window.addEventListener('click', close);
     return () => window.removeEventListener('click', close);
+  });
+
+  onDestroy(() => {
+    if (open) {
+      uiStore.closeOpenMenu();
+    }
   });
 </script>
 
@@ -103,7 +126,7 @@
     class:open
     class="menu-trigger"
     aria-label={`Open menu for ${game.title}`}
-    on:click|stopPropagation={() => (open = !open)}
+    on:click|stopPropagation={toggleMenu}
   >
     <svg viewBox="0 0 16 16" aria-hidden="true">
       <circle cx="3" cy="8" r="1.2"></circle>
@@ -113,7 +136,15 @@
   </button>
 
   {#if open}
-    <div class="menu" role="menu" tabindex="-1" on:click|stopPropagation on:keydown|stopPropagation>
+    <div
+      class:side-right={placement === 'side-right'}
+      class:above-right={placement === 'above-right'}
+      class="menu"
+      role="menu"
+      tabindex="-1"
+      on:click|stopPropagation
+      on:keydown|stopPropagation
+    >
       {#each menuGroups as group, index}
         <div class="group">
           {#each group as action}
@@ -139,15 +170,19 @@
 <style>
   .menu-root {
     position: relative;
-    z-index: 4;
+    z-index: 20;
+  }
+
+  .menu-root:focus-within {
+    z-index: 80;
   }
 
   .menu-trigger {
     display: inline-grid;
     place-items: center;
     border: 0;
-    background: transparent;
-    color: rgba(239, 236, 243, 0.62);
+    background: rgba(36, 38, 44, 0.44);
+    color: rgba(244, 242, 247, 0.82);
     width: 2rem;
     height: 2rem;
     padding: 0;
@@ -156,13 +191,15 @@
     font-weight: 700;
     line-height: 1;
     border-radius: 0.7rem;
-    opacity: 0.16;
-    transform: scale(0.92);
+    opacity: 0.68;
+    transform: scale(0.96);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
     transition:
       opacity var(--motion-fast) ease,
       transform var(--motion-fast) ease,
       background-color var(--motion-fast) ease,
-      color var(--motion-fast) ease;
+      color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease;
   }
 
   .menu-root:hover .menu-trigger,
@@ -177,6 +214,7 @@
   .menu-trigger.open {
     background: rgba(132, 136, 146, 0.38);
     color: #f4f2f7;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
   }
 
   .menu-trigger svg {
@@ -196,6 +234,23 @@
     border: 1px solid var(--surface-border);
     box-shadow: var(--surface-shadow);
     backdrop-filter: blur(var(--ui-blur));
+    z-index: 90;
+  }
+
+  .menu.side-right {
+    top: auto;
+    bottom: 0;
+    right: auto;
+    left: calc(100% + 0.55rem);
+    transform: none;
+  }
+
+  .menu.above-right {
+    top: auto;
+    bottom: calc(100% + 0.45rem);
+    right: 0;
+    left: auto;
+    transform: none;
   }
 
   .group {

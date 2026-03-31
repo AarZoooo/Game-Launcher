@@ -13,6 +13,7 @@ interface ScanState {
 interface UIState {
   isGameRunning: boolean;
   activeGameId: string | null;
+  activeMenuKey: string | null;
   performanceMode: boolean;
   scanning: ScanState;
   activeAccent: string;
@@ -23,6 +24,7 @@ interface UIState {
 const initialState: UIState = {
   isGameRunning: false,
   activeGameId: null,
+  activeMenuKey: null,
   performanceMode: false,
   scanning: {
     steam: false,
@@ -45,6 +47,16 @@ function createUIStore() {
         ...state,
         isGameRunning,
         activeGameId: isGameRunning ? activeGameId ?? state.activeGameId : null
+      })),
+    setOpenMenu: (activeMenuKey: string | null) =>
+      update((state) => ({
+        ...state,
+        activeMenuKey
+      })),
+    closeOpenMenu: () =>
+      update((state) => ({
+        ...state,
+        activeMenuKey: null
       })),
     startGame: (activeGameId: string) =>
       update((state) => ({
@@ -91,6 +103,7 @@ export const uiStore = createUIStore();
 
 export const isGameRunning = derived(uiStore, ($uiStore) => $uiStore.isGameRunning);
 export const activeGameId = derived(uiStore, ($uiStore) => $uiStore.activeGameId);
+export const activeMenuKey = derived(uiStore, ($uiStore) => $uiStore.activeMenuKey);
 export const performanceMode = derived(uiStore, ($uiStore) => $uiStore.performanceMode);
 export const scanningState = derived(uiStore, ($uiStore) => $uiStore.scanning);
 export const activeAccent = derived(uiStore, ($uiStore) => $uiStore.activeAccent);

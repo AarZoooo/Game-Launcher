@@ -21,7 +21,12 @@
 
 <article class:compact class={`card ${game.accent}`} style={`--accent:${game.accentHex || '#b69b57'}`}>
   <div class="menu-shell">
-    <GameMenu {game} {context} on:action={(event) => dispatch('action', event.detail)} />
+    <GameMenu
+      {game}
+      {context}
+      placement="side-right"
+      on:action={(event) => dispatch('action', event.detail)}
+    />
   </div>
 
   <button type="button" class="poster" aria-label={`Open ${game.title}`} on:click={openGame}>
@@ -45,6 +50,7 @@
 <style>
   .card {
     position: relative;
+    z-index: 0;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -61,11 +67,16 @@
     transform: translateY(-0.24rem);
   }
 
+  .card:hover,
+  .card:focus-within {
+    z-index: 24;
+  }
+
   .menu-shell {
     position: absolute;
-    top: 0.75rem;
     right: 0.75rem;
-    z-index: 2;
+    bottom: 0.9rem;
+    z-index: 12;
   }
 
   .card:hover .menu-shell :global(.menu-trigger),
