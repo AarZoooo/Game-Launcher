@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 echo "Checking for dependency changes..."
 
 if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "package-lock.json"; then
