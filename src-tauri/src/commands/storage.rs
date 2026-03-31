@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -16,6 +16,12 @@ pub struct ScannedGameCandidate {
     pub title: String,
     pub path: String,
     pub platform: String,
+}
+
+#[derive(Debug, Clone)]
+struct CandidateMatch {
+    candidate: ScannedGameCandidate,
+    score: i32,
 }
 
 fn games_file_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -170,8 +176,13 @@ fn normalized_path(path: &Path) -> String {
 
 fn should_skip_directory(path: &Path) -> bool {
     let normalized = normalized_path(path);
+    let directory_name = path
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or_default()
+        .to_lowercase();
 
-    [
+    let blocked_segments = [
         "\\steamapps\\",
         "\\epic games\\",
         "\\epicgameslauncher\\",
@@ -185,9 +196,42 @@ fn should_skip_directory(path: &Path) -> bool {
         "\\appdata\\",
         "\\microsoft\\",
         "\\windowsapps\\",
+        "\\engine\\extras\\",
+        "\\engine\\binaries\\thirdparty\\",
+        "\\_redist\\",
+        "\\redist\\",
+        "\\redistributable\\",
+        "\\prereq\\",
+        "\\prerequisites\\",
+        "\\easyanticheat\\",
+    ];
+
+    if blocked_segments.iter().any(|needle| normalized.contains(needle)) {
+        return true;
+    }
+
+    [
+        "engine",
+        "binaries",
+        "win64",
+        "win32",
+        "shipping",
+        "launcher",
+        "redistributable",
+        "redist",
+        "prereq",
+        "prerequisites",
+        "easyanticheat",
+        "thirdparty",
+        "extras",
+        "debug",
+        "support",
+        "tools",
+        "installer",
+        "installers",
     ]
     .iter()
-    .any(|needle| normalized.contains(needle))
+    .any(|needle| directory_name == *needle)
 }
 
 fn should_skip_executable(path: &Path) -> bool {
@@ -203,7 +247,21 @@ fn should_skip_executable(path: &Path) -> bool {
 
     let normalized = normalized_path(path);
 
-    if ["\\steamapps\\", "\\epic games\\", "\\epicgameslauncher\\"]
+    if [
+        "\\steamapps\\",
+        "\\epic games\\",
+        "\\epicgameslauncher\\",
+        "\\engine\\",
+        "\\binaries\\",
+        "\\win64\\",
+        "\\win32\\",
+        "\\_redist\\",
+        "\\redist\\",
+        "\\redistributable\\",
+        "\\prereq\\",
+        "\\prerequisites\\",
+        "\\easyanticheat\\",
+    ]
         .iter()
         .any(|needle| normalized.contains(needle))
     {
@@ -233,6 +291,9 @@ fn should_skip_executable(path: &Path) -> bool {
         "acrocef",
         "acrobroker",
         "acrobatinfo",
+        "quicksfv",
+        "eac",
+        "anticheat",
     ];
 
     blocked_names.iter().any(|needle| file_name.contains(needle))
@@ -278,8 +339,173 @@ fn slugify(value: &str) -> String {
     slug.trim_matches('-').to_string()
 }
 
-fn build_candidate(path: &Path) -> ScannedGameCandidate {
-    let title = title_from_path(path);
+fn normalized_name(value: &str) -> String {
+    value
+        .to_lowercase()
+        .replace('-', "")
+        .replace('_', "")
+        .replace(' ', "")
+}
+
+fn is_generic_container_name(name: &str) -> bool {
+    let normalized = normalized_name(name);
+
+    if normalized.is_empty() {
+        return true;
+    }
+
+    let months = [
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+    ];
+
+    let generic = [
+        "games",
+        "installed",
+        "install",
+        "library",
+        "libraries",
+        "collection",
+        "collections",
+        "downloads",
+        "downloaded",
+        "new",
+        "old",
+        "backup",
+        "backups",
+        "setup",
+        "bin",
+        "binaries",
+        "win64",
+        "win32",
+        "shipping",
+        "content",
+        "engine",
+        "rpg",
+        "action",
+        "adventure",
+        "indie",
+        "strategy",
+        "simulation",
+        "sandbox",
+    ];
+
+    normalized.chars().all(|char| char.is_ascii_digit())
+        || normalized.len() == 4 && normalized.starts_with("20") && normalized.chars().all(|char| char.is_ascii_digit())
+        || months.contains(&normalized.as_str())
+        || generic.contains(&normalized.as_str())
+}
+
+fn path_components_below_allowed_root(path: &Path) -> Option<Vec<String>> {
+    let scan_root = scan_root_for_path(path)?;
+    let exe_dir = path.parent()?;
+    let relative = exe_dir.strip_prefix(scan_root).ok()?;
+
+    Some(
+        relative
+            .components()
+            .map(|component| component.as_os_str().to_string_lossy().to_string())
+            .collect(),
+    )
+}
+
+fn install_root_for_path(path: &Path) -> Option<PathBuf> {
+    let exe_dir = path.parent()?;
+    let below_allowed_root = path_components_below_allowed_root(path)?;
+    let file_stem = normalized_name(
+        path.file_stem()
+            .and_then(|value| value.to_str())
+            .unwrap_or_default(),
+    );
+
+    let mut best: Option<(PathBuf, i32)> = None;
+
+    for ancestor in exe_dir.ancestors() {
+        let name = ancestor
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or_default();
+
+        if name.is_empty() {
+            continue;
+        }
+
+        let matches_scope = below_allowed_root
+            .iter()
+            .any(|component| normalized_name(component) == normalized_name(name));
+
+        if !matches_scope {
+            continue;
+        }
+
+        let mut score = 0;
+        let normalized_ancestor = normalized_name(name);
+
+        if !is_generic_container_name(name) {
+            score += 4;
+        } else {
+            score -= 4;
+        }
+
+        if !file_stem.is_empty()
+            && (file_stem.contains(&normalized_ancestor) || normalized_ancestor.contains(&file_stem))
+        {
+            score += 5;
+        }
+
+        let distance = exe_dir
+            .strip_prefix(ancestor)
+            .ok()
+            .map(|relative| relative.components().count())
+            .unwrap_or(0);
+
+        if distance == 0 {
+            score += 4;
+        } else if distance == 1 {
+            score += 3;
+        } else if distance == 2 {
+            score += 1;
+        } else {
+            score -= distance as i32;
+        }
+
+        if directory_has_game_markers(ancestor, "") {
+            score += 4;
+        }
+
+        match &best {
+            Some((_, best_score)) if *best_score >= score => {}
+            _ => best = Some((ancestor.to_path_buf(), score)),
+        }
+    }
+
+    best.map(|(path, _)| path)
+}
+
+fn title_from_install_root(path: &Path, install_root: Option<&Path>) -> String {
+    if let Some(root) = install_root {
+        if let Some(name) = root.file_name().and_then(|value| value.to_str()) {
+            if !name.trim().is_empty() {
+                return name.replace('_', " ").replace('-', " ");
+            }
+        }
+    }
+
+    title_from_path(path)
+}
+
+fn build_candidate(path: &Path, install_root: Option<&Path>) -> ScannedGameCandidate {
+    let title = title_from_install_root(path, install_root);
 
     ScannedGameCandidate {
         id: format!("local-{}", slugify(&title)),
@@ -297,6 +523,15 @@ fn path_has_allowed_root(path: &Path) -> bool {
         .any(|needle| normalized.contains(needle))
 }
 
+fn scan_root_for_path(path: &Path) -> Option<PathBuf> {
+    let normalized = normalized_path(path);
+
+    collect_scan_roots()
+        .into_iter()
+        .filter(|root| normalized.starts_with(&normalized_path(root)))
+        .max_by_key(|root| normalized_path(root).len())
+}
+
 fn file_name_lowercase(path: &Path) -> String {
     path.file_name()
         .and_then(|value| value.to_str())
@@ -309,18 +544,15 @@ fn stems_look_related(path: &Path, directory: &Path) -> bool {
         .file_stem()
         .and_then(|value| value.to_str())
         .unwrap_or_default()
-        .to_lowercase()
-        .replace('-', "")
-        .replace('_', "")
-        .replace(' ', "");
+        .to_string();
     let dir_name = directory
         .file_name()
         .and_then(|value| value.to_str())
         .unwrap_or_default()
-        .to_lowercase()
-        .replace('-', "")
-        .replace('_', "")
-        .replace(' ', "");
+        .to_string();
+
+    let file_stem = normalized_name(&file_stem);
+    let dir_name = normalized_name(&dir_name);
 
     !file_stem.is_empty()
         && !dir_name.is_empty()
@@ -392,6 +624,7 @@ fn has_game_signature(path: &Path) -> bool {
 
 fn executable_score(path: &Path) -> i32 {
     let mut score = 0;
+    let install_root = install_root_for_path(path);
 
     if path_has_allowed_root(path) {
         score += 3;
@@ -418,6 +651,28 @@ fn executable_score(path: &Path) -> i32 {
         }
     }
 
+    if let Some(root) = install_root.as_deref() {
+        if stems_look_related(path, root) {
+            score += 3;
+        }
+
+        if let Some(exe_dir) = path.parent() {
+            let distance = exe_dir
+                .strip_prefix(root)
+                .ok()
+                .map(|relative| relative.components().count())
+                .unwrap_or(0);
+
+            if distance == 0 {
+                score += 4;
+            } else if distance == 1 {
+                score += 2;
+            } else {
+                score -= distance as i32;
+            }
+        }
+    }
+
     let file_name = file_name_lowercase(path);
     if file_name.contains("shipping") || file_name.contains("game") {
         score += 1;
@@ -430,10 +685,9 @@ fn walk_for_games(
     root: &Path,
     depth: usize,
     seen_paths: &mut HashSet<String>,
-    seen_ids: &mut HashSet<String>,
-    discovered: &mut Vec<ScannedGameCandidate>,
+    best_by_root: &mut HashMap<String, CandidateMatch>,
 ) {
-    if depth > MAX_SCAN_DEPTH || discovered.len() >= MAX_DISCOVERED_GAMES || !root.exists() {
+    if depth > MAX_SCAN_DEPTH || best_by_root.len() >= MAX_DISCOVERED_GAMES || !root.exists() {
         return;
     }
 
@@ -443,7 +697,7 @@ fn walk_for_games(
     };
 
     for entry in entries.flatten() {
-        if discovered.len() >= MAX_DISCOVERED_GAMES {
+        if best_by_root.len() >= MAX_DISCOVERED_GAMES {
             return;
         }
 
@@ -458,7 +712,7 @@ fn walk_for_games(
                 continue;
             }
 
-            walk_for_games(&path, depth + 1, seen_paths, seen_ids, discovered);
+            walk_for_games(&path, depth + 1, seen_paths, best_by_root);
             continue;
         }
 
@@ -478,9 +732,22 @@ fn walk_for_games(
             continue;
         }
 
-        let candidate = build_candidate(&path);
-        if seen_paths.insert(normalized) && seen_ids.insert(candidate.id.to_lowercase()) {
-            discovered.push(candidate);
+        if !seen_paths.insert(normalized) {
+            continue;
+        }
+
+        let install_root = install_root_for_path(&path);
+        let root_key = install_root
+            .as_deref()
+            .map(normalized_path)
+            .unwrap_or_else(|| normalized_path(&path));
+        let candidate = build_candidate(&path, install_root.as_deref());
+
+        match best_by_root.get(&root_key) {
+            Some(existing) if existing.score >= score => {}
+            _ => {
+                best_by_root.insert(root_key, CandidateMatch { candidate, score });
+            }
         }
     }
 }
@@ -498,22 +765,27 @@ pub fn write_games(app: AppHandle, games: Vec<Game>) -> Result<String, String> {
 #[tauri::command]
 pub fn scan_local_games(app: AppHandle) -> Result<Vec<ScannedGameCandidate>, String> {
     let current_games = read_games_from_disk(&app)?;
-    let mut discovered = Vec::new();
     let mut seen_paths = HashSet::new();
-    let mut seen_ids = HashSet::new();
+    let mut best_by_root = HashMap::new();
 
     for game in &current_games {
         seen_paths.insert(game.exe_path.to_lowercase());
-        seen_ids.insert(game.id.to_lowercase());
     }
 
     for root in collect_scan_roots() {
-        walk_for_games(&root, 0, &mut seen_paths, &mut seen_ids, &mut discovered);
+        walk_for_games(&root, 0, &mut seen_paths, &mut best_by_root);
 
-        if discovered.len() >= MAX_DISCOVERED_GAMES {
+        if best_by_root.len() >= MAX_DISCOVERED_GAMES {
             break;
         }
     }
+
+    let mut discovered = best_by_root
+        .into_values()
+        .map(|item| item.candidate)
+        .collect::<Vec<_>>();
+
+    discovered.sort_by(|left, right| left.title.cmp(&right.title));
 
     Ok(discovered)
 }
