@@ -1,0 +1,98 @@
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { openPath } from '@tauri-apps/plugin-opener';
+import type { ImportedGameResult } from '$lib/stores/libraryStore';
+import { uiStore } from '$lib/stores/uiStore';
+
+export interface StoredGame {
+  id: string;
+  title: string;
+  exePath: string;
+  coverArt: string;
+  platform: string;
+  totalPlaytime: number;
+  lastPlayed: string | null;
+  status: string;
+  genres: string[];
+  description: string;
+}
+
+export interface LocalScanResult extends ImportedGameResult {}
+
+export interface GameProcessEvent {
+  gameId: string | null;
+  exePath: string;
+  state: 'started' | 'exited' | 'error';
+  message?: string;
+}
+
+export async function getGames(): Promise<StoredGame[]> {
+  return invoke<StoredGame[]>('read_games');
+}
+
+export async function saveGames(games: StoredGame[]): Promise<string> {
+  return invoke<string>('write_games', { games });
+}
+
+export async function scanLocalGames(): Promise<LocalScanResult[]> {
+  return invoke<LocalScanResult[]>('scan_local_games');
+}
+
+export async function launchGame(exePath: string, gameId?: string) {
+  if (!exePath) {
+    throw new Error('No executable path was provided for this game.');
+  }
+
+  try {
+    if (gameId) {
+      uiStore.startGame(gameId);
+    } else {
+      uiStore.setGameRunning(true);
+    }
+
+    await invoke('launch_game', { exePath, gameId: gameId || null });
+  } catch (err) {
+    if (gameId) {
+      uiStore.finishGame(gameId);
+    } else {
+      uiStore.setGameRunning(false);
+    }
+
+    console.error('Failed to launch game:', err);
+    throw err instanceof Error ? err : new Error(String(err));
+  }
+}
+
+export async function listenForGameProcessEvents(
+  callback: (event: GameProcessEvent) => void
+) {
+  return listen<GameProcessEvent>('game-process-state', (event) => {
+    callback(event.payload);
+  });
+}
+
+export function setGameRunning(isRunning: boolean, gameId?: string | null) {
+  uiStore.setGameRunning(isRunning, gameId ?? null);
+}
+
+function getFolderPath(path: string) {
+  const normalized = path.replace(/\//g, '\\');
+  const index = normalized.lastIndexOf('\\');
+  return index > 0 ? normalized.slice(0, index) : normalized;
+}
+
+export async function openGameFolder(path?: string) {
+  if (!path) {
+    throw new Error('No game path is available.');
+  }
+
+  await openPath(getFolderPath(path));
+}
+
+export async function openSaveFolder(path?: string) {
+  if (!path) {
+    throw new Error('No save path is configured for this game.');
+  }
+
+  await openPath(path);
+}

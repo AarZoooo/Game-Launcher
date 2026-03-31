@@ -1,159 +1,91 @@
 <script lang="ts">
-import { invoke } from "@tauri-apps/api/core";
+  import ContinuePlaying from '$lib/components/game/ContinuePlaying.svelte';
+  import GameGrid from '$lib/components/game/GameGrid.svelte';
+  import StatsDashboard from '$lib/components/stats/StatsDashboard.svelte';
+  import { launchGame, openGameFolder } from '$lib/services/tauriService';
+  import {
+    continuePlayingGames,
+    games,
+    getAllGames,
+    getGameById,
+    getGamesByIds,
+    homeExploreIds,
+    type Game
+  } from '$lib/stores/libraryStore';
 
-let name = $state("");
-let greetMsg = $state("");
+  let featuredGame = getGameById('sekiro');
+  const suggestedGames = getGamesByIds(homeExploreIds);
 
-async function greet(event: Event) {
-	event.preventDefault();
-	// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-	greetMsg = await invoke("greet", { name });
-}
+  function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
+    const { id, game } = event.detail;
+
+    if (id === 'status-want') return games.setStatus(game.id, 'want');
+    if (id === 'status-playing') return games.setStatus(game.id, 'playing');
+    if (id === 'status-played') return games.setStatus(game.id, 'played');
+    if ((id === 'play' || id === 'resume' || id === 'restart') && game.path) {
+      return launchGame(game.path, game.id);
+    }
+    if (id === 'toggle-favorite') return games.toggleFavorite(game.id);
+    if (id === 'open-folder') return openGameFolder(game.path);
+    if (id === 'hide-continue') return games.hideFromContinuePlaying(game.id);
+    if (id === 'view-playtime') {
+      window.alert(`${game.title}: ${game.totalPlaytime || game.hours} total playtime.`);
+    }
+  }
+
+  $: featuredGame =
+    $continuePlayingGames[0] ||
+    getAllGames().find((game) => game.inLibrary !== false) ||
+    getGameById(homeExploreIds[0]) ||
+    getGameById('sekiro');
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
+{#if featuredGame}
+  <div class="home">
+    <ContinuePlaying game={featuredGame} on:action={handleAction} />
 
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
+    <section>
+      <div class="section-header">
+        <h2>Recently Played</h2>
+        <span>See more</span>
+      </div>
+      <GameGrid games={$continuePlayingGames} horizontal compact context="home" on:action={handleAction} />
+    </section>
+
+    <section>
+      <div class="section-header">
+        <h2>Explore New</h2>
+        <span>See more</span>
+      </div>
+      <GameGrid games={suggestedGames} horizontal compact context="explore" on:action={handleAction} />
+    </section>
+
+    <StatsDashboard />
   </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
-
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
-</main>
+{/if}
 
 <style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-
-
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
+  .home {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
   }
 
-  a:hover {
-    color: #24c8db;
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1rem;
   }
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
+  h2 {
+    margin: 0;
+    font-size: 0.98rem;
   }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
 
+  span {
+    color: rgba(226, 223, 231, 0.42);
+    font-size: 0.74rem;
+    cursor: pointer;
+  }
 </style>
