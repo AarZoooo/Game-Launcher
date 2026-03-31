@@ -151,6 +151,7 @@ fn collect_scan_roots() -> Vec<PathBuf> {
     }
 
     for drive in ["C", "D", "E", "F", "G"] {
+        roots.push(PathBuf::from(format!(r"{drive}:\Installed")));
         roots.push(PathBuf::from(format!(r"{drive}:\Games")));
         roots.push(PathBuf::from(format!(r"{drive}:\XboxGames")));
         roots.push(PathBuf::from(format!(r"{drive}:\GOG Games")));
