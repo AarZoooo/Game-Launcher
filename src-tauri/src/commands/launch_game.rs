@@ -351,7 +351,20 @@ pub fn launch_game(
         trimmed_path, game_id
     );
 
-    let pid = spawn_game_process(trimmed_path)?;
+    let pid = match spawn_game_process(trimmed_path) {
+        Ok(pid) => pid,
+        Err(error) => {
+            emit_game_process_state(
+                &app,
+                &game_id,
+                trimmed_path,
+                "error",
+                Some(error.clone()),
+            );
+            emit_game_process_state(&app, &game_id, trimmed_path, "exited", None);
+            return Err(error);
+        }
+    };
     println!("[launch_game] initial pid={pid} exe_path={trimmed_path}");
 
     emit_game_process_state(&app, &game_id, trimmed_path, "started", None);
