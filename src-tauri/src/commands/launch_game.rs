@@ -7,9 +7,11 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 
 const GAME_PROCESS_EVENT: &str = "game-process-state";
-const PROCESS_POLL_INTERVAL: Duration = Duration::from_secs(2);
 const SHORT_SESSION_THRESHOLD: Duration = Duration::from_secs(15);
-const REAPPEARANCE_WINDOW: Duration = Duration::from_secs(30);
+const FAST_POLL_INTERVAL: Duration = Duration::from_secs(2);
+const FAST_REAPPEARANCE_WINDOW: Duration = Duration::from_secs(30);
+const EXTENDED_POLL_INTERVAL: Duration = Duration::from_secs(20);
+const EXTENDED_REAPPEARANCE_WINDOW: Duration = Duration::from_secs(900);
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -155,11 +157,72 @@ fn is_target_process(process: &ProcessSnapshot, normalized_path: &str, expected_
         .unwrap_or(false)
 }
 
-fn is_game_running(normalized_path: &str, expected_name: &str) -> Result<bool, String> {
-    let snapshots = process_snapshots()?;
-    Ok(snapshots
+fn is_game_running_in_snapshots(
+    snapshots: &[ProcessSnapshot],
+    normalized_path: &str,
+    expected_name: &str,
+) -> bool {
+    snapshots
         .iter()
-        .any(|process| is_target_process(process, normalized_path, expected_name)))
+        .any(|process| is_target_process(process, normalized_path, expected_name))
+}
+
+fn launcher_activity_detected(snapshots: &[ProcessSnapshot], normalized_path: &str) -> bool {
+    let path_markers = [
+        "\\steam\\",
+        "\\steamapps\\",
+        "\\epic games\\",
+        "\\epicgames\\",
+        "\\launcher\\",
+        "\\updater\\",
+        "\\patch\\",
+        "\\bootstrap",
+    ];
+
+    if path_markers
+        .iter()
+        .any(|marker| normalized_path.contains(marker))
+    {
+        return true;
+    }
+
+    let name_markers = [
+        "steam.exe",
+        "steamservice.exe",
+        "steamwebhelper.exe",
+        "epicgameslauncher.exe",
+        "epiconlineservices",
+        "launcher",
+        "updater",
+        "bootstrap",
+        "patch",
+    ];
+
+    snapshots.iter().any(|process| {
+        let name_matches = process
+            .name
+            .as_deref()
+            .map(|name| {
+                let lower_name = name.to_ascii_lowercase();
+                name_markers
+                    .iter()
+                    .any(|marker| lower_name.contains(marker))
+            })
+            .unwrap_or(false);
+
+        let path_matches = process
+            .executable_path
+            .as_deref()
+            .map(normalize_path)
+            .map(|path| {
+                path_markers
+                    .iter()
+                    .any(|marker| path.contains(marker))
+            })
+            .unwrap_or(false);
+
+        name_matches || path_matches
+    })
 }
 
 fn monitor_game_process(app: AppHandle, exe_path: String, game_id: Option<String>) {
@@ -180,17 +243,20 @@ fn monitor_game_process(app: AppHandle, exe_path: String, game_id: Option<String
     let mut is_marked_running = true;
     let mut session_started_at = Instant::now();
     let mut reappearance_deadline: Option<Instant> = None;
+    let mut poll_interval = FAST_POLL_INTERVAL;
+    let mut extended_watch_enabled = false;
 
     loop {
-        thread::sleep(PROCESS_POLL_INTERVAL);
+        thread::sleep(poll_interval);
 
-        let is_running = match is_game_running(&normalized_path, &expected_name) {
-            Ok(is_running) => is_running,
+        let snapshots = match process_snapshots() {
+            Ok(snapshots) => snapshots,
             Err(error) => {
                 emit_game_process_state(&app, &game_id, &exe_path, "error", Some(error));
                 break;
             }
         };
+        let is_running = is_game_running_in_snapshots(&snapshots, &normalized_path, &expected_name);
 
         if is_running {
             if !is_marked_running {
@@ -206,6 +272,8 @@ fn monitor_game_process(app: AppHandle, exe_path: String, game_id: Option<String
             }
 
             reappearance_deadline = None;
+            poll_interval = FAST_POLL_INTERVAL;
+            extended_watch_enabled = false;
             continue;
         }
 
@@ -214,13 +282,27 @@ fn monitor_game_process(app: AppHandle, exe_path: String, game_id: Option<String
             is_marked_running = false;
 
             if session_started_at.elapsed() < SHORT_SESSION_THRESHOLD {
-                println!(
-                    "[launch_game] short session detected; watching for restart for {} seconds game_id={:?} exe_path={}",
-                    REAPPEARANCE_WINDOW.as_secs(),
-                    game_id,
-                    exe_path
-                );
-                reappearance_deadline = Some(Instant::now() + REAPPEARANCE_WINDOW);
+                if launcher_activity_detected(&snapshots, &normalized_path) {
+                    println!(
+                        "[launch_game] short session with launcher/update activity; watching for restart for {} seconds at {} second intervals game_id={:?} exe_path={}",
+                        EXTENDED_REAPPEARANCE_WINDOW.as_secs(),
+                        EXTENDED_POLL_INTERVAL.as_secs(),
+                        game_id,
+                        exe_path
+                    );
+                    reappearance_deadline = Some(Instant::now() + EXTENDED_REAPPEARANCE_WINDOW);
+                    poll_interval = EXTENDED_POLL_INTERVAL;
+                    extended_watch_enabled = true;
+                } else {
+                    println!(
+                        "[launch_game] short session detected; watching for restart for {} seconds game_id={:?} exe_path={}",
+                        FAST_REAPPEARANCE_WINDOW.as_secs(),
+                        game_id,
+                        exe_path
+                    );
+                    reappearance_deadline = Some(Instant::now() + FAST_REAPPEARANCE_WINDOW);
+                    poll_interval = FAST_POLL_INTERVAL;
+                }
             } else {
                 println!(
                     "[launch_game] treating exit as final after {} seconds game_id={:?} exe_path={}",
@@ -237,8 +319,8 @@ fn monitor_game_process(app: AppHandle, exe_path: String, game_id: Option<String
         if let Some(deadline) = reappearance_deadline {
             if Instant::now() >= deadline {
                 println!(
-                    "[launch_game] stopping background tracking for game_id={:?} exe_path={}",
-                    game_id, exe_path
+                    "[launch_game] stopping background tracking for game_id={:?} exe_path={} extended_watch_enabled={}",
+                    game_id, exe_path, extended_watch_enabled
                 );
                 break;
             }
