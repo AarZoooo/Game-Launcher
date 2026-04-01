@@ -95,6 +95,11 @@ async function addManualGame() {
 	}
 }
 
+async function addManualFromImportModal() {
+	await addManualGame();
+	closeImport();
+}
+
 function addSelected(event: CustomEvent<string[]>) {
 	const selected = scanResults.filter((item) => event.detail.includes(item.id));
 	void addImportedGamesToLibrary(selected).then((message) => {
@@ -237,6 +242,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   on:cancel={closeImport}
   on:close={closeImport}
   on:addselected={addSelected}
+  on:addmanual={addManualFromImportModal}
 />
 
 <style>

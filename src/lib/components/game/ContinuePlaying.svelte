@@ -1,16 +1,11 @@
 <script lang="ts">
-import { createEventDispatcher } from "svelte";
-import GameMenu from "$lib/components/game/GameMenu.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
 import { pageLabels } from "$lib/data/labels";
+import { games } from "$lib/stores/libraryStore";
 import { effectiveUIMode } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
 import { resolveAccentPresentation } from "$lib/utils/accent";
 import { getGameImage } from "$lib/utils/getGameMedia";
-
-const dispatch = createEventDispatcher<{
-	action: { id: string; game: Game };
-}>();
 
 export let game: Game;
 
@@ -21,19 +16,25 @@ $: accentPresentation = resolveAccentPresentation(game);
 $: if (heroElement) {
 	heroElement.style.setProperty("--hero-accent-rgb", accentPresentation.rgb);
 }
+
+function toggleFavorite() {
+	void games.toggleFavorite(game.id);
+}
 </script>
 
 <section bind:this={heroElement} class="hero" class:performance={$effectiveUIMode === 'gaming'}>
   <img class="hero-media" src={getGameImage(game, 'horizontal')} alt="" loading="lazy" />
   <div class="veil"></div>
-  <div class="hero-menu">
-    <GameMenu
-      {game}
-      context="home"
-      placement="above-right"
-      on:action={(event) => dispatch('action', event.detail)}
-    />
-  </div>
+  <button
+    type="button"
+    class:active={game.favorite}
+    class="hero-favorite"
+    aria-label={game.favorite ? pageLabels.actions.removeFavorite : pageLabels.actions.addFavorite}
+    aria-pressed={game.favorite}
+    on:click={toggleFavorite}
+  >
+    <span aria-hidden="true">{game.favorite ? "★" : "☆"}</span>
+  </button>
   <div class="content">
     <p class="eyebrow">{pageLabels.continuePlaying.eyebrow}</p>
     <h1>{game.title}</h1>
@@ -87,9 +88,9 @@ $: if (heroElement) {
   }
 
   .content {
-    position: relative;
+    position: absolute;
+    inset: 0;
     z-index: 1;
-    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -97,16 +98,46 @@ $: if (heroElement) {
     padding: var(--space-9) var(--space-8) var(--space-7);
   }
 
-  .hero-menu {
+  .hero-favorite {
     position: absolute;
     right: var(--space-6);
-    bottom: var(--space-6);
+    top: var(--space-6);
     z-index: var(--z-menu);
+    display: inline-grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: var(--radius-pill);
+    background: var(--surface-glass);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-outline);
+    cursor: pointer;
+    transition:
+      transform var(--motion-fast) ease,
+      color var(--motion-fast) ease,
+      background-color var(--motion-fast) ease,
+      border-color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease;
   }
 
-  .hero-menu :global(.menu-trigger) {
-    opacity: 0.92;
-    transform: scale(1);
+  .hero-favorite:hover {
+    transform: translateY(-1px) scale(1.03);
+    color: var(--text-primary);
+    background: var(--surface-hover);
+  }
+
+  .hero-favorite.active {
+    color: rgb(var(--hero-accent-rgb));
+    border-color: rgb(var(--hero-accent-rgb) / 0.28);
+    box-shadow:
+      var(--shadow-outline),
+      0 0 1rem rgb(var(--hero-accent-rgb) / 0.18);
+  }
+
+  .hero-favorite span {
+    font-size: 1rem;
+    line-height: 1;
   }
 
   .eyebrow {

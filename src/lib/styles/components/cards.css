@@ -36,6 +36,10 @@
 	bottom: var(--space-3);
 	right: var(--space-3);
 	z-index: 12;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.28rem;
 }
 
 .game-card:hover .game-card-menu-shell .menu-trigger,
@@ -109,6 +113,10 @@
 
 .game-card-favorite {
 	color: rgb(var(--card-accent-rgb));
-	font-size: 0.9rem;
+	font-size: 1.05rem;
 	line-height: 1;
+	text-shadow: 0 0 0.35rem rgb(var(--card-accent-rgb) / 0.35);
+	flex: 0 0 auto;
+	align-self: center;
+	pointer-events: none;
 }

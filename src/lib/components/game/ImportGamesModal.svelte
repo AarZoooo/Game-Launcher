@@ -12,6 +12,7 @@ const dispatch = createEventDispatcher<{
 	cancel: void;
 	addall: void;
 	addselected: string[];
+	addmanual: void;
 }>();
 
 export let open = false;
@@ -34,6 +35,8 @@ $: platformLabel =
 			: pageLabels.importModal.autoSearch;
 
 $: allSelected = results.length > 0 && selectedIds.length === results.length;
+$: showAddManualAction =
+	!loading && !error && platform === "local" && results.length === 0;
 
 function toggle(id: string) {
 	selectedIds = selectedIds.includes(id)
@@ -112,9 +115,15 @@ function truncate(path: string) {
       <Button quiet compact on:click={() => dispatch('cancel')}>
         {pageLabels.importModal.cancel}
       </Button>
-      <Button compact disabled={!selectedIds.length} on:click={() => dispatch('addselected', selectedIds)}>
-        {pageLabels.importModal.addSelected}
-      </Button>
+      {#if showAddManualAction}
+        <Button compact on:click={() => dispatch('addmanual')}>
+          {pageLabels.games.addManually}
+        </Button>
+      {:else}
+        <Button compact disabled={!selectedIds.length} on:click={() => dispatch('addselected', selectedIds)}>
+          {pageLabels.importModal.addSelected}
+        </Button>
+      {/if}
     </div>
   </svelte:fragment>
 </Modal>
