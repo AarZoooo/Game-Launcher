@@ -19,6 +19,13 @@ export interface StoredGame {
 
 export interface LocalScanResult extends ImportedGameResult {}
 
+export interface ManualGameCandidate {
+	id: string;
+	title: string;
+	path: string;
+	platform: "local";
+}
+
 export interface GameProcessEvent {
 	gameId: string | null;
 	exePath: string;
@@ -36,6 +43,10 @@ export async function saveGames(games: StoredGame[]): Promise<string> {
 
 export async function scanLocalGames(): Promise<LocalScanResult[]> {
 	return invoke<LocalScanResult[]>("scan_local_games");
+}
+
+export async function pickGameExecutable(): Promise<ManualGameCandidate | null> {
+	return invoke<ManualGameCandidate | null>("pick_game_executable");
 }
 
 export async function launchGame(exePath: string, gameId?: string) {

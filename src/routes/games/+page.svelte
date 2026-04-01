@@ -8,6 +8,7 @@ import {
 	launchGame,
 	openGameFolder,
 	openSaveFolder,
+	pickGameExecutable,
 	scanLocalGames,
 } from "$lib/services/tauriService";
 import {
@@ -83,19 +84,21 @@ function startAutoSearch() {
 		});
 }
 
-function addManualGame() {
-	const title = window.prompt("Game title");
-	if (!title) {
-		return;
-	}
+async function addManualGame() {
+	try {
+		const candidate = await pickGameExecutable();
+		if (!candidate || hasDuplicateGame(candidate)) {
+			return;
+		}
 
-	const path = window.prompt("Executable path", "C:\\Games\\MyGame\\Game.exe");
-	if (!path) {
-		return;
+		await games.addImportedGames([candidate]);
+		autoSearchMessage = `Added ${candidate.title} to your installed games list.`;
+	} catch (error) {
+		scanError =
+			error instanceof Error
+				? error.message
+				: "Manual add failed. Please try again.";
 	}
-
-	games.addManualGame(title.trim(), path.trim());
-	autoSearchMessage = `Added ${title.trim()} to your installed games list.`;
 }
 
 function addSelected(event: CustomEvent<string[]>) {
