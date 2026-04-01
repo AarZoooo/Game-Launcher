@@ -1,0 +1,72 @@
+.selection-check-row {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: var(--space-3);
+	align-items: center;
+}
+
+.selection-check-label {
+	color: var(--text-primary);
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.selection-check-shell {
+	position: relative;
+	width: 1rem;
+	height: 1rem;
+	display: inline-grid;
+	place-items: center;
+	flex: 0 0 auto;
+}
+
+.selection-check-shell input {
+	position: absolute;
+	inset: 0;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.selection-check-indicator {
+	width: 1rem;
+	height: 1rem;
+	border-radius: var(--radius-pill);
+	border: 1px solid var(--surface-border);
+	background: var(--surface-card);
+	box-shadow: inset 0 0 0 1px var(--surface-border-soft);
+	transition:
+		background-color var(--motion-fast) ease,
+		border-color var(--motion-fast) ease,
+		box-shadow var(--motion-fast) ease,
+		transform var(--motion-fast) ease;
+}
+
+.selection-check-indicator::after {
+	content: none;
+}
+
+.selection-check-shell input:checked + .selection-check-indicator {
+	background: var(--interactive-primary-bg);
+	border-color: var(--surface-border);
+	box-shadow:
+		inset 0 0 0 1px rgb(var(--accent-rgb) / 0.28),
+		0 0 0 0.18rem rgb(var(--accent-rgb) / 0.2);
+}
+
+.selection-check-shell input:focus-visible + .selection-check-indicator {
+	outline: 2px solid rgb(var(--accent-rgb) / 0.42);
+	outline-offset: 2px;
+}
+
+.selection-copy-title {
+	display: block;
+	font-size: 0.88rem;
+}
+
+.selection-copy-meta {
+	display: block;
+	margin-top: var(--space-1);
+	color: var(--text-secondary);
+	font-size: 0.75rem;
+}

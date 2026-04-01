@@ -74,27 +74,33 @@ function truncate(path: string) {
     <EmptyState kind="noResults" message={pageLabels.importModal.noResults} />
   {:else}
     <div class="selection-bar">
-      <label class="select-all">
-        <input
-          type="checkbox"
-          checked={allSelected}
-          on:change={toggleAll}
-        />
-        <span>{pageLabels.importModal.selectAll}</span>
+      <label class="select-all selection-check-row">
+        <span class="selection-check-shell">
+          <input
+            type="checkbox"
+            checked={allSelected}
+            on:change={toggleAll}
+          />
+          <span class="selection-check-indicator" aria-hidden="true"></span>
+        </span>
+        <span class="selection-check-label">{pageLabels.importModal.selectAll}</span>
       </label>
     </div>
 
     <div class="results">
       {#each results as game}
-        <label class="row" title={game.path}>
-          <input
-            type="checkbox"
-            checked={selectedIds.includes(game.id)}
-            on:change={() => toggle(game.id)}
-          />
+        <label class="row selection-check-row" title={game.path}>
+          <span class="selection-check-shell">
+            <input
+              type="checkbox"
+              checked={selectedIds.includes(game.id)}
+              on:change={() => toggle(game.id)}
+            />
+            <span class="selection-check-indicator" aria-hidden="true"></span>
+          </span>
           <div class="copy">
-            <strong>{game.title}</strong>
-            <span>{truncate(game.path)}</span>
+            <strong class="selection-copy-title">{game.title}</strong>
+            <span class="selection-copy-meta">{truncate(game.path)}</span>
           </div>
         </label>
       {/each}
@@ -133,22 +139,11 @@ function truncate(path: string) {
   .selection-bar {
     display: flex;
     justify-content: flex-start;
-    margin-bottom: var(--space-3);
-  }
-
-  .select-all {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--text-primary);
-    font-size: 0.8rem;
-    font-weight: 600;
+    margin-bottom: var(--space-2);
+    padding: 0 var(--space-1);
   }
 
   .row {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--space-3);
     align-items: start;
     padding: var(--space-3) var(--space-1);
     border-radius: var(--radius-md);
@@ -156,16 +151,8 @@ function truncate(path: string) {
     border: 1px solid var(--surface-border-soft);
   }
 
-  .copy strong {
-    display: block;
-    font-size: 0.88rem;
-  }
-
-  .copy span {
-    display: block;
-    margin-top: var(--space-1);
-    color: var(--text-secondary);
-    font-size: 0.75rem;
+  .row :global(.selection-check-shell) {
+    margin-top: 0.08rem;
   }
 
   .footer {

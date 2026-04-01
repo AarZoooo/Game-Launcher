@@ -7,6 +7,10 @@
 @import "./themes/dark.css";
 @import "./themes/light.css";
 @import "./themes/dynamic.css";
+@import "./components/buttons.css";
+@import "./components/cards.css";
+@import "./components/dropdown.css";
+@import "./components/modal.css";
 @import "./typography.css";
 @import "./utilities.css";
 
