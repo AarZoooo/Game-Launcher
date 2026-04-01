@@ -2,12 +2,6 @@ use rusqlite::{params, Connection};
 
 use crate::models::game::Game;
 
-pub fn count_games(connection: &Connection) -> Result<i64, String> {
-    connection
-        .query_row("SELECT COUNT(*) FROM games", [], |row| row.get::<_, i64>(0))
-        .map_err(|error| format!("Failed to count games: {error}"))
-}
-
 pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
     let mut statement = connection
         .prepare(
