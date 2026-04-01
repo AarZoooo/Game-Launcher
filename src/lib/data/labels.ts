@@ -84,6 +84,7 @@ export const pageLabels = {
 		reviewResults:
 			"Review the detected games below. Checked items will be added to your library.",
 		noResults: "No games were detected on your connected drives.",
+		selectAll: "Select all",
 		cancel: "Cancel",
 		addAll: "Add All",
 		addSelected: "Add Selected",

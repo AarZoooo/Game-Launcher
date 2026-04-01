@@ -26,10 +26,6 @@ $: if (!open) {
 	selectedIds = [];
 }
 
-$: if (results.length && !selectedIds.length) {
-	selectedIds = results.map((item) => item.id);
-}
-
 $: platformLabel =
 	platform === "steam"
 		? "Steam"
@@ -37,10 +33,16 @@ $: platformLabel =
 			? "Epic"
 			: pageLabels.importModal.autoSearch;
 
+$: allSelected = results.length > 0 && selectedIds.length === results.length;
+
 function toggle(id: string) {
 	selectedIds = selectedIds.includes(id)
 		? selectedIds.filter((value) => value !== id)
 		: [...selectedIds, id];
+}
+
+function toggleAll() {
+	selectedIds = allSelected ? [] : results.map((item) => item.id);
 }
 
 function truncate(path: string) {
@@ -71,6 +73,17 @@ function truncate(path: string) {
   {:else if !results.length}
     <EmptyState kind="noResults" message={pageLabels.importModal.noResults} />
   {:else}
+    <div class="selection-bar">
+      <label class="select-all">
+        <input
+          type="checkbox"
+          checked={allSelected}
+          on:change={toggleAll}
+        />
+        <span>{pageLabels.importModal.selectAll}</span>
+      </label>
+    </div>
+
     <div class="results">
       {#each results as game}
         <label class="row" title={game.path}>
@@ -93,10 +106,7 @@ function truncate(path: string) {
       <Button quiet compact on:click={() => dispatch('cancel')}>
         {pageLabels.importModal.cancel}
       </Button>
-      <Button quiet compact on:click={() => dispatch('addall')}>
-        {pageLabels.importModal.addAll}
-      </Button>
-      <Button compact on:click={() => dispatch('addselected', selectedIds)}>
+      <Button compact disabled={!selectedIds.length} on:click={() => dispatch('addselected', selectedIds)}>
         {pageLabels.importModal.addSelected}
       </Button>
     </div>
@@ -118,6 +128,21 @@ function truncate(path: string) {
     display: grid;
     gap: var(--space-2);
     padding-right: 0.2rem;
+  }
+
+  .selection-bar {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: var(--space-3);
+  }
+
+  .select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
   }
 
   .row {

@@ -103,13 +103,6 @@ function addSelected(event: CustomEvent<string[]>) {
 	});
 }
 
-function addAll() {
-	void addImportedGamesToLibrary(scanResults).then((message) => {
-		autoSearchMessage = message;
-		closeImport();
-	});
-}
-
 function closeImport() {
 	showImportModal = false;
 	scanResults = [];
@@ -243,7 +236,6 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   results={scanResults}
   on:cancel={closeImport}
   on:close={closeImport}
-  on:addall={addAll}
   on:addselected={addSelected}
 />
 
