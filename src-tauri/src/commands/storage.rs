@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use crate::db::{database, games as game_db};
 use crate::models::game::Game;
 use serde::Serialize;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 
 const MAX_SCAN_DEPTH: usize = 4;
 const MAX_DISCOVERED_GAMES: usize = 32;
@@ -25,82 +25,12 @@ struct CandidateMatch {
     score: i32,
 }
 
-fn games_file_path(app: &AppHandle) -> Result<PathBuf, String> {
-    let app_data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|error| format!("Could not resolve app data directory: {error}"))?;
-
-    fs::create_dir_all(&app_data_dir)
-        .map_err(|error| format!("Could not create app data directory: {error}"))?;
-
-    Ok(app_data_dir.join("games.json"))
-}
-
-fn legacy_games_file_path() -> Result<PathBuf, String> {
-    let current_dir =
-        std::env::current_dir().map_err(|error| format!("Could not read current directory: {error}"))?;
-    Ok(current_dir.join("games.json"))
-}
-
-fn ensure_games_file_exists(app: &AppHandle) -> Result<PathBuf, String> {
-    let file_path = games_file_path(app)?;
-
-    if !file_path.exists() {
-        let legacy_path = legacy_games_file_path()?;
-
-        if legacy_path.exists() {
-            fs::copy(&legacy_path, &file_path)
-                .map_err(|error| format!("Could not migrate existing games.json: {error}"))?;
-        } else {
-            let sample_games = sample_games();
-            let json = serde_json::to_string_pretty(&sample_games)
-                .map_err(|error| format!("Could not serialize sample games: {error}"))?;
-
-            fs::write(&file_path, json).map_err(|error| format!("Could not create games.json: {error}"))?;
-        }
-    }
-
-    Ok(file_path)
-}
-
-fn read_games_from_disk(app: &AppHandle) -> Result<Vec<Game>, String> {
-    let file_path = ensure_games_file_exists(app)?;
-    let file_contents =
-        fs::read_to_string(&file_path).map_err(|error| format!("Could not read games.json: {error}"))?;
-
-    serde_json::from_str(&file_contents).map_err(|error| format!("Could not parse games.json: {error}"))
-}
-
-fn migrate_games_to_database(app: &AppHandle) -> Result<(), String> {
-    let mut connection = database::open_database(app)?;
-    if game_db::count_games(&connection)? > 0 {
-        return Ok(());
-    }
-
-    let seed_games = if let Ok(games) = read_games_from_disk(app) {
-        games
-    } else {
-        sample_games()
-    };
-
-    game_db::replace_all_games(&mut connection, &seed_games)?;
-    println!(
-        "[storage] migrated {} game(s) into SQLite library storage",
-        seed_games.len()
-    );
-
-    Ok(())
-}
-
 fn read_games_from_database(app: &AppHandle) -> Result<Vec<Game>, String> {
-    migrate_games_to_database(app)?;
     let connection = database::open_database(app)?;
     game_db::get_all_games(&connection)
 }
 
 fn write_games_to_database(app: &AppHandle, games: &[Game]) -> Result<String, String> {
-    migrate_games_to_database(app)?;
     let mut connection = database::open_database(app)?;
     game_db::replace_all_games(&mut connection, games)?;
 
@@ -110,59 +40,6 @@ fn write_games_to_database(app: &AppHandle, games: &[Game]) -> Result<String, St
         games.len(),
         database_path.display()
     ))
-}
-
-fn sample_games() -> Vec<Game> {
-    vec![
-        Game {
-            id: "game-hades".into(),
-            title: "Hades".into(),
-            exe_path: r"C:\Games\Hades\Hades.exe".into(),
-            cover_art: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.png".into(),
-            platform: "steam".into(),
-            total_playtime: 1240,
-            last_played: Some("2026-03-28T19:30:00Z".into()),
-            status: "playing".into(),
-            genres: vec!["Roguelike".into(), "Action".into()],
-            description: "Fight your way out of the Underworld in fast, replayable runs.".into(),
-        },
-        Game {
-            id: "game-celeste".into(),
-            title: "Celeste".into(),
-            exe_path: r"C:\Games\Celeste\Celeste.exe".into(),
-            cover_art: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5q3r.png".into(),
-            platform: "gog".into(),
-            total_playtime: 640,
-            last_played: Some("2026-03-10T12:15:00Z".into()),
-            status: "completed".into(),
-            genres: vec!["Platformer".into(), "Indie".into()],
-            description: "A precise climbing platformer with a great story and soundtrack.".into(),
-        },
-        Game {
-            id: "game-witcher-3".into(),
-            title: "The Witcher 3".into(),
-            exe_path: r"D:\Games\TheWitcher3\bin\x64\witcher3.exe".into(),
-            cover_art: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.png".into(),
-            platform: "epic".into(),
-            total_playtime: 3120,
-            last_played: Some("2026-02-21T21:05:00Z".into()),
-            status: "installed".into(),
-            genres: vec!["RPG".into(), "Open World".into()],
-            description: "A large story-driven RPG with exploration, combat, and quests.".into(),
-        },
-        Game {
-            id: "game-hollow-knight".into(),
-            title: "Hollow Knight".into(),
-            exe_path: r"C:\Games\HollowKnight\Hollow Knight.exe".into(),
-            cover_art: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.png".into(),
-            platform: "pc".into(),
-            total_playtime: 0,
-            last_played: None,
-            status: "backlog".into(),
-            genres: vec!["Metroidvania".into(), "Action".into()],
-            description: "A moody exploration game with challenging combat and beautiful art.".into(),
-        },
-    ]
 }
 
 fn env_path(name: &str) -> Option<PathBuf> {
