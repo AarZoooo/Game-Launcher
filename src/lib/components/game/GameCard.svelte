@@ -1,6 +1,7 @@
 ﻿<script lang="ts">
 import { createEventDispatcher } from "svelte";
 import { goto } from "$app/navigation";
+import { getGameCover } from "$lib/assets";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import { pageLabels } from "$lib/data/labels";
 import type { Game } from "$lib/types/Game";
@@ -39,7 +40,7 @@ function openGame() {
   </div>
 
   <button type="button" class="poster" aria-label={`Open ${game.title}`} on:click={openGame}>
-    <img class="image" src={game.cover} alt="" loading="lazy" />
+    <img class="image" src={getGameCover(game)} alt="" loading="lazy" />
   </button>
 
   <div class="info">

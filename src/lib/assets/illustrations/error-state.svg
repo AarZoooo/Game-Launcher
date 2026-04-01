@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420">
+  <rect width="640" height="420" rx="30" fill="#1a1214"/>
+  <path d="M320 72 516 344H124L320 72Z" fill="#3a2126" stroke="#ffb4a6" stroke-width="10"/>
+  <rect x="304" y="160" width="32" height="102" rx="16" fill="#ffb4a6"/>
+  <circle cx="320" cy="298" r="18" fill="#ffb4a6"/>
+  <text x="320" y="382" fill="#ffe1db" font-family="Segoe UI, Arial, sans-serif" font-size="28" text-anchor="middle">Something went wrong</text>
+</svg>

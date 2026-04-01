@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420">
+  <rect width="640" height="420" rx="30" fill="#121822"/>
+  <circle cx="216" cy="188" r="90" fill="#223045"/>
+  <circle cx="216" cy="188" r="54" fill="none" stroke="#d5b36a" stroke-width="18"/>
+  <path d="m276 248 72 72" stroke="#d5b36a" stroke-linecap="round" stroke-width="20"/>
+  <rect x="372" y="132" width="126" height="22" rx="11" fill="#314257"/>
+  <rect x="372" y="182" width="164" height="22" rx="11" fill="#314257"/>
+  <rect x="372" y="232" width="108" height="22" rx="11" fill="#314257"/>
+  <text x="320" y="372" fill="#eef3f8" font-family="Segoe UI, Arial, sans-serif" font-size="28" text-anchor="middle">Nothing matched your filters</text>
+</svg>

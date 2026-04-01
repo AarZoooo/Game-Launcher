@@ -1,7 +1,9 @@
 <script lang="ts">
 import { onMount } from "svelte";
 import { browser } from "$app/environment";
+import { getGameBanner } from "$lib/assets";
 import Button from "$lib/components/common/Button.svelte";
+import EmptyState from "$lib/components/common/EmptyState.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
 import { pageLabels, recommendationPrompt } from "$lib/data/labels";
 import { performGameAction } from "$lib/services/gameService";
@@ -49,7 +51,7 @@ onMount(() => {
     {#if featuredRecommendation}
       <section class="featured-banner">
         <div class="banner-media">
-          <img src={featuredRecommendation.hero || featuredRecommendation.cover} alt="" loading="lazy" />
+          <img src={getGameBanner(featuredRecommendation)} alt="" loading="lazy" />
         </div>
 
         <div class="banner-copy">
@@ -91,9 +93,11 @@ onMount(() => {
   </div>
 {:else}
   <section class="offline">
-    <div class="icon">?</div>
-    <h2>{pageLabels.explore.offlineTitle}</h2>
-    <p>{pageLabels.explore.offlineBody}</p>
+    <EmptyState
+      kind="errorState"
+      title={pageLabels.explore.offlineTitle}
+      message={pageLabels.explore.offlineBody}
+    />
   </section>
 {/if}
 
@@ -238,15 +242,6 @@ onMount(() => {
     min-height: 62vh;
     display: grid;
     place-items: center;
-    align-content: center;
-    gap: 0.6rem;
-    text-align: center;
-    color: var(--text-muted);
-  }
-
-  .icon {
-    font-size: 4rem;
-    opacity: 0.35;
   }
 
   @media (max-width: 720px) {

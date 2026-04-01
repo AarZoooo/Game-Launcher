@@ -1,6 +1,7 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte";
 import Button from "$lib/components/common/Button.svelte";
+import EmptyState from "$lib/components/common/EmptyState.svelte";
 import Loader from "$lib/components/common/Loader.svelte";
 import Modal from "$lib/components/common/Modal.svelte";
 import { pageLabels } from "$lib/data/labels";
@@ -66,9 +67,9 @@ function truncate(path: string) {
       <Loader loading inline message={pageLabels.importModal.scanning} />
     </div>
   {:else if error}
-    <div class="state error">{error}</div>
+    <EmptyState kind="errorState" message={error} />
   {:else if !results.length}
-    <div class="state">{pageLabels.importModal.noResults}</div>
+    <EmptyState kind="noResults" message={pageLabels.importModal.noResults} />
   {:else}
     <div class="results">
       {#each results as game}
@@ -103,17 +104,12 @@ function truncate(path: string) {
 </Modal>
 
 <style>
-  .loader-wrap,
-  .state {
+  .loader-wrap {
     min-height: 12rem;
     display: grid;
     place-items: center;
     text-align: center;
     color: var(--text-secondary);
-  }
-
-  .state.error {
-    color: var(--color-danger-1);
   }
 
   .results {

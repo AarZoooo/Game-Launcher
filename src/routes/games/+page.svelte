@@ -1,5 +1,6 @@
 <script lang="ts">
 import Button from "$lib/components/common/Button.svelte";
+import EmptyState from "$lib/components/common/EmptyState.svelte";
 import FilterPanel from "$lib/components/game/FilterPanel.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
 import ImportGamesModal from "$lib/components/game/ImportGamesModal.svelte";
@@ -212,7 +213,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     {#if filteredInstalledGames.length > 0}
       <GameGrid games={filteredInstalledGames} context="library" on:action={handleMenuAction} />
     {:else}
-      <p class="empty">{pageLabels.games.installedEmpty}</p>
+      <EmptyState kind="emptyLibrary" message={pageLabels.games.installedEmpty} />
     {/if}
   </section>
 
@@ -228,7 +229,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     {#if filteredCatalogGames.length > 0}
       <GameGrid games={filteredCatalogGames} context="explore" on:action={handleMenuAction} />
     {:else}
-      <p class="empty">{pageLabels.games.catalogEmpty}</p>
+      <EmptyState kind="noResults" message={pageLabels.games.catalogEmpty} />
     {/if}
   </section>
 </div>
@@ -351,13 +352,6 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
 
   .controls > button:hover {
     transform: translateY(-1px);
-  }
-
-  .empty {
-    padding: var(--space-4);
-    border: 1px solid var(--surface-border-soft);
-    background: var(--surface-card);
-    color: var(--text-secondary);
   }
 
   @media (max-width: 980px) {

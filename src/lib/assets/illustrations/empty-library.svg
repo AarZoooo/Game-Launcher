@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420">
+  <rect width="640" height="420" rx="30" fill="#121822"/>
+  <circle cx="116" cy="86" r="56" fill="#d5b36a" opacity=".12"/>
+  <circle cx="546" cy="320" r="86" fill="#8a9a54" opacity=".12"/>
+  <rect x="120" y="110" width="170" height="218" rx="20" fill="#1d2735" stroke="#3e5167"/>
+  <rect x="234" y="90" width="170" height="238" rx="20" fill="#243244" stroke="#526781"/>
+  <rect x="348" y="130" width="170" height="198" rx="20" fill="#1a2430" stroke="#465a70"/>
+  <path d="M188 184h34l23 28 29-44 48 84H188z" fill="#d5b36a"/>
+  <text x="320" y="382" fill="#eef3f8" font-family="Segoe UI, Arial, sans-serif" font-size="28" text-anchor="middle">No games here yet</text>
+</svg>

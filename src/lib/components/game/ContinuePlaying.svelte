@@ -1,5 +1,6 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte";
+import { getGameBanner } from "$lib/assets";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
 import SyncBadge from "$lib/components/sync/SyncBadge.svelte";
@@ -14,7 +15,7 @@ export let game: Game;
 </script>
 
 <section class="hero">
-  <img class="hero-media" src={game.hero || game.cover} alt="" loading="lazy" />
+  <img class="hero-media" src={getGameBanner(game)} alt="" loading="lazy" />
   <div class="veil"></div>
   <div class="content">
     <p class="eyebrow">{pageLabels.continuePlaying.eyebrow}</p>

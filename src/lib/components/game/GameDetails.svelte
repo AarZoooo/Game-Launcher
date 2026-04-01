@@ -1,5 +1,7 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
+import { appIcons, getGameBanner } from "$lib/assets";
+import Icon from "$lib/components/common/Icon.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
 import { pageLabels } from "$lib/data/labels";
@@ -13,12 +15,10 @@ let launchError = "";
 
 <section class="details">
   <div class="hero">
-    <img class="hero-media" src={game.hero || game.cover} alt="" loading="lazy" />
+    <img class="hero-media" src={getGameBanner(game)} alt="" loading="lazy" />
     <div class="hero-top">
       <button class="back" aria-label={pageLabels.common.goBack} on:click={() => goto('/')}>
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M9.97 3.47a.75.75 0 0 1 0 1.06L7.06 7.44h6.19a.75.75 0 0 1 0 1.5H7.06l2.9 2.9a.75.75 0 1 1-1.06 1.06L4.72 8.72a1 1 0 0 1 0-1.44L8.9 3.47a.75.75 0 0 1 1.06 0Z" />
-        </svg>
+        <Icon src={appIcons.ui.back} size="1rem" />
       </button>
       <div class="window-actions">
         <span></span><span></span><span></span>
@@ -105,12 +105,6 @@ let launchError = "";
     cursor: pointer;
     border-radius: var(--radius-sm);
     backdrop-filter: blur(10px);
-  }
-
-  .back svg {
-    width: 1rem;
-    height: 1rem;
-    fill: currentColor;
   }
 
   .window-actions {

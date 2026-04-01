@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#111823"/>
+      <stop offset="50%" stop-color="#223045"/>
+      <stop offset="100%" stop-color="#10141c"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(288 190) rotate(21) scale(544 312)">
+      <stop offset="0%" stop-color="#d5b36a" stop-opacity=".65"/>
+      <stop offset="100%" stop-color="#d5b36a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="720" rx="42" fill="url(#bg)"/>
+  <rect width="1600" height="720" rx="42" fill="url(#glow)"/>
+  <circle cx="1310" cy="208" r="174" fill="#ffffff" opacity=".05"/>
+  <circle cx="1430" cy="566" r="224" fill="#8a9a54" opacity=".18"/>
+  <rect x="90" y="104" width="610" height="512" rx="28" fill="#ffffff" opacity=".05"/>
+  <text x="140" y="250" fill="#f5f7fb" font-family="Bahnschrift, Segoe UI, Arial, sans-serif" font-size="88" font-weight="700">Scoped Launcher</text>
+  <text x="140" y="334" fill="#c4cfdb" font-family="Segoe UI, Arial, sans-serif" font-size="34">Your library. Your backlog. One clean place.</text>
+  <text x="140" y="556" fill="#9db087" font-family="Segoe UI, Arial, sans-serif" font-size="28">Dynamic banner fallback</text>
+</svg>

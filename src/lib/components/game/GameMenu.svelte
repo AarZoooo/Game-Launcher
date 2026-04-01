@@ -1,5 +1,7 @@
 <script lang="ts">
 import { createEventDispatcher, onDestroy, onMount } from "svelte";
+import { appIcons } from "$lib/assets";
+import Icon from "$lib/components/common/Icon.svelte";
 import { getGameMenuGroups } from "$lib/data/gameMenu";
 import { pageLabels } from "$lib/data/labels";
 import {
@@ -74,11 +76,7 @@ onDestroy(() => {
     aria-label={pageLabels.common.openMenuFor(game.title)}
     on:click|stopPropagation={toggleMenu}
   >
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <circle cx="3" cy="8" r="1.2"></circle>
-      <circle cx="8" cy="8" r="1.2"></circle>
-      <circle cx="13" cy="8" r="1.2"></circle>
-    </svg>
+    <Icon src={appIcons.ui.more} size="0.9rem" />
   </button>
 
   {#if open}
@@ -162,12 +160,6 @@ onDestroy(() => {
     background: rgba(132, 136, 146, 0.38);
     color: var(--text-primary);
     box-shadow: inset 0 0 0 1px var(--surface-border);
-  }
-
-  .menu-trigger svg {
-    width: 0.9rem;
-    height: 0.9rem;
-    fill: currentColor;
   }
 
   .menu {

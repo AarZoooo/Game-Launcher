@@ -1,7 +1,9 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte";
 import { goto } from "$app/navigation";
+import { appIcons } from "$lib/assets";
 import Button from "$lib/components/common/Button.svelte";
+import Icon from "$lib/components/common/Icon.svelte";
 import { pageLabels } from "$lib/data/labels";
 import { playGame } from "$lib/services/gameService";
 import { activeGameId, isGameRunning } from "$lib/stores/uiStore";
@@ -50,9 +52,7 @@ async function handleClick() {
   ariaLabel={`${label} ${game.title}`}
   on:click={handleClick}
 >
-  <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-    <path d="M5 3.75a.75.75 0 0 1 1.14-.64l5.5 3.5a.75.75 0 0 1 0 1.28l-5.5 3.5A.75.75 0 0 1 5 10.75z" />
-  </svg>
+  <Icon src={appIcons.ui.play} size="0.95rem" />
   {#if showLabel}
     <span>{label}</span>
   {/if}
