@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::db::{database, games as game_db};
 use crate::models::game::Game;
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
@@ -71,15 +72,44 @@ fn read_games_from_disk(app: &AppHandle) -> Result<Vec<Game>, String> {
     serde_json::from_str(&file_contents).map_err(|error| format!("Could not parse games.json: {error}"))
 }
 
-fn write_games_to_disk(app: &AppHandle, games: &[Game]) -> Result<String, String> {
-    let file_path = games_file_path(app)?;
+fn migrate_games_to_database(app: &AppHandle) -> Result<(), String> {
+    let mut connection = database::open_database(app)?;
+    if game_db::count_games(&connection)? > 0 {
+        return Ok(());
+    }
 
-    let json = serde_json::to_string_pretty(games)
-        .map_err(|error| format!("Could not serialize game list: {error}"))?;
+    let seed_games = if let Ok(games) = read_games_from_disk(app) {
+        games
+    } else {
+        sample_games()
+    };
 
-    fs::write(&file_path, json).map_err(|error| format!("Could not write games.json: {error}"))?;
+    game_db::replace_all_games(&mut connection, &seed_games)?;
+    println!(
+        "[storage] migrated {} game(s) into SQLite library storage",
+        seed_games.len()
+    );
 
-    Ok(format!("Saved {} game(s) to {}", games.len(), file_path.display()))
+    Ok(())
+}
+
+fn read_games_from_database(app: &AppHandle) -> Result<Vec<Game>, String> {
+    migrate_games_to_database(app)?;
+    let connection = database::open_database(app)?;
+    game_db::get_all_games(&connection)
+}
+
+fn write_games_to_database(app: &AppHandle, games: &[Game]) -> Result<String, String> {
+    migrate_games_to_database(app)?;
+    let mut connection = database::open_database(app)?;
+    game_db::replace_all_games(&mut connection, games)?;
+
+    let database_path = database::database_path(app)?;
+    Ok(format!(
+        "Saved {} game(s) to {}",
+        games.len(),
+        database_path.display()
+    ))
 }
 
 fn sample_games() -> Vec<Game> {
@@ -755,17 +785,17 @@ fn walk_for_games(
 
 #[tauri::command]
 pub fn read_games(app: AppHandle) -> Result<Vec<Game>, String> {
-    read_games_from_disk(&app)
+    read_games_from_database(&app)
 }
 
 #[tauri::command]
 pub fn write_games(app: AppHandle, games: Vec<Game>) -> Result<String, String> {
-    write_games_to_disk(&app, &games)
+    write_games_to_database(&app, &games)
 }
 
 #[tauri::command]
 pub fn scan_local_games(app: AppHandle) -> Result<Vec<ScannedGameCandidate>, String> {
-    let current_games = read_games_from_disk(&app)?;
+    let current_games = read_games_from_database(&app)?;
     let mut seen_paths = HashSet::new();
     let mut best_by_root = HashMap::new();
 
