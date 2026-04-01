@@ -5,10 +5,10 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
 </script>
 
 <aside class="sidebar">
-  <div class="brand">
+  <button type="button" class="brand" on:click={() => goto('/')}>
     <strong>{appBrand.name}</strong>
     <span>{appBrand.version}</span>
-  </div>
+  </button>
 
   <nav>
     {#each navItems as item}
@@ -64,7 +64,11 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
   }
 
   .brand {
+    border: 0;
+    background: transparent;
     padding: 0 var(--space-6);
+    text-align: left;
+    cursor: pointer;
   }
 
   .brand strong {
