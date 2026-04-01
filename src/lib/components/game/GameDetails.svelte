@@ -12,6 +12,7 @@ export let similarGames: Game[] = [];
 export let backHref = "/";
 
 let launchError = "";
+$: showPlayButton = game.inLibrary !== false;
 </script>
 
 <section class="details">
@@ -28,14 +29,16 @@ let launchError = "";
 
     <div class="hero-copy">
       <h1>{game.title}</h1>
-      <div class="actions">
-        <GamePlayButton
-          {game}
-          compact
-          on:launcherror={(event) => (launchError = event.detail)}
-        />
-      </div>
-      {#if launchError}
+      {#if showPlayButton}
+        <div class="actions">
+          <GamePlayButton
+            {game}
+            compact
+            on:launcherror={(event) => (launchError = event.detail)}
+          />
+        </div>
+      {/if}
+      {#if showPlayButton && launchError}
         <p class="error">{launchError}</p>
       {/if}
 
