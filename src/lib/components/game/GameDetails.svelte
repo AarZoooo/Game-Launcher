@@ -38,25 +38,26 @@ $: if (heroElement) {
 
     <div class="hero-copy">
       <h1>{game.title}</h1>
-      {#if showPlayButton}
-        <div class="actions">
+      <div class="actions">
+        {#if showPlayButton}
           <GamePlayButton
             {game}
             compact
             on:launcherror={(event) => (launchError = event.detail)}
           />
+        {/if}
+
+        <div class="meta-row">
+          <div><span>{pageLabels.game.genres}</span><p>{game.genres}</p></div>
+          <div><span>{pageLabels.game.rating}</span><p>{game.rating}/10</p></div>
+          <div><span>{pageLabels.game.coopSupport}</span><p>{game.coop}</p></div>
+          <div><span>{pageLabels.game.completionTime}</span><p>{game.completion}</p></div>
         </div>
-      {/if}
+      </div>
+
       {#if showPlayButton && launchError}
         <p class="error">{launchError}</p>
       {/if}
-
-      <div class="meta-row">
-        <div><span>{pageLabels.game.genres}</span><p>{game.genres}</p></div>
-        <div><span>{pageLabels.game.rating}</span><p>{game.rating}/10</p></div>
-        <div><span>{pageLabels.game.coopSupport}</span><p>{game.coop}</p></div>
-        <div><span>{pageLabels.game.completionTime}</span><p>{game.completion}</p></div>
-      </div>
     </div>
   </div>
 
@@ -150,6 +151,7 @@ $: if (heroElement) {
   .actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-3);
   }
 
@@ -170,8 +172,15 @@ $: if (heroElement) {
 
   .meta-row {
     display: flex;
+    flex: 1 1 24rem;
     flex-wrap: wrap;
-    gap: var(--space-6);
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .meta-row > div {
+    min-width: 0;
+    flex: 1 1 9rem;
   }
 
   .meta-row span {
@@ -192,5 +201,11 @@ $: if (heroElement) {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+  }
+
+  @media (max-width: 900px) {
+    .meta-row {
+      flex-basis: 100%;
+    }
   }
 </style>

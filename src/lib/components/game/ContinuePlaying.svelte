@@ -2,7 +2,6 @@
 import { createEventDispatcher } from "svelte";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
-import SyncBadge from "$lib/components/sync/SyncBadge.svelte";
 import { pageLabels } from "$lib/data/labels";
 import { effectiveUIMode } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
@@ -41,19 +40,15 @@ $: if (heroElement) {
 
     <div class="actions">
       <GamePlayButton {game} compact />
-    </div>
 
-    <div class="meta">
-      {#each game.metrics || [] as metric}
-        <div class="metric">
-          <span>{metric.label}</span>
-          {#if metric.label === 'Cloud Sync'}
-            <SyncBadge status={metric.value} />
-          {:else}
+      <div class="meta">
+        {#each (game.metrics || []).filter((metric) => metric.label !== 'Cloud Sync') as metric}
+          <div class="metric">
+            <span>{metric.label}</span>
             <p>{metric.value}</p>
-          {/if}
-        </div>
-      {/each}
+          </div>
+        {/each}
+      </div>
     </div>
   </div>
 </section>
@@ -131,17 +126,22 @@ $: if (heroElement) {
   .actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-3);
   }
 
   .meta {
     display: flex;
-    gap: var(--space-6);
+    flex: 1 1 24rem;
     flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
   }
 
   .metric {
-    min-width: 7.5rem;
+    min-width: 0;
+    flex: 1 1 9rem;
   }
 
   .metric span {
@@ -165,6 +165,10 @@ $: if (heroElement) {
 
     .content {
       padding: var(--space-6);
+    }
+
+    .meta {
+      flex-basis: 100%;
     }
   }
 </style>
