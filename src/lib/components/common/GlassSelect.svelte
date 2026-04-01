@@ -15,6 +15,7 @@ export let fullWidth = false;
 
 let root: HTMLDivElement;
 let open = false;
+let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 
 $: selectedOption =
 	options.find((option) => option.value === value) ||
@@ -30,6 +31,21 @@ function toggle() {
 
 function close() {
 	open = false;
+}
+
+function clearCloseTimeout() {
+	if (closeTimeout) {
+		clearTimeout(closeTimeout);
+		closeTimeout = null;
+	}
+}
+
+function scheduleClose() {
+	clearCloseTimeout();
+	closeTimeout = setTimeout(() => {
+		close();
+		closeTimeout = null;
+	}, 120);
 }
 
 function selectOption(option: SelectOption) {
@@ -50,6 +66,7 @@ onMount(() => {
 });
 
 onDestroy(() => {
+	clearCloseTimeout();
 	close();
 });
 </script>
@@ -59,7 +76,8 @@ onDestroy(() => {
   class="select-root"
   bind:this={root}
   role="presentation"
-  on:mouseleave={close}
+  on:mouseenter={clearCloseTimeout}
+  on:mouseleave={scheduleClose}
 >
   <button
     type="button"
