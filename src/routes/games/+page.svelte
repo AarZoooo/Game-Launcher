@@ -1,6 +1,7 @@
 <script lang="ts">
 import Button from "$lib/components/common/Button.svelte";
 import EmptyState from "$lib/components/common/EmptyState.svelte";
+import GlassSelect from "$lib/components/common/GlassSelect.svelte";
 import FilterPanel from "$lib/components/game/FilterPanel.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
 import ImportGamesModal from "$lib/components/game/ImportGamesModal.svelte";
@@ -185,11 +186,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
 
       <label>
         <span>{pageLabels.games.sortBy}</span>
-        <select class="field-control glass-dropdown" bind:value={sortBy}>
-          {#each sortOptions as option}
-            <option value={option.value}>{option.label}</option>
-          {/each}
-        </select>
+        <GlassSelect bind:value={sortBy} options={sortOptions} ariaLabel={pageLabels.games.sortBy} />
       </label>
 
       <button on:click={() => (showFilters = true)}>{pageLabels.games.filters}</button>
@@ -312,8 +309,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   }
 
   label,
-  button,
-  select {
+  button {
     font: inherit;
   }
 
@@ -325,7 +321,6 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     font-size: 0.8rem;
   }
 
-  select,
   .controls > button {
     min-width: 7.2rem;
     border: 1px solid var(--surface-border);
@@ -346,7 +341,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   }
 
   .controls > button:hover,
-  select:hover {
+  :global(.select-trigger:hover) {
     background: rgba(255, 255, 255, 0.09);
   }
 

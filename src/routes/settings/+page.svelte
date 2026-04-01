@@ -1,5 +1,11 @@
 ﻿<script lang="ts">
+import GlassSelect from "$lib/components/common/GlassSelect.svelte";
 import { pageLabels, settingsSections } from "$lib/data/labels";
+import type { SelectOption } from "$lib/types/UI";
+
+function toOptions(options: string[] = []): SelectOption[] {
+	return options.map((option) => ({ label: option, value: option }));
+}
 </script>
 
 <div class="settings">
@@ -14,11 +20,7 @@ import { pageLabels, settingsSections } from "$lib/data/labels";
             <span class="label">{field.label}</span>
 
             {#if field.type === 'select'}
-              <select class="field-control glass-dropdown" aria-label={field.label}>
-                {#each field.options || [] as option}
-                  <option selected={option === field.value}>{option}</option>
-                {/each}
-              </select>
+              <GlassSelect value={field.value} options={toOptions(field.options)} ariaLabel={field.label} fullWidth />
             {:else if field.type === 'text'}
               <input class="field-control" aria-label={field.label} value={field.value} />
             {:else}
@@ -82,18 +84,6 @@ import { pageLabels, settingsSections } from "$lib/data/labels";
   .radio-line {
     width: 100%;
     justify-content: flex-start;
-  }
-
-  select {
-    appearance: none;
-    background-image:
-      linear-gradient(45deg, transparent 50%, rgba(244, 242, 247, 0.8) 50%),
-      linear-gradient(135deg, rgba(244, 242, 247, 0.8) 50%, transparent 50%);
-    background-position:
-      calc(100% - 1.05rem) calc(50% - 0.12rem),
-      calc(100% - 0.72rem) calc(50% - 0.12rem);
-    background-size: 0.4rem 0.4rem;
-    background-repeat: no-repeat;
   }
 
   .radio-line {

@@ -91,6 +91,7 @@ onDestroy(() => {
 <div
   class="menu-root"
   bind:this={root}
+  role="presentation"
   on:mouseenter={clearCloseTimeout}
   on:mouseleave={scheduleClose}
 >

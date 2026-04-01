@@ -1,5 +1,6 @@
 ﻿<script lang="ts">
 import { createEventDispatcher } from "svelte";
+import GlassSelect from "$lib/components/common/GlassSelect.svelte";
 import { coopOptions, genreOptions, statusOptions } from "$lib/data/filters";
 import { pageLabels } from "$lib/data/labels";
 import type { GameFilterState } from "$lib/types/UI";
@@ -47,29 +48,17 @@ function close() {
 
   <div class="section">
     <p>{pageLabels.filterPanel.status}</p>
-    <select class="field-control glass-dropdown" bind:value={status}>
-      {#each statusOptions as option}
-        <option value={option.value}>{option.label}</option>
-      {/each}
-    </select>
+    <GlassSelect bind:value={status} options={statusOptions} ariaLabel={pageLabels.filterPanel.status} fullWidth />
   </div>
 
   <div class="section">
     <p>{pageLabels.filterPanel.genres}</p>
-    <select class="field-control glass-dropdown" bind:value={genre}>
-      {#each genreOptions as option}
-        <option value={option.value}>{option.label}</option>
-      {/each}
-    </select>
+    <GlassSelect bind:value={genre} options={genreOptions} ariaLabel={pageLabels.filterPanel.genres} fullWidth />
   </div>
 
   <div class="section">
     <p>{pageLabels.filterPanel.coopSupport}</p>
-    <select class="field-control glass-dropdown" bind:value={coop}>
-      {#each coopOptions as option}
-        <option value={option.value}>{option.label}</option>
-      {/each}
-    </select>
+    <GlassSelect bind:value={coop} options={coopOptions} ariaLabel={pageLabels.filterPanel.coopSupport} fullWidth />
   </div>
 
   <button class="apply" on:click={applyFilters}>
