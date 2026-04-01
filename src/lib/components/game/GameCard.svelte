@@ -1,6 +1,7 @@
 ﻿<script lang="ts">
 import { createEventDispatcher } from "svelte";
 import { goto } from "$app/navigation";
+import { page } from "$app/stores";
 import { getGameCover } from "$lib/assets";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import { pageLabels } from "$lib/data/labels";
@@ -25,7 +26,8 @@ $: if (cardElement) {
 }
 
 function openGame() {
-	goto(`/game/${game.id}`);
+	const from = `${$page.url.pathname}${$page.url.search}${$page.url.hash}`;
+	goto(`/game/${game.id}?from=${encodeURIComponent(from)}`);
 }
 </script>
 

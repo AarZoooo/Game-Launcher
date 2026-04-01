@@ -9,6 +9,7 @@ import type { Game } from "$lib/types/Game";
 
 export let game: Game;
 export let similarGames: Game[] = [];
+export let backHref = "/";
 
 let launchError = "";
 </script>
@@ -17,7 +18,7 @@ let launchError = "";
   <div class="hero">
     <img class="hero-media" src={getGameBanner(game)} alt="" loading="lazy" />
     <div class="hero-top">
-      <button class="back" aria-label={pageLabels.common.goBack} on:click={() => goto('/')}>
+      <button class="back" aria-label={pageLabels.common.goBack} on:click={() => goto(backHref)}>
         <Icon src={appIcons.ui.back} size="1rem" />
       </button>
       <div class="window-actions">
