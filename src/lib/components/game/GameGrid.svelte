@@ -48,11 +48,13 @@ export let menuPlacement: MenuPlacement = "above-right";
   }
 
   .horizontal {
+    --menu-headroom: 13.5rem;
     display: flex;
     gap: var(--space-6);
     overflow-x: auto;
     scrollbar-width: none;
-    padding: var(--space-1) 0 var(--space-2);
+    padding: var(--menu-headroom) 0 var(--space-2);
+    margin-top: calc(var(--menu-headroom) * -1);
   }
 
   .horizontal::-webkit-scrollbar {

@@ -45,7 +45,7 @@ $: featuredGame =
         horizontal
         compact
         context="home"
-        menuPlacement="side-right"
+        menuPlacement="above-right"
         on:action={handleAction}
       />
     </section>
@@ -60,7 +60,7 @@ $: featuredGame =
         horizontal
         compact
         context="explore"
-        menuPlacement="side-right"
+        menuPlacement="above-right"
         on:action={handleAction}
       />
     </section>

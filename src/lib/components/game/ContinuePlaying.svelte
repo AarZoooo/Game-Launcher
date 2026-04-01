@@ -93,6 +93,11 @@ export let game: Game;
     z-index: var(--z-menu);
   }
 
+  .hero-menu :global(.menu-trigger) {
+    opacity: 0.92;
+    transform: scale(1);
+  }
+
   .eyebrow {
     margin: 0;
     color: var(--text-secondary);

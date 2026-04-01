@@ -76,7 +76,9 @@ onMount(() => {
 	};
 
 	window.addEventListener("click", close);
-	return () => window.removeEventListener("click", close);
+	return () => {
+		window.removeEventListener("click", close);
+	};
 });
 
 onDestroy(() => {
