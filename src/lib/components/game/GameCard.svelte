@@ -34,7 +34,7 @@ function openGame() {
     <GameMenu
       {game}
       {context}
-      placement="side-right"
+      placement="above-right"
       on:action={(event) => dispatch('action', event.detail)}
     />
   </div>
@@ -93,7 +93,7 @@ function openGame() {
 
   .menu-shell {
     position: absolute;
-    top: var(--space-3);
+    bottom: var(--space-3);
     right: var(--space-3);
     z-index: 12;
   }
@@ -129,7 +129,7 @@ function openGame() {
 
   .info {
     min-height: 3.9rem;
-    padding: 0 var(--space-1);
+    padding: 0 calc(var(--space-1) + 2.75rem) 0 var(--space-1);
   }
 
   .title-row {

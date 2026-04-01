@@ -27,6 +27,7 @@ export let placement: MenuPlacement = "below-right";
 
 let root: HTMLDivElement;
 let menuKey = "";
+let closeTimeout: ReturnType<typeof setTimeout> | null = null;
 $: isActiveGame = $isGameRunning && $activeGameId === game.id;
 $: if (!menuKey && game?.id) {
 	menuKey = `${game.id}-${Math.random().toString(36).slice(2, 10)}`;
@@ -42,12 +43,29 @@ function select(actionId: string) {
 function toggleMenu() {
 	if (!menuKey) return;
 
+	clearCloseTimeout();
+
 	if (open) {
 		uiStore.closeOpenMenu();
 		return;
 	}
 
 	uiStore.setOpenMenu(menuKey);
+}
+
+function clearCloseTimeout() {
+	if (closeTimeout) {
+		clearTimeout(closeTimeout);
+		closeTimeout = null;
+	}
+}
+
+function scheduleClose() {
+	clearCloseTimeout();
+	closeTimeout = setTimeout(() => {
+		uiStore.closeOpenMenu();
+		closeTimeout = null;
+	}, 120);
 }
 
 onMount(() => {
@@ -62,13 +80,20 @@ onMount(() => {
 });
 
 onDestroy(() => {
+	clearCloseTimeout();
+
 	if (open) {
 		uiStore.closeOpenMenu();
 	}
 });
 </script>
 
-<div class="menu-root" bind:this={root}>
+<div
+  class="menu-root"
+  bind:this={root}
+  on:mouseenter={clearCloseTimeout}
+  on:mouseleave={scheduleClose}
+>
   <button
     type="button"
     class:open
@@ -166,8 +191,9 @@ onDestroy(() => {
     position: absolute;
     right: 0;
     top: calc(100% + 0.45rem);
-    min-width: 13.5rem;
-    padding: var(--space-2);
+    min-width: 10.5rem;
+    max-width: 11.5rem;
+    padding: var(--space-1);
     border-radius: var(--radius-lg);
     background: rgba(30, 30, 30, 0.6);
     border: 1px solid var(--surface-border);
@@ -202,9 +228,11 @@ onDestroy(() => {
     background: transparent;
     color: var(--text-primary);
     text-align: left;
-    padding: var(--space-3);
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
     font: inherit;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
+    line-height: 1.2;
     cursor: pointer;
     border-radius: var(--radius-sm);
     transition:
