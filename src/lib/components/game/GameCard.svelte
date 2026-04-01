@@ -34,6 +34,10 @@ function openGame() {
 
 <article bind:this={cardElement} class:compact class="game-card">
   <div class="game-card-menu-shell">
+    {#if game.favorite}
+      <span class="game-card-favorite" aria-label={pageLabels.common.favorite}>★</span>
+    {/if}
+
     <GameMenu
       {game}
       {context}
@@ -64,10 +68,6 @@ function openGame() {
           {compact ? game.genreLabel || game.genres : `${game.hours} • ${game.platform}`}
         </p>
       </div>
-
-      {#if game.favorite}
-        <span class="game-card-favorite" aria-label={pageLabels.common.favorite}>★</span>
-      {/if}
     </div>
   </div>
 </article>
