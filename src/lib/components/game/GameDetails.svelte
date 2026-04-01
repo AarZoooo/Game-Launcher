@@ -81,7 +81,7 @@ let launchError = "";
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(15, 16, 20, 0) 8%, rgba(15, 16, 20, 0.95) 100%);
+    background: linear-gradient(180deg, transparent 8%, var(--surface-glass-strong) 100%);
   }
 
   .hero-top,
@@ -100,7 +100,7 @@ let launchError = "";
     width: 1.9rem;
     height: 1.9rem;
     border: 0;
-    background: rgba(30, 30, 30, 0.6);
+    background: var(--surface-glass);
     color: var(--text-primary);
     cursor: pointer;
     border-radius: var(--radius-sm);
@@ -116,7 +116,7 @@ let launchError = "";
     width: 0.65rem;
     height: 0.65rem;
     border-radius: var(--radius-pill);
-    background: rgba(241, 239, 244, 0.55);
+    background: var(--text-secondary);
   }
 
   .hero-copy {

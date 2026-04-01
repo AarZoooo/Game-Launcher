@@ -151,7 +151,7 @@ onDestroy(() => {
     display: inline-grid;
     place-items: center;
     border: 0;
-    background: rgba(30, 30, 30, 0.6);
+    background: var(--surface-glass);
     color: var(--text-primary);
     width: 2rem;
     height: 2rem;
@@ -183,7 +183,7 @@ onDestroy(() => {
   .menu-trigger:hover,
   .menu-trigger:focus-visible,
   .menu-trigger.open {
-    background: rgba(132, 136, 146, 0.38);
+    background: var(--surface-hover);
     color: var(--text-primary);
     box-shadow: inset 0 0 0 1px var(--surface-border);
   }
@@ -196,7 +196,7 @@ onDestroy(() => {
     max-width: 11.5rem;
     padding: var(--space-1);
     border-radius: var(--radius-lg);
-    background: rgba(30, 30, 30, 0.6);
+    background: var(--surface-glass);
     border: 1px solid var(--surface-border);
     box-shadow: var(--shadow-md);
     backdrop-filter: blur(10px);

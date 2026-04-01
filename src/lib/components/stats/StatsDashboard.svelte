@@ -189,7 +189,7 @@ $: if (heatmapCard) {
     padding: 0;
     border: 0;
     border-radius: 0.18rem;
-    background: rgba(210, 214, 220, 0.18);
+    background: var(--surface-border);
     transition:
       transform var(--motion-fast) ease,
       filter var(--motion-fast) ease,
@@ -198,19 +198,19 @@ $: if (heatmapCard) {
   }
 
   .cell.level-0 {
-    background: rgba(210, 214, 220, 0.18);
+    background: var(--surface-border);
   }
 
   .cell.level-1 {
-    background: #7ea76d;
+    background: var(--color-secondary-1);
   }
 
   .cell.level-2 {
-    background: #4a9c4f;
+    background: var(--color-success-2);
   }
 
   .cell.level-3 {
-    background: #1f5f2f;
+    background: var(--color-secondary-3);
   }
 
   button.cell:hover,
@@ -288,9 +288,14 @@ $: if (heatmapCard) {
     height: 3.1rem;
     border-radius: 50%;
     background:
-      radial-gradient(circle at center, #3f4149 46%, transparent 47%),
-      conic-gradient(#d8d2ff 0 13%, #f0b8aa 13% 33%, #b9dd86 33% 60%, #8ea0ff 60% 100%);
-    box-shadow: 0 0 1rem rgba(255, 255, 255, 0.08);
+      radial-gradient(circle at center, var(--color-background-4) 46%, transparent 47%),
+      conic-gradient(
+        var(--color-tertiary-2) 0 13%,
+        var(--color-danger-1) 13% 33%,
+        var(--color-secondary-1) 33% 60%,
+        var(--color-primary-1) 60% 100%
+      );
+    box-shadow: 0 0 1rem var(--surface-border-soft);
   }
 
   .legend p {

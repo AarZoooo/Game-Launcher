@@ -107,7 +107,7 @@ function pageToAccentSource(pathname: string, gameId?: string) {
   }
 
   :global(body.gaming-mode *) {
-    scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+    scrollbar-color: var(--text-muted) transparent;
   }
 
   @keyframes rise {

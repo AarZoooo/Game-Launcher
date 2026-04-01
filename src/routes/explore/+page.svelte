@@ -127,8 +127,8 @@ onMount(() => {
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(180deg, rgba(10, 10, 13, 0.08) 15%, rgba(10, 10, 13, 0.82) 100%),
-      linear-gradient(90deg, rgba(11, 11, 14, 0.1) 20%, rgba(11, 11, 14, 0.62) 100%);
+      linear-gradient(180deg, transparent 15%, var(--surface-glass-strong) 100%),
+      linear-gradient(90deg, transparent 20%, var(--surface-glass) 100%);
   }
 
   .banner-media img {
@@ -215,7 +215,7 @@ onMount(() => {
     padding: var(--space-1);
     border: 1px solid var(--surface-border);
     border-radius: var(--radius-lg);
-    background: rgba(30, 30, 30, 0.6);
+    background: var(--surface-glass);
     box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.12);
     backdrop-filter: blur(10px);
   }

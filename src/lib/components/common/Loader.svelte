@@ -33,8 +33,8 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
 <style>
   .loader-shell {
     --loader-accent: var(--interactive-primary-bg);
-    --loader-track: rgba(255, 255, 255, 0.12);
-    --loader-bg: #1e1e1e;
+    --loader-track: var(--surface-border);
+    --loader-bg: var(--surface-glass-strong);
     display: inline-flex;
     flex-direction: column;
     align-items: center;
@@ -51,7 +51,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
     position: fixed;
     inset: 0;
     z-index: var(--z-loader);
-    background: rgba(18, 18, 18, 0.88);
+    background: var(--color-overlay-1);
   }
 
   .loader-shell.normal.overlay {
@@ -95,7 +95,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
 
   .normal .loader span:nth-child(2) {
     inset: 0.35rem;
-    border: 0.14rem solid rgba(255, 255, 255, 0.08);
+    border: 0.14rem solid var(--surface-border-soft);
   }
 
   .normal .loader span:nth-child(3),
@@ -139,11 +139,11 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
   }
 
   .gaming.overlay {
-    background: rgba(18, 18, 18, 0.76);
+    background: var(--color-overlay-1);
   }
 
   .gaming p {
-    color: rgba(236, 233, 241, 0.52);
+    color: var(--text-muted);
   }
 
   @keyframes spin {

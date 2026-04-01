@@ -63,7 +63,7 @@ export let game: Game;
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(90deg, rgba(11, 11, 14, 0.6) 0%, rgba(11, 11, 14, 0.22) 45%, rgba(11, 11, 14, 0.08) 100%),
+      linear-gradient(90deg, var(--surface-glass-strong) 0%, var(--surface-glass) 45%, transparent 100%),
       radial-gradient(circle at 50% 0%, rgb(var(--accent-rgb) / 0.18) 0%, transparent 48%);
     backdrop-filter: blur(calc(var(--ui-blur) * 0.08));
   }

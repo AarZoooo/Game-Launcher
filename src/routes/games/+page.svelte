@@ -342,7 +342,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
 
   .controls > button:hover,
   :global(.select-trigger:hover) {
-    background: rgba(255, 255, 255, 0.09);
+    background: var(--surface-hover);
   }
 
   .controls > button:hover {

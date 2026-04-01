@@ -72,7 +72,7 @@ function close() {
     inset: 0;
     border: 0;
     padding: 0;
-    background: rgba(9, 9, 12, 0.36);
+    background: var(--color-overlay-1);
     backdrop-filter: blur(calc(var(--ui-blur) * 0.4));
   }
 
@@ -83,10 +83,10 @@ function close() {
     width: min(24rem, calc(100vw - 2rem));
     height: 100%;
     background:
-      linear-gradient(180deg, rgb(var(--accent-rgb) / 0.14), rgba(30, 30, 30, 0.6)),
-      rgba(30, 30, 30, 0.6);
+      linear-gradient(180deg, rgb(var(--accent-rgb) / 0.14), var(--surface-glass)),
+      var(--surface-glass);
     border-left: 1px solid var(--surface-border);
-    box-shadow: -1rem 0 3rem rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
     backdrop-filter: blur(10px);
     padding: var(--space-7);
     display: flex;

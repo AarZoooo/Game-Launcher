@@ -137,8 +137,8 @@ onDestroy(() => {
     flex: 0 0 auto;
     width: 0.5rem;
     height: 0.5rem;
-    border-right: 2px solid rgb(244 242 247 / 0.8);
-    border-bottom: 2px solid rgb(244 242 247 / 0.8);
+    border-right: 2px solid var(--text-primary);
+    border-bottom: 2px solid var(--text-primary);
     transform: translateY(-0.08rem) rotate(45deg);
     transition: transform var(--motion-fast) ease;
   }
@@ -154,7 +154,7 @@ onDestroy(() => {
     left: 0;
     padding: var(--space-1);
     border-radius: var(--radius-lg);
-    background: rgba(30, 30, 30, 0.6);
+    background: var(--surface-glass);
     border: 1px solid var(--surface-border);
     box-shadow: var(--shadow-md);
     backdrop-filter: blur(10px);
@@ -180,6 +180,6 @@ onDestroy(() => {
 
   .option:hover,
   .option.selected {
-    background: rgba(132, 136, 146, 0.24);
+    background: var(--surface-hover);
   }
 </style>

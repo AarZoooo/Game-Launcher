@@ -101,18 +101,18 @@ function handleBackdropClick() {
   }
 
   .backdrop.normal {
-    background: rgba(10, 10, 13, 0.48);
+    background: var(--color-overlay-1);
     backdrop-filter: blur(calc(var(--ui-blur) * 0.8));
   }
 
   .backdrop.gaming {
-    background: rgba(10, 10, 13, 0.34);
+    background: var(--color-overlay-1);
   }
 
   .modal {
     width: min(100%, 32rem);
     border: 1px solid var(--surface-border);
-    background: rgba(30, 30, 30, 0.6);
+    background: var(--surface-glass);
     color: var(--text-primary);
     transform-origin: center;
     transition:
