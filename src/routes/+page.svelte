@@ -2,37 +2,26 @@
 import ContinuePlaying from "$lib/components/game/ContinuePlaying.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
 import StatsDashboard from "$lib/components/stats/StatsDashboard.svelte";
-import { launchGame, openGameFolder } from "$lib/services/tauriService";
+import { pageLabels } from "$lib/data/labels";
+import { performGameAction } from "$lib/services/gameService";
 import {
 	continuePlayingGames,
-	type Game,
-	games,
 	getAllGames,
 	getGameById,
 	getGamesByIds,
 	homeExploreIds,
 } from "$lib/stores/libraryStore";
+import type { Game } from "$lib/types/Game";
+import type { GameMenuActionId } from "$lib/types/Menu";
 
 let featuredGame = getGameById("sekiro");
 const suggestedGames = getGamesByIds(homeExploreIds);
 
 function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
-	const { id, game } = event.detail;
-
-	if (id === "status-want") return games.setStatus(game.id, "want");
-	if (id === "status-playing") return games.setStatus(game.id, "playing");
-	if (id === "status-played") return games.setStatus(game.id, "played");
-	if ((id === "play" || id === "resume" || id === "restart") && game.path) {
-		return launchGame(game.path, game.id);
-	}
-	if (id === "toggle-favorite") return games.toggleFavorite(game.id);
-	if (id === "open-folder") return openGameFolder(game.path);
-	if (id === "hide-continue") return games.hideFromContinuePlaying(game.id);
-	if (id === "view-playtime") {
-		window.alert(
-			`${game.title}: ${game.totalPlaytime || game.hours} total playtime.`,
-		);
-	}
+	return performGameAction(
+		event.detail.id as GameMenuActionId,
+		event.detail.game,
+	);
 }
 
 $: featuredGame =
@@ -48,16 +37,16 @@ $: featuredGame =
 
     <section>
       <div class="section-header">
-        <h2>Recently Played</h2>
-        <span>See more</span>
+        <h2>{pageLabels.home.recentlyPlayed}</h2>
+        <span>{pageLabels.home.seeMore}</span>
       </div>
       <GameGrid games={$continuePlayingGames} horizontal compact context="home" on:action={handleAction} />
     </section>
 
     <section>
       <div class="section-header">
-        <h2>Explore New</h2>
-        <span>See more</span>
+        <h2>{pageLabels.home.exploreNew}</h2>
+        <span>{pageLabels.home.seeMore}</span>
       </div>
       <GameGrid games={suggestedGames} horizontal compact context="explore" on:action={handleAction} />
     </section>
@@ -70,7 +59,7 @@ $: featuredGame =
   .home {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: var(--space-8);
   }
 
   .section-header {
@@ -86,7 +75,7 @@ $: featuredGame =
   }
 
   span {
-    color: rgba(226, 223, 231, 0.42);
+    color: var(--text-muted);
     font-size: 0.74rem;
     cursor: pointer;
   }

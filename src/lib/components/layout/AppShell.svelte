@@ -1,30 +1,42 @@
 <script lang="ts">
+import { browser } from "$app/environment";
 import { page } from "$app/stores";
 import Loader from "$lib/components/common/Loader.svelte";
 import Sidebar from "$lib/components/layout/Sidebar.svelte";
+import { footerColumns, routeAccents } from "$lib/data/navigation";
 import { getGameById } from "$lib/stores/libraryStore";
 import {
 	effectiveUIMode,
 	libraryBusy,
 	libraryBusyMessage,
+	themeMode,
 } from "$lib/stores/uiStore";
-import { footerColumns, routeAccents } from "$lib/utils/constants";
+import { resolveAccentPresentation } from "$lib/utils/accent";
 
-$: accent = pageToAccent($page.url.pathname, $page.params.id);
+$: accentSource = pageToAccentSource($page.url.pathname, $page.params.id);
+$: accentPresentation = resolveAccentPresentation(accentSource);
+$: activeTheme = $page.url.pathname.startsWith("/game/")
+	? "dynamic"
+	: $themeMode;
 
-function pageToAccent(pathname: string, gameId?: string) {
+$: if (browser) {
+	document.body.dataset.theme = activeTheme;
+	document.body.classList.toggle("gaming-mode", $effectiveUIMode === "gaming");
+	document.body.style.setProperty("--accent-rgb", accentPresentation.rgb);
+	document.body.style.setProperty("--accent-contrast", accentPresentation.text);
+}
+
+function pageToAccentSource(pathname: string, gameId?: string) {
 	if (pathname.startsWith("/game/") && gameId) {
-		return getGameById(gameId)?.accent || "silver";
+		return getGameById(gameId) || { accent: "silver" as const };
 	}
 
-	return routeAccents[pathname] || "silver";
+	return { accent: routeAccents[pathname] || "silver" };
 }
 </script>
 
-<svelte:body class:gaming-mode={$effectiveUIMode === 'gaming'} />
-
-<div class={`shell ${accent} ${$effectiveUIMode}`}>
-  <Sidebar {accent} />
+<div class="shell" data-mode={$effectiveUIMode}>
+  <Sidebar />
 
   <div class="frame">
     <main>
@@ -47,62 +59,15 @@ function pageToAccent(pathname: string, gameId?: string) {
 <Loader loading={$libraryBusy} message={$libraryBusyMessage} size="lg" />
 
 <style>
-  :global(body) {
-    --surface-glass: rgba(30, 30, 30, 0.6);
-    --surface-glass-strong: rgba(24, 24, 27, 0.82);
-    --surface-border: rgba(255, 255, 255, 0.1);
-    --surface-shadow: 0 1rem 2.2rem rgba(0, 0, 0, 0.3);
-    --surface-hover: rgba(255, 255, 255, 0.05);
-    --surface-card: rgba(255, 255, 255, 0.04);
-    --surface-card-strong: rgba(255, 255, 255, 0.06);
-    --field-border: rgba(255, 255, 255, 0.1);
-    --field-background: rgba(255, 255, 255, 0.08);
-    --field-background-strong: rgba(255, 255, 255, 0.1);
-    --text-secondary: rgba(226, 223, 231, 0.68);
-    --text-muted: rgba(226, 223, 231, 0.48);
-    --ui-blur: 10px;
-    --motion-fast: 140ms;
-    --motion-base: 180ms;
-    margin: 0;
-    min-height: 100vh;
-    background: #404149;
-    color: #f3f1f7;
-    font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
-    transition: background-color var(--motion-base) ease;
-  }
-
-  :global(*) {
-    box-sizing: border-box;
-  }
-
-  :global(a) {
-    color: inherit;
-    text-decoration: none;
-  }
-
   .shell {
-    --page-accent: #d8d9de;
     display: grid;
     grid-template-columns: 13.5rem minmax(0, 1fr);
     min-height: 100vh;
-    background:
-      radial-gradient(circle at left top, rgba(255, 255, 255, 0.06) 0%, transparent 35%),
-      #404149;
-    transition: background var(--motion-base) ease;
+    background: transparent;
   }
 
-  .shell.gold {
-    --page-accent: #b69b57;
-  }
-
-  .shell.olive {
-    --page-accent: #8a9a54;
-  }
-
-  .shell.gaming {
-    --surface-glass: rgba(24, 24, 24, 0.88);
-    --surface-glass-strong: rgba(22, 22, 22, 0.94);
-    --surface-shadow: 0 0.7rem 1.4rem rgba(0, 0, 0, 0.2);
+  .shell[data-mode='gaming'] {
+    --surface-shadow: var(--shadow-sm);
     --ui-blur: 0px;
     --motion-fast: 90ms;
     --motion-base: 120ms;
@@ -112,46 +77,43 @@ function pageToAccent(pathname: string, gameId?: string) {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    background: transparent;
   }
 
   main {
     flex: 1;
-    padding: 1.4rem 1.7rem 1rem;
+    padding: var(--page-padding-y) var(--page-padding-x) var(--space-5);
     animation: rise var(--motion-base) ease;
   }
 
   footer {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1rem;
-    padding: 1rem 1.7rem 1.4rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    color: rgba(217, 213, 224, 0.42);
-    font-size: 0.7rem;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--page-padding-x) var(--space-6);
+    border-top: 1px solid var(--surface-border-soft);
+    color: var(--text-muted);
+    font-size: 0.72rem;
   }
 
   .column {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: var(--space-2);
   }
 
   .column span {
-    color: rgba(217, 213, 224, 0.34);
+    color: var(--text-secondary);
   }
 
   :global(body.gaming-mode *) {
     scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
   }
 
-  :global(body.gaming-mode) {
-    background: #2c2d33;
-  }
-
   @keyframes rise {
     from {
       opacity: 0;
-      transform: translateY(0.8rem);
+      transform: translateY(var(--space-3));
     }
 
     to {
@@ -166,12 +128,12 @@ function pageToAccent(pathname: string, gameId?: string) {
     }
 
     main {
-      padding: 1rem;
+      padding: var(--space-4);
     }
 
     footer {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      padding: 1rem;
+      padding: var(--space-4);
     }
   }
 </style>

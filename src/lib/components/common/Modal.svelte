@@ -1,11 +1,13 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte";
+import Button from "$lib/components/common/Button.svelte";
+import { pageLabels } from "$lib/data/labels";
 import {
 	isGameRunning,
 	performanceMode,
 	resolveVariant,
-	type UIModeVariant,
 } from "$lib/stores/uiStore";
+import type { UIModeVariant } from "$lib/types/UI";
 
 const dispatch = createEventDispatcher<{
 	close: void;
@@ -17,8 +19,8 @@ export let open = false;
 export let title = "";
 export let message = "";
 export let content = "";
-export let confirmLabel = "Confirm";
-export let cancelLabel = "Cancel";
+export let confirmLabel = pageLabels.common.confirm;
+export let cancelLabel = pageLabels.common.cancel;
 export let showCancel = true;
 export let hideActions = false;
 export let closeOnBackdrop = true;
@@ -75,14 +77,10 @@ function handleBackdropClick() {
       {#if !hideActions}
         <div class="actions">
           {#if showCancel}
-            <button class="secondary" type="button" on:click={cancel}>
-              {cancelLabel}
-            </button>
+            <Button quiet compact type="button" on:click={cancel}>{cancelLabel}</Button>
           {/if}
 
-          <button class="primary" type="button" on:click={confirm}>
-            {confirmLabel}
-          </button>
+          <Button compact type="button" on:click={confirm}>{confirmLabel}</Button>
         </div>
       {/if}
 
@@ -95,10 +93,10 @@ function handleBackdropClick() {
   .backdrop {
     position: fixed;
     inset: 0;
-    z-index: 80;
+    z-index: var(--z-modal);
     display: grid;
     place-items: center;
-    padding: 1rem;
+    padding: var(--space-4);
     transition: opacity 140ms ease, background-color 140ms ease;
   }
 
@@ -114,14 +112,15 @@ function handleBackdropClick() {
   .modal {
     width: min(100%, 32rem);
     border: 1px solid var(--surface-border);
-    background: var(--surface-glass-strong);
-    color: #f5f3f8;
+    background: rgba(30, 30, 30, 0.6);
+    color: var(--text-primary);
     transform-origin: center;
     transition:
       transform var(--motion-fast) ease,
       opacity var(--motion-fast) ease,
       background-color var(--motion-fast) ease,
       box-shadow var(--motion-fast) ease;
+    backdrop-filter: blur(10px);
   }
 
   .modal.sm {
@@ -137,18 +136,17 @@ function handleBackdropClick() {
   }
 
   .modal.normal {
-    border-radius: 1rem;
-    padding: 1.3rem 1.35rem 1.1rem;
-    box-shadow: var(--surface-shadow);
-    backdrop-filter: blur(var(--ui-blur));
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-md);
     animation: modalIn 180ms ease;
   }
 
   .modal.gaming {
-    border-radius: 0.55rem;
-    padding: 1rem 1rem 0.9rem;
-    background: #171717;
-    box-shadow: 0 0.8rem 1.4rem rgba(0, 0, 0, 0.22);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    background: var(--surface-glass-strong);
+    box-shadow: var(--shadow-sm);
     animation: modalInFast 90ms linear;
   }
 
@@ -159,7 +157,7 @@ function handleBackdropClick() {
 
   .message,
   .content {
-    color: rgba(235, 232, 241, 0.76);
+    color: var(--text-secondary);
     font-size: 0.86rem;
     line-height: 1.5;
   }
@@ -176,41 +174,8 @@ function handleBackdropClick() {
   .actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.7rem;
-    margin-top: 1rem;
-  }
-
-  .actions button {
-    border: 0;
-    min-height: 2.25rem;
-    padding: 0.65rem 1rem;
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-    transition: opacity 120ms ease, transform 120ms ease;
-  }
-
-  .actions button:hover {
-    opacity: 0.95;
-    transform: translateY(-1px);
-  }
-
-  .primary {
-    background: #b69b57;
-    color: #fcfaf2;
-  }
-
-  .secondary {
-    background: rgba(255, 255, 255, 0.08);
-    color: #f5f3f8;
-  }
-
-  .normal .actions button {
-    border-radius: 0.7rem;
-  }
-
-  .gaming .actions button {
-    border-radius: 0.45rem;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
   }
 
   @keyframes modalIn {
@@ -240,7 +205,7 @@ function handleBackdropClick() {
   @media (prefers-reduced-motion: reduce) {
     .backdrop,
     .modal,
-    .actions button {
+    .actions :global(button) {
       transition: none;
       animation: none;
     }

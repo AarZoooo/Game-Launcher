@@ -1,71 +1,31 @@
 import { derived, get, writable } from "svelte/store";
 
+import { pageLabels } from "$lib/data/labels";
 import {
 	getGames as loadStoredGames,
 	type StoredGame,
 	saveGames as saveStoredGames,
 } from "$lib/services/tauriService";
 import { uiStore } from "$lib/stores/uiStore";
+import type {
+	AccentTone,
+	Game,
+	GameMetric,
+	GameStatus,
+	ImportedGameResult,
+	PlatformType,
+	ResumeState,
+} from "$lib/types/Game";
 
-export type AccentTone = "gold" | "olive" | "silver";
-export type PlatformType =
-	| "steam"
-	| "epic"
-	| "local"
-	| "suggested"
-	| "wishlist";
-export type GameStatus = "want" | "playing" | "played" | "none";
-export type ResumeState = "resume" | "restart";
-
-export interface GameMetric {
-	label: string;
-	value: string;
-}
-
-export interface ImportedGameResult {
-	id: string;
-	title: string;
-	path: string;
-	platform: "steam" | "epic" | "local";
-}
-
-export interface Game {
-	id: string;
-	title: string;
-	hours: string;
-	platform: string;
-	platformType?: PlatformType;
-	genres: string;
-	rating: string;
-	coop: string;
-	completion: string;
-	cover: string;
-	hero?: string;
-	accent: AccentTone;
-	accentHex?: string;
-	path?: string;
-	savePath?: string;
-	lastPlayed?: string;
-	totalPlaytime?: string;
-	syncStatus?: string;
-	blurb?: string;
-	genreLabel?: string;
-	inLibrary?: boolean;
-	featured?: boolean;
-	inRecommendations?: boolean;
-	similarIds?: string[];
-	metrics?: GameMetric[];
-	status?: GameStatus;
-	favorite?: boolean;
-	cloudSyncEnabled?: boolean;
-	launchOptions?: string;
-	tags?: string[];
-	hiddenFromContinue?: boolean;
-	resumeState?: ResumeState;
-	storageDescription?: string;
-	storageGenres?: string[];
-	storageLastPlayedRaw?: string | null;
-}
+export type {
+	AccentTone,
+	Game,
+	GameMetric,
+	GameStatus,
+	ImportedGameResult,
+	PlatformType,
+	ResumeState,
+} from "$lib/types/Game";
 
 function slugify(value: string) {
 	return value
@@ -116,6 +76,7 @@ function buildImportedGame(input: ImportedGameResult): Game {
 		cover: "/mock/elden-card.png",
 		accent,
 		accentHex,
+		accentColor: accentHex,
 		path: input.path,
 		inLibrary: true,
 		status: "none",
@@ -685,6 +646,8 @@ function normalizeGame(game: Game, index: number): Game {
 		...game,
 		platformType: game.platformType || inferPlatformType(game.platform),
 		accentHex: game.accentHex || accentHexMap[game.accent],
+		accentColor:
+			game.accentColor || game.accentHex || accentHexMap[game.accent],
 		status: game.status || defaultStatus,
 		favorite: game.favorite ?? index < 4,
 		cloudSyncEnabled: game.cloudSyncEnabled ?? Boolean(game.syncStatus),
@@ -816,7 +779,7 @@ function toMetrics(game: Game): GameMetric[] {
 		{ label: "Total Play", value: game.totalPlaytime || game.hours },
 		{ label: "Genres", value: game.genres },
 		{ label: "Path", value: game.path || "Unavailable" },
-		{ label: "Storage", value: "Local library" },
+		{ label: "Storage", value: pageLabels.messages.localLibrary },
 	];
 }
 
@@ -842,7 +805,7 @@ function mapStoredGame(game: StoredGame): Game {
 			path: game.exePath,
 			lastPlayed: formatLastPlayed(game.lastPlayed),
 			totalPlaytime: formatPlaytime(game.totalPlaytime),
-			syncStatus: "Stored locally",
+			syncStatus: pageLabels.messages.storedLocally,
 			blurb: game.description,
 			genreLabel: genres,
 			inLibrary: true,

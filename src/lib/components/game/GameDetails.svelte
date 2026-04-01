@@ -2,7 +2,8 @@
 import { goto } from "$app/navigation";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
-import type { Game } from "$lib/stores/libraryStore";
+import { pageLabels } from "$lib/data/labels";
+import type { Game } from "$lib/types/Game";
 
 export let game: Game;
 export let similarGames: Game[] = [];
@@ -10,10 +11,15 @@ export let similarGames: Game[] = [];
 let launchError = "";
 </script>
 
-<section class={`details ${game.accent}`} style={`--hero-image: url('${game.hero || game.cover}')`}>
+<section class="details">
   <div class="hero">
+    <img class="hero-media" src={game.hero || game.cover} alt="" loading="lazy" />
     <div class="hero-top">
-      <button class="back" on:click={() => goto('/')}>?</button>
+      <button class="back" aria-label={pageLabels.common.goBack} on:click={() => goto('/')}>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M9.97 3.47a.75.75 0 0 1 0 1.06L7.06 7.44h6.19a.75.75 0 0 1 0 1.5H7.06l2.9 2.9a.75.75 0 1 1-1.06 1.06L4.72 8.72a1 1 0 0 1 0-1.44L8.9 3.47a.75.75 0 0 1 1.06 0Z" />
+        </svg>
+      </button>
       <div class="window-actions">
         <span></span><span></span><span></span>
       </div>
@@ -33,16 +39,16 @@ let launchError = "";
       {/if}
 
       <div class="meta-row">
-        <div><span>Genres</span><p>{game.genres}</p></div>
-        <div><span>Rating</span><p>{game.rating}/10</p></div>
-        <div><span>Co-Op Support</span><p>{game.coop}</p></div>
-        <div><span>Completion Time</span><p>{game.completion}</p></div>
+        <div><span>{pageLabels.game.genres}</span><p>{game.genres}</p></div>
+        <div><span>{pageLabels.game.rating}</span><p>{game.rating}/10</p></div>
+        <div><span>{pageLabels.game.coopSupport}</span><p>{game.coop}</p></div>
+        <div><span>{pageLabels.game.completionTime}</span><p>{game.completion}</p></div>
       </div>
     </div>
   </div>
 
   <section class="similar">
-    <h2>Similar Titles</h2>
+    <h2>{pageLabels.game.similarTitles}</h2>
     <GameGrid games={similarGames} horizontal compact />
   </section>
 </section>
@@ -57,20 +63,25 @@ let launchError = "";
   .hero {
     position: relative;
     min-height: 25rem;
-    border-radius: 1.2rem;
+    border-radius: var(--radius-xl);
     overflow: hidden;
-    background:
-      linear-gradient(180deg, rgba(6, 6, 8, 0.06) 0%, rgba(48, 48, 55, 0.72) 72%),
-      var(--hero-image) center / cover no-repeat;
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow: var(--shadow-inset);
     transition: box-shadow var(--motion-base) ease;
+  }
+
+  .hero-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .hero::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(15, 16, 20, 0) 8%, rgba(58, 59, 65, 0.95) 100%);
+    background: linear-gradient(180deg, rgba(15, 16, 20, 0) 8%, rgba(15, 16, 20, 0.95) 100%);
   }
 
   .hero-top,
@@ -82,27 +93,35 @@ let launchError = "";
   .hero-top {
     display: flex;
     justify-content: space-between;
-    padding: 1rem;
+    padding: var(--space-4);
   }
 
   .back {
     width: 1.9rem;
     height: 1.9rem;
     border: 0;
-    background: rgba(72, 72, 80, 0.72);
-    color: #f7f5fa;
+    background: rgba(30, 30, 30, 0.6);
+    color: var(--text-primary);
     cursor: pointer;
+    border-radius: var(--radius-sm);
+    backdrop-filter: blur(10px);
+  }
+
+  .back svg {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
   }
 
   .window-actions {
     display: flex;
-    gap: 0.55rem;
+    gap: var(--space-2);
   }
 
   .window-actions span {
     width: 0.65rem;
     height: 0.65rem;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: rgba(241, 239, 244, 0.55);
   }
 
@@ -110,15 +129,15 @@ let launchError = "";
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    gap: 1rem;
+    gap: var(--space-4);
     min-height: 22rem;
-    padding: 0 1.4rem 1.6rem;
+    padding: 0 var(--space-6) var(--space-7);
   }
 
   .actions {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
+    gap: var(--space-3);
   }
 
   h1,
@@ -127,31 +146,31 @@ let launchError = "";
   }
 
   h1 {
-    font: 700 clamp(1.9rem, 3vw, 2.45rem) / 1.05 'Bahnschrift', 'Segoe UI Variable Text', sans-serif;
+    font: 700 clamp(1.9rem, 3vw, 2.45rem) / 1.05 var(--font-display);
   }
 
   .error {
     margin: 0;
-    color: #ffc2b8;
+    color: var(--color-danger-1);
     font-size: 0.78rem;
   }
 
   .meta-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.6rem;
+    gap: var(--space-6);
   }
 
   .meta-row span {
     display: block;
-    margin-bottom: 0.35rem;
-    color: rgba(227, 223, 232, 0.52);
+    margin-bottom: var(--space-2);
+    color: var(--text-muted);
     font-size: 0.74rem;
   }
 
   .meta-row p {
     margin: 0;
-    color: #f3f1f6;
+    color: var(--text-primary);
     font-size: 0.8rem;
     font-weight: 600;
   }
@@ -159,6 +178,6 @@ let launchError = "";
   .similar {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 </style>

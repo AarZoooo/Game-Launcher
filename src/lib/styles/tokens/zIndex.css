@@ -1,0 +1,7 @@
+:root {
+	--z-base: 1;
+	--z-card-hover: 18;
+	--z-menu: 80;
+	--z-modal: 90;
+	--z-loader: 95;
+}

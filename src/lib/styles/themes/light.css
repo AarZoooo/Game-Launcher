@@ -1,0 +1,34 @@
+body[data-theme="light"] {
+	color-scheme: light;
+	--app-background: linear-gradient(180deg, #f2f5fb, #e7ebf5);
+	--app-panel: rgba(255, 255, 255, 0.82);
+	--app-sidebar: linear-gradient(
+			180deg,
+			rgb(var(--accent-rgb) / 0.16),
+			rgba(255, 255, 255, 0.72)
+		),
+		rgba(255, 255, 255, 0.82);
+	--surface-glass: rgba(255, 255, 255, 0.72);
+	--surface-glass-strong: rgba(255, 255, 255, 0.9);
+	--surface-card: rgba(255, 255, 255, 0.68);
+	--surface-card-strong: rgba(255, 255, 255, 0.82);
+	--surface-border: rgba(19, 22, 29, 0.12);
+	--surface-border-soft: rgba(19, 22, 29, 0.08);
+	--surface-hover: rgba(19, 22, 29, 0.06);
+	--surface-shadow: var(--shadow-sm);
+	--field-background: rgba(243, 246, 250, 0.92);
+	--field-background-strong: rgba(255, 255, 255, 0.98);
+	--field-border: rgba(19, 22, 29, 0.12);
+	--text-primary: #111827;
+	--text-secondary: rgba(17, 24, 39, 0.74);
+	--text-muted: rgba(17, 24, 39, 0.48);
+	--interactive-primary-bg: var(--theme-accent);
+	--interactive-primary-text: var(--accent-contrast);
+	--interactive-secondary-bg: rgba(19, 22, 29, 0.08);
+	--interactive-secondary-text: #111827;
+	--interactive-disabled-bg: rgba(17, 24, 39, 0.14);
+	--interactive-disabled-text: rgba(17, 24, 39, 0.48);
+	--ui-blur: var(--blur-sm);
+	--motion-fast: 140ms;
+	--motion-base: 180ms;
+}

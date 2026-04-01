@@ -2,9 +2,10 @@
 import { createEventDispatcher } from "svelte";
 import { goto } from "$app/navigation";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
-import type { Game } from "$lib/stores/libraryStore";
-
-type GameMenuContext = "library" | "explore" | "home";
+import { pageLabels } from "$lib/data/labels";
+import type { Game } from "$lib/types/Game";
+import type { GameMenuContext } from "$lib/types/Menu";
+import { resolveAccentPresentation } from "$lib/utils/accent";
 
 const dispatch = createEventDispatcher<{
 	action: { id: string; game: Game };
@@ -14,12 +15,20 @@ export let game: Game;
 export let compact = false;
 export let context: GameMenuContext = "library";
 
+let cardElement: HTMLElement;
+
+$: accentPresentation = resolveAccentPresentation(game);
+
+$: if (cardElement) {
+	cardElement.style.setProperty("--card-accent-rgb", accentPresentation.rgb);
+}
+
 function openGame() {
 	goto(`/game/${game.id}`);
 }
 </script>
 
-<article class:compact class={`card ${game.accent}`} style={`--accent:${game.accentHex || '#b69b57'}`}>
+<article bind:this={cardElement} class:compact class="card">
   <div class="menu-shell">
     <GameMenu
       {game}
@@ -41,7 +50,7 @@ function openGame() {
       </div>
 
       {#if game.favorite}
-        <span class="favorite" aria-label="Favorite">★</span>
+        <span class="favorite" aria-label={pageLabels.common.favorite}>★</span>
       {/if}
     </div>
   </div>
@@ -54,17 +63,26 @@ function openGame() {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
+    gap: var(--space-3);
     min-width: 0;
-    background: transparent;
-    border-radius: 1rem;
+    padding: var(--space-3);
+    background:
+      linear-gradient(180deg, rgb(var(--card-accent-rgb) / 0.08), transparent 38%),
+      var(--surface-card);
+    border: 1px solid var(--surface-border-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-inset);
     transition:
       transform var(--motion-base) ease,
-      opacity var(--motion-base) ease;
+      opacity var(--motion-base) ease,
+      box-shadow var(--motion-base) ease,
+      border-color var(--motion-base) ease;
   }
 
   .card:hover {
     transform: translateY(-0.24rem);
+    box-shadow: 0 1rem 2rem rgb(var(--card-accent-rgb) / 0.18);
+    border-color: rgb(var(--card-accent-rgb) / 0.22);
   }
 
   .card:hover,
@@ -74,8 +92,8 @@ function openGame() {
 
   .menu-shell {
     position: absolute;
-    right: 0.75rem;
-    bottom: 0.9rem;
+    top: var(--space-3);
+    right: var(--space-3);
     z-index: 12;
   }
 
@@ -98,25 +116,25 @@ function openGame() {
   .image {
     display: block;
     width: 100%;
-    aspect-ratio: 0.63;
+    height: clamp(15rem, 30vw, 17.5rem);
     object-fit: cover;
-    background-color: #33343a;
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: var(--color-background-4);
+    border-radius: calc(var(--radius-lg) - var(--space-1));
+    border: 1px solid var(--surface-border-soft);
     box-shadow:
-      inset 0 -1.2rem 2rem color-mix(in srgb, var(--accent) 18%, transparent),
-      0 0.9rem 2rem rgba(0, 0, 0, 0.16);
+      inset 0 -1.2rem 2rem rgb(var(--card-accent-rgb) / 0.2),
+      var(--shadow-sm);
   }
 
   .info {
     min-height: 3.9rem;
-    padding: 0 0.15rem 0 0.1rem;
+    padding: 0 var(--space-1);
   }
 
   .title-row {
     display: flex;
     justify-content: space-between;
-    gap: 0.7rem;
+    gap: var(--space-3);
     align-items: start;
   }
 
@@ -128,7 +146,7 @@ function openGame() {
     margin: 0;
     font-size: 0.95rem;
     font-weight: 650;
-    color: #efedf3;
+    color: var(--text-primary);
     line-height: 1.2;
     display: -webkit-box;
     overflow: hidden;
@@ -138,8 +156,8 @@ function openGame() {
   }
 
   p {
-    margin: 0.42rem 0 0;
-    color: rgba(223, 220, 230, 0.56);
+    margin: var(--space-2) 0 0;
+    color: var(--text-secondary);
     font-size: 0.76rem;
     white-space: nowrap;
     overflow: hidden;
@@ -147,7 +165,7 @@ function openGame() {
   }
 
   .favorite {
-    color: var(--accent);
+    color: rgb(var(--card-accent-rgb));
     font-size: 0.9rem;
     line-height: 1;
   }

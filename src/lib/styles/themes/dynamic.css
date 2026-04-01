@@ -1,0 +1,39 @@
+body[data-theme="dynamic"] {
+	color-scheme: dark;
+	--app-background: radial-gradient(
+			110% 110% at 0% 0%,
+			rgb(var(--accent-rgb) / 0.2) 0%,
+			transparent 34%
+		),
+		linear-gradient(180deg, #13161d, #0d0f14);
+	--app-panel: rgb(18 21 28 / 0.84);
+	--app-sidebar: linear-gradient(
+			180deg,
+			rgb(var(--accent-rgb) / 0.26),
+			rgba(255, 255, 255, 0.02)
+		),
+		rgba(18, 21, 28, 0.88);
+	--surface-glass: rgb(23 26 33 / 0.64);
+	--surface-glass-strong: rgb(18 21 28 / 0.86);
+	--surface-card: rgb(var(--accent-rgb) / 0.08);
+	--surface-card-strong: rgb(var(--accent-rgb) / 0.14);
+	--surface-border: rgb(var(--accent-rgb) / 0.22);
+	--surface-border-soft: rgb(var(--accent-rgb) / 0.12);
+	--surface-hover: rgb(var(--accent-rgb) / 0.16);
+	--surface-shadow: 0 1rem 2.6rem rgb(0 0 0 / 0.32);
+	--field-background: rgb(var(--accent-rgb) / 0.12);
+	--field-background-strong: rgb(var(--accent-rgb) / 0.18);
+	--field-border: rgb(var(--accent-rgb) / 0.26);
+	--text-primary: var(--color-text-1);
+	--text-secondary: rgba(246, 247, 251, 0.76);
+	--text-muted: rgba(246, 247, 251, 0.52);
+	--interactive-primary-bg: rgb(var(--accent-rgb) / 0.9);
+	--interactive-primary-text: var(--accent-contrast);
+	--interactive-secondary-bg: rgb(var(--accent-rgb) / 0.16);
+	--interactive-secondary-text: var(--color-text-1);
+	--interactive-disabled-bg: rgba(186, 194, 207, 0.22);
+	--interactive-disabled-text: rgba(246, 247, 251, 0.6);
+	--ui-blur: var(--blur-md);
+	--motion-fast: 140ms;
+	--motion-base: 180ms;
+}

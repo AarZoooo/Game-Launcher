@@ -1,8 +1,9 @@
 ﻿<script lang="ts">
-import { settingsSections } from "$lib/utils/constants";
+import { pageLabels, settingsSections } from "$lib/data/labels";
 </script>
 
 <div class="settings">
+  <h1>{pageLabels.settings.title}</h1>
   {#each settingsSections as section}
     <section>
       <h2>{section.title}</h2>
@@ -13,15 +14,15 @@ import { settingsSections } from "$lib/utils/constants";
             <span class="label">{field.label}</span>
 
             {#if field.type === 'select'}
-              <select aria-label={field.label}>
+              <select class="field-control glass-dropdown" aria-label={field.label}>
                 {#each field.options || [] as option}
                   <option selected={option === field.value}>{option}</option>
                 {/each}
               </select>
             {:else if field.type === 'text'}
-              <input aria-label={field.label} value={field.value} />
+              <input class="field-control" aria-label={field.label} value={field.value} />
             {:else}
-              <div class="radio-line">{field.value}</div>
+              <div class="radio-line field-control">{field.value}</div>
             {/if}
           </div>
         {/each}
@@ -35,58 +36,52 @@ import { settingsSections } from "$lib/utils/constants";
     max-width: 50rem;
     display: flex;
     flex-direction: column;
-    gap: 1.8rem;
+    gap: var(--space-7);
   }
 
   section {
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
-    padding: 1.2rem 1.25rem;
-    border-radius: 1.1rem;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+  }
+
+  h1,
+  h2 {
+    margin: 0;
+  }
+
+  h1 {
+    font: 700 1.9rem/1 var(--font-display);
   }
 
   h2 {
-    margin: 0;
     font-size: 1rem;
   }
 
   .fields {
     display: grid;
-    gap: 0.7rem;
+    gap: var(--space-3);
   }
 
   .field {
     display: grid;
     grid-template-columns: minmax(14rem, 1fr) minmax(0, 16rem);
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .label {
-    color: rgba(230, 226, 235, 0.72);
+    color: var(--text-secondary);
     font-size: 0.8rem;
   }
 
-  select,
-  input,
   .radio-line {
     width: 100%;
-    border: 1px solid var(--surface-border);
-    background: var(--surface-glass);
-    color: #f4f2f7;
-    min-height: 2.45rem;
-    padding: 0.55rem 0.8rem;
-    font: inherit;
-    border-radius: 0.78rem;
-    box-shadow: var(--surface-shadow);
-    backdrop-filter: blur(var(--ui-blur));
-    transition:
-      background-color var(--motion-fast) ease,
-      border-color var(--motion-fast) ease,
-      box-shadow var(--motion-fast) ease;
+    justify-content: flex-start;
   }
 
   select {
@@ -104,17 +99,7 @@ import { settingsSections } from "$lib/utils/constants";
   .radio-line {
     display: flex;
     align-items: center;
-    color: rgba(235, 232, 239, 0.68);
-  }
-
-  select:hover,
-  input:hover,
-  .radio-line:hover,
-  select:focus,
-  input:focus {
-    background: rgba(255, 255, 255, 0.09);
-    border-color: rgba(255, 255, 255, 0.14);
-    outline: none;
+    color: var(--text-secondary);
   }
 
   @media (max-width: 820px) {

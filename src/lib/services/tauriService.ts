@@ -1,8 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { openPath } from "@tauri-apps/plugin-opener";
-import type { ImportedGameResult } from "$lib/stores/libraryStore";
 import { uiStore } from "$lib/stores/uiStore";
+import type { ImportedGameResult } from "$lib/types/Game";
 
 export interface StoredGame {
 	id: string;
@@ -57,7 +57,7 @@ export async function launchGame(exePath: string, gameId?: string) {
 	const optimisticStart = Boolean(gameId);
 
 	try {
-		if (optimisticStart) {
+		if (optimisticStart && gameId) {
 			uiStore.startGame(gameId);
 		} else {
 			uiStore.setGameRunning(true);

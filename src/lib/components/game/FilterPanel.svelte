@@ -1,8 +1,13 @@
 ﻿<script lang="ts">
 import { createEventDispatcher } from "svelte";
-import { coopOptions, genreOptions, statusOptions } from "$lib/utils/constants";
+import { coopOptions, genreOptions, statusOptions } from "$lib/data/filters";
+import { pageLabels } from "$lib/data/labels";
+import type { GameFilterState } from "$lib/types/UI";
 
-const dispatch = createEventDispatcher();
+const dispatch = createEventDispatcher<{
+	apply: GameFilterState;
+	close: void;
+}>();
 
 let showFavorites = false;
 let status = "";
@@ -23,21 +28,26 @@ function close() {
 }
 </script>
 
-<button type="button" class="overlay" aria-label="Close filters" on:click={close}></button>
+<button
+  type="button"
+  class="overlay"
+  aria-label={pageLabels.filterPanel.close}
+  on:click={close}
+></button>
 
 <div class="panel">
-  <h2>Filters</h2>
+  <h2>{pageLabels.filterPanel.title}</h2>
 
   <div class="section">
     <label>
       <input type="checkbox" bind:checked={showFavorites} />
-      Show only favourites
+      {pageLabels.filterPanel.showFavorites}
     </label>
   </div>
 
   <div class="section">
-    <p>Status</p>
-    <select bind:value={status}>
+    <p>{pageLabels.filterPanel.status}</p>
+    <select class="field-control glass-dropdown" bind:value={status}>
       {#each statusOptions as option}
         <option value={option.value}>{option.label}</option>
       {/each}
@@ -45,8 +55,8 @@ function close() {
   </div>
 
   <div class="section">
-    <p>Genres</p>
-    <select bind:value={genre}>
+    <p>{pageLabels.filterPanel.genres}</p>
+    <select class="field-control glass-dropdown" bind:value={genre}>
       {#each genreOptions as option}
         <option value={option.value}>{option.label}</option>
       {/each}
@@ -54,8 +64,8 @@ function close() {
   </div>
 
   <div class="section">
-    <p>Co-op Support</p>
-    <select bind:value={coop}>
+    <p>{pageLabels.filterPanel.coopSupport}</p>
+    <select class="field-control glass-dropdown" bind:value={coop}>
       {#each coopOptions as option}
         <option value={option.value}>{option.label}</option>
       {/each}
@@ -63,7 +73,7 @@ function close() {
   </div>
 
   <button class="apply" on:click={applyFilters}>
-    Apply Filters
+    {pageLabels.filterPanel.apply}
   </button>
 </div>
 
@@ -84,16 +94,16 @@ function close() {
     width: min(24rem, calc(100vw - 2rem));
     height: 100%;
     background:
-      linear-gradient(180deg, rgba(108, 86, 52, 0.14), rgba(61, 64, 74, 0.72)),
-      rgba(58, 59, 66, 0.72);
-    border-left: 1px solid rgba(228, 223, 236, 0.2);
+      linear-gradient(180deg, rgb(var(--accent-rgb) / 0.14), rgba(30, 30, 30, 0.6)),
+      rgba(30, 30, 30, 0.6);
+    border-left: 1px solid var(--surface-border);
     box-shadow: -1rem 0 3rem rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(calc(var(--ui-blur) * 1.6));
-    padding: 1.8rem;
+    backdrop-filter: blur(10px);
+    padding: var(--space-7);
     display: flex;
     flex-direction: column;
-    gap: 1.4rem;
-    z-index: 10;
+    gap: var(--space-6);
+    z-index: var(--z-modal);
   }
 
   h2 {
@@ -104,8 +114,8 @@ function close() {
   .section {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    color: rgba(235, 232, 239, 0.72);
+    gap: var(--space-2);
+    color: var(--text-secondary);
   }
 
   .section p,
@@ -114,24 +124,16 @@ function close() {
     font-size: 0.9rem;
   }
 
-  select {
-    padding: 0.68rem 0.85rem;
-    border-radius: 0.75rem;
-    background: var(--surface-glass);
-    border: 1px solid var(--surface-border);
-    color: white;
-    backdrop-filter: blur(var(--ui-blur));
-    box-shadow: var(--surface-shadow);
-  }
-
   .apply {
     margin-top: auto;
-    padding: 0.9rem;
-    background: #b69b57;
+    min-height: var(--control-height-md);
+    padding: 0 var(--space-4);
+    background: var(--interactive-primary-bg);
     border: none;
-    border-radius: 0.6rem;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    color: white;
+    color: var(--interactive-primary-text);
     font-weight: 700;
+    box-shadow: var(--shadow-sm);
   }
 </style>

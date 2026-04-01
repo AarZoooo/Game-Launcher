@@ -3,7 +3,8 @@ import { createEventDispatcher } from "svelte";
 import Button from "$lib/components/common/Button.svelte";
 import Loader from "$lib/components/common/Loader.svelte";
 import Modal from "$lib/components/common/Modal.svelte";
-import type { ImportedGameResult } from "$lib/stores/libraryStore";
+import { pageLabels } from "$lib/data/labels";
+import type { ImportedGameResult } from "$lib/types/Game";
 
 const dispatch = createEventDispatcher<{
 	close: void;
@@ -29,7 +30,11 @@ $: if (results.length && !selectedIds.length) {
 }
 
 $: platformLabel =
-	platform === "steam" ? "Steam" : platform === "epic" ? "Epic" : "Auto Search";
+	platform === "steam"
+		? "Steam"
+		: platform === "epic"
+			? "Epic"
+			: pageLabels.importModal.autoSearch;
 
 function toggle(id: string) {
 	selectedIds = selectedIds.includes(id)
@@ -46,22 +51,24 @@ function truncate(path: string) {
   {open}
   hideActions
   showCancel={false}
-  title={platform === 'local' ? platformLabel : `Import ${platformLabel} Games`}
+  title={platform === 'local'
+    ? platformLabel
+    : `${pageLabels.importModal.importPrefix} ${platformLabel} Games`}
   message={loading
-    ? 'Searching likely game folders and checking for known game files...'
+    ? pageLabels.importModal.searching
     : error
       ? ''
-      : 'Review the detected games below. Checked items will be added to your library.'}
+      : pageLabels.importModal.reviewResults}
   on:close={() => dispatch('close')}
 >
   {#if loading}
     <div class="loader-wrap">
-      <Loader loading inline message="Scanning..." />
+      <Loader loading inline message={pageLabels.importModal.scanning} />
     </div>
   {:else if error}
     <div class="state error">{error}</div>
   {:else if !results.length}
-    <div class="state">No games were detected on your connected drives.</div>
+    <div class="state">{pageLabels.importModal.noResults}</div>
   {:else}
     <div class="results">
       {#each results as game}
@@ -82,10 +89,14 @@ function truncate(path: string) {
 
   <svelte:fragment slot="footer">
     <div class="footer">
-      <Button quiet compact on:click={() => dispatch('cancel')}>Cancel</Button>
-      <Button quiet compact on:click={() => dispatch('addall')}>Add All</Button>
+      <Button quiet compact on:click={() => dispatch('cancel')}>
+        {pageLabels.importModal.cancel}
+      </Button>
+      <Button quiet compact on:click={() => dispatch('addall')}>
+        {pageLabels.importModal.addAll}
+      </Button>
       <Button compact on:click={() => dispatch('addselected', selectedIds)}>
-        Add Selected
+        {pageLabels.importModal.addSelected}
       </Button>
     </div>
   </svelte:fragment>
@@ -98,27 +109,30 @@ function truncate(path: string) {
     display: grid;
     place-items: center;
     text-align: center;
-    color: rgba(233, 230, 239, 0.66);
+    color: var(--text-secondary);
   }
 
   .state.error {
-    color: #ffb4a6;
+    color: var(--color-danger-1);
   }
 
   .results {
     max-height: 18rem;
     overflow: auto;
     display: grid;
-    gap: 0.55rem;
+    gap: var(--space-2);
     padding-right: 0.2rem;
   }
 
   .row {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 0.75rem;
+    gap: var(--space-3);
     align-items: start;
-    padding: 0.65rem 0.1rem;
+    padding: var(--space-3) var(--space-1);
+    border-radius: var(--radius-md);
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border-soft);
   }
 
   .copy strong {
@@ -128,15 +142,15 @@ function truncate(path: string) {
 
   .copy span {
     display: block;
-    margin-top: 0.2rem;
-    color: rgba(233, 230, 239, 0.52);
+    margin-top: var(--space-1);
+    color: var(--text-secondary);
     font-size: 0.75rem;
   }
 
   .footer {
     display: flex;
     justify-content: flex-end;
-    gap: 0.6rem;
-    margin-top: 1rem;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
   }
 </style>

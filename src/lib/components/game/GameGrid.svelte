@@ -1,9 +1,8 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte";
 import GameCard from "$lib/components/game/GameCard.svelte";
-import type { Game } from "$lib/stores/libraryStore";
-
-type GameMenuContext = "library" | "explore" | "home";
+import type { Game } from "$lib/types/Game";
+import type { GameMenuContext } from "$lib/types/Menu";
 
 const dispatch = createEventDispatcher<{
 	action: { id: string; game: Game };
@@ -37,16 +36,16 @@ export let context: GameMenuContext = "library";
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(12.25rem, 1fr));
-    gap: 1.45rem;
+    gap: var(--space-6);
     align-items: start;
   }
 
   .horizontal {
     display: flex;
-    gap: 1.45rem;
+    gap: var(--space-6);
     overflow-x: auto;
     scrollbar-width: none;
-    padding: 0.15rem 0 0.35rem;
+    padding: var(--space-1) 0 var(--space-2);
   }
 
   .horizontal::-webkit-scrollbar {
@@ -61,11 +60,11 @@ export let context: GameMenuContext = "library";
   @media (max-width: 720px) {
     .grid {
       grid-template-columns: repeat(auto-fill, minmax(10.4rem, 1fr));
-      gap: 1rem;
+      gap: var(--space-4);
     }
 
     .horizontal {
-      gap: 1rem;
+      gap: var(--space-4);
     }
 
     .horizontal .item {

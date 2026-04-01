@@ -1,6 +1,7 @@
 ﻿<script lang="ts">
 import { page } from "$app/stores";
 import GameDetails from "$lib/components/game/GameDetails.svelte";
+import { pageLabels } from "$lib/data/labels";
 import { getGameById, getGamesByIds } from "$lib/stores/libraryStore";
 
 $: gameId = $page.params.id || "ghost-yotei";
@@ -11,5 +12,5 @@ $: similarGames = getGamesByIds(game?.similarIds || []);
 {#if game}
   <GameDetails {game} {similarGames} />
 {:else}
-  <p>Game not found.</p>
+  <p>{pageLabels.game.notFound}</p>
 {/if}

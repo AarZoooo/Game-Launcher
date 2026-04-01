@@ -3,7 +3,8 @@ import { createEventDispatcher } from "svelte";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
 import SyncBadge from "$lib/components/sync/SyncBadge.svelte";
-import type { Game } from "$lib/stores/libraryStore";
+import { pageLabels } from "$lib/data/labels";
+import type { Game } from "$lib/types/Game";
 
 const dispatch = createEventDispatcher<{
 	action: { id: string; game: Game };
@@ -12,10 +13,11 @@ const dispatch = createEventDispatcher<{
 export let game: Game;
 </script>
 
-<section class="hero" style={`--hero-image: url('${game.hero || game.cover}')`}>
+<section class="hero">
+  <img class="hero-media" src={game.hero || game.cover} alt="" loading="lazy" />
   <div class="veil"></div>
   <div class="content">
-    <p class="eyebrow">Continue playing</p>
+    <p class="eyebrow">{pageLabels.continuePlaying.eyebrow}</p>
     <h1>{game.title}</h1>
 
     <div class="actions">
@@ -42,13 +44,18 @@ export let game: Game;
   .hero {
     position: relative;
     min-height: 25rem;
-    border-radius: 1.4rem;
-    background:
-      linear-gradient(180deg, rgba(6, 7, 11, 0.04) 0%, rgba(25, 24, 31, 0.82) 75%),
-      var(--hero-image) center top / cover no-repeat;
+    border-radius: var(--radius-xl);
     overflow: hidden;
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow: var(--shadow-inset);
     transition: transform var(--motion-base) ease, box-shadow var(--motion-base) ease;
+  }
+
+  .hero-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .veil {
@@ -56,7 +63,7 @@ export let game: Game;
     inset: 0;
     background:
       linear-gradient(90deg, rgba(11, 11, 14, 0.6) 0%, rgba(11, 11, 14, 0.22) 45%, rgba(11, 11, 14, 0.08) 100%),
-      radial-gradient(circle at 50% 0%, rgba(255, 173, 98, 0.18) 0%, rgba(255, 173, 98, 0) 48%);
+      radial-gradient(circle at 50% 0%, rgb(var(--accent-rgb) / 0.18) 0%, transparent 48%);
     backdrop-filter: blur(calc(var(--ui-blur) * 0.08));
   }
 
@@ -67,13 +74,13 @@ export let game: Game;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    gap: 1rem;
-    padding: 2.2rem 1.9rem 1.7rem;
+    gap: var(--space-4);
+    padding: var(--space-9) var(--space-8) var(--space-7);
   }
 
   .eyebrow {
     margin: 0;
-    color: rgba(232, 230, 236, 0.56);
+    color: var(--text-secondary);
     font-size: 0.78rem;
     font-weight: 600;
   }
@@ -81,19 +88,19 @@ export let game: Game;
   h1 {
     margin: 0;
     max-width: 24rem;
-    font: 700 clamp(1.9rem, 3vw, 2.45rem) / 1.05 'Bahnschrift', 'Segoe UI Variable Text', sans-serif;
-    color: #f5f3f8;
+    font: 700 clamp(1.9rem, 3vw, 2.45rem) / 1.05 var(--font-display);
+    color: var(--text-primary);
   }
 
   .actions {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: var(--space-3);
   }
 
   .meta {
     display: flex;
-    gap: 1.4rem;
+    gap: var(--space-6);
     flex-wrap: wrap;
   }
 
@@ -103,14 +110,14 @@ export let game: Game;
 
   .metric span {
     display: block;
-    margin-bottom: 0.28rem;
-    color: rgba(228, 225, 234, 0.48);
+    margin-bottom: var(--space-1);
+    color: var(--text-muted);
     font-size: 0.72rem;
   }
 
   .metric p {
     margin: 0;
-    color: #f5f3f8;
+    color: var(--text-primary);
     font-size: 0.74rem;
     font-weight: 600;
   }
@@ -121,7 +128,7 @@ export let game: Game;
     }
 
     .content {
-      padding: 1.4rem;
+      padding: var(--space-6);
     }
   }
 </style>

@@ -1,56 +1,120 @@
-import type { ImportedGameResult } from "$lib/stores/libraryStore";
+import { pageLabels } from "$lib/data/labels";
+import {
+	getSyncNowMessage,
+	getSyncShortcutMessage,
+} from "$lib/services/syncService";
+import {
+	launchGame,
+	openGameFolder,
+	openSaveFolder,
+} from "$lib/services/tauriService";
+import { games } from "$lib/stores/libraryStore";
+import type { Game, GameStatus } from "$lib/types/Game";
+import type { GameMenuActionId } from "$lib/types/Menu";
 
-function simulateDelay() {
-	return new Promise((resolve) => setTimeout(resolve, 900));
+function statusFromAction(actionId: GameMenuActionId): GameStatus | null {
+	if (actionId === "status-want") return "want";
+	if (actionId === "status-playing") return "playing";
+	if (actionId === "status-played") return "played";
+	return null;
 }
 
-// TODO: Replace these mock scans with backend commands once library scanning is implemented.
-export async function scanSteamGames(): Promise<ImportedGameResult[]> {
-	await simulateDelay();
-
-	return [
-		{
-			id: "steam-portal-2",
-			title: "Portal 2",
-			path: "D:\\SteamLibrary\\steamapps\\common\\Portal 2\\portal2.exe",
-			platform: "steam",
-		},
-		{
-			id: "steam-dark-souls-3",
-			title: "Dark Souls III",
-			path: "E:\\SteamLibrary\\steamapps\\common\\DARK SOULS III\\Game\\DarkSoulsIII.exe",
-			platform: "steam",
-		},
-		{
-			id: "steam-hades",
-			title: "Hades",
-			path: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Hades\\Hades.exe",
-			platform: "steam",
-		},
-	];
+function promptForValue(label: string, initial = "") {
+	return window.prompt(label, initial);
 }
 
-export async function scanEpicGames(): Promise<ImportedGameResult[]> {
-	await simulateDelay();
+export async function playGame(game: Game) {
+	if (!game.path) {
+		throw new Error("No executable path was provided for this game.");
+	}
 
-	return [
-		{
-			id: "epic-alan-wake-2",
-			title: "Alan Wake 2",
-			path: "D:\\Epic Games\\AlanWake2\\AlanWake2.exe",
-			platform: "epic",
-		},
-		{
-			id: "epic-fortnite",
-			title: "Fortnite",
-			path: "E:\\Epic Games\\Fortnite\\FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping.exe",
-			platform: "epic",
-		},
-		{
-			id: "epic-satisfactory",
-			title: "Satisfactory",
-			path: "C:\\Epic Games\\SatisfactoryEarlyAccess\\FactoryGame.exe",
-			platform: "epic",
-		},
-	];
+	return launchGame(game.path, game.id);
+}
+
+export async function performGameAction(
+	actionId: GameMenuActionId,
+	game: Game,
+) {
+	const nextStatus = statusFromAction(actionId);
+
+	if (nextStatus) {
+		return games.setStatus(game.id, nextStatus);
+	}
+
+	if (actionId === "play" || actionId === "resume" || actionId === "restart") {
+		return playGame(game);
+	}
+
+	if (actionId === "toggle-favorite") {
+		games.toggleFavorite(game.id);
+		return;
+	}
+
+	if (actionId === "open-folder") {
+		return openGameFolder(game.path);
+	}
+
+	if (actionId === "open-save-folder") {
+		return openSaveFolder(game.savePath);
+	}
+
+	if (actionId === "toggle-cloud-sync") {
+		games.toggleCloudSync(game.id);
+		return;
+	}
+
+	if (actionId === "remove-library") {
+		return games.removeFromLibrary(game.id);
+	}
+
+	if (actionId === "hide-continue") {
+		games.hideFromContinuePlaying(game.id);
+		return;
+	}
+
+	if (actionId === "edit-details") {
+		const title = promptForValue(pageLabels.fields.gameTitlePrompt, game.title);
+		if (title) {
+			return games.updateDetails(game.id, { title });
+		}
+		return;
+	}
+
+	if (actionId === "change-cover") {
+		const cover = promptForValue(pageLabels.fields.coverPrompt, game.cover);
+		if (cover) {
+			return games.updateDetails(game.id, { cover });
+		}
+		return;
+	}
+
+	if (actionId === "launch-options") {
+		const value = promptForValue(
+			pageLabels.fields.launchArgumentsPrompt,
+			game.launchOptions || "",
+		);
+		if (value !== null) {
+			games.setLaunchOptions(game.id, value);
+		}
+		return;
+	}
+
+	if (actionId === "create-shortcut") {
+		window.alert(getSyncShortcutMessage(game.title));
+		return;
+	}
+
+	if (actionId === "sync-now") {
+		window.alert(getSyncNowMessage(game.title));
+		return;
+	}
+
+	if (actionId === "view-playtime") {
+		window.alert(
+			pageLabels.messages.playtimeDetails(
+				game.title,
+				game.totalPlaytime || game.hours,
+			),
+		);
+	}
 }

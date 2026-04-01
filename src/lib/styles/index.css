@@ -1,0 +1,60 @@
+@import "./tokens/colors.css";
+@import "./tokens/spacing.css";
+@import "./tokens/radius.css";
+@import "./tokens/shadows.css";
+@import "./tokens/blur.css";
+@import "./tokens/zIndex.css";
+@import "./themes/dark.css";
+@import "./themes/light.css";
+@import "./themes/dynamic.css";
+@import "./typography.css";
+@import "./utilities.css";
+
+:root {
+	background: var(--color-background-1);
+}
+
+html,
+body {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	background: var(--app-background);
+	color: var(--text-primary);
+	font-family: var(--font-body);
+	transition:
+		background var(--motion-base) ease,
+		color var(--motion-base) ease;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+button {
+	-webkit-tap-highlight-color: transparent;
+}
+
+img {
+	max-width: 100%;
+}
+
+.app-host {
+	display: contents;
+}

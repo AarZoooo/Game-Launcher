@@ -1,16 +1,13 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
 import { page } from "$app/stores";
-import type { AccentTone } from "$lib/stores/libraryStore";
-import { navItems } from "$lib/utils/constants";
-
-export let accent: AccentTone = "silver";
+import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
 </script>
 
-<aside class={`sidebar ${accent}`}>
+<aside class="sidebar">
   <div class="brand">
-    <strong>Scoped</strong>
-    <span>v 0.1.1</span>
+    <strong>{appBrand.name}</strong>
+    <span>{appBrand.version}</span>
   </div>
 
   <nav>
@@ -25,10 +22,10 @@ export let accent: AccentTone = "silver";
   </nav>
 
   <div class="profile">
-    <div class="avatar">N</div>
+    <div class="avatar">{sidebarProfile.initial}</div>
     <div>
-      <strong>NezukoChan</strong>
-      <span><i></i>Online</span>
+      <strong>{sidebarProfile.name}</strong>
+      <span><i></i>{sidebarProfile.status}</span>
     </div>
   </div>
 </aside>
@@ -38,15 +35,13 @@ export let accent: AccentTone = "silver";
     position: sticky;
     top: 0;
     height: 100vh;
-    padding: 1.35rem 0 1rem;
+    padding: var(--space-6) 0 var(--space-4);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-      rgba(85, 86, 94, 0.72);
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(18px);
+    background: var(--app-sidebar);
+    border-right: 1px solid var(--surface-border-soft);
+    backdrop-filter: blur(var(--blur-lg));
     overflow: hidden;
   }
 
@@ -69,52 +64,57 @@ export let accent: AccentTone = "silver";
   }
 
   .brand {
-    padding: 0 1.5rem;
+    padding: 0 var(--space-6);
   }
 
   .brand strong {
     display: block;
-    font: 700 2rem/1 'Bahnschrift', 'Segoe UI Variable Text', sans-serif;
+    font: 700 2rem/1 var(--font-display);
   }
 
   .brand span {
-    color: rgba(234, 231, 239, 0.42);
+    color: var(--text-muted);
     font-size: 0.72rem;
   }
 
   nav {
     display: grid;
-    gap: 0.3rem;
+    gap: var(--space-1);
   }
 
   nav button {
     width: 100%;
     border: 0;
     background: transparent;
-    color: rgba(238, 236, 242, 0.56);
+    color: var(--text-secondary);
     font: inherit;
     text-align: left;
-    padding: 0.9rem 1.7rem;
+    padding: var(--space-4) calc(var(--space-6) + var(--space-1));
     cursor: pointer;
-    transition: 180ms ease;
+    transition:
+      background-color var(--motion-fast) ease,
+      color var(--motion-fast) ease,
+      transform var(--motion-fast) ease;
   }
 
   nav button:hover {
-    color: #fbf9fe;
-    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+    background: var(--surface-hover);
+    transform: translateX(var(--space-1));
   }
 
   nav button.active {
-    color: #282a30;
-    background: var(--page-accent);
+    color: var(--interactive-primary-text);
+    background: var(--interactive-primary-bg);
     font-weight: 700;
+    box-shadow: var(--shadow-sm);
   }
 
   .profile {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0 1.5rem;
+    gap: var(--space-3);
+    padding: 0 var(--space-6);
   }
 
   .avatar {
@@ -122,9 +122,13 @@ export let accent: AccentTone = "silver";
     place-items: center;
     width: 2rem;
     height: 2rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #f0b9c1, #f3d899);
-    color: #292b31;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(
+      135deg,
+      rgb(var(--accent-rgb) / 0.9),
+      rgb(var(--accent-rgb) / 0.52)
+    );
+    color: var(--accent-contrast);
     font-size: 0.85rem;
     font-weight: 800;
   }
@@ -137,17 +141,17 @@ export let accent: AccentTone = "silver";
   .profile span {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: var(--space-2);
     font-size: 0.72rem;
-    color: rgba(230, 226, 236, 0.56);
+    color: var(--text-secondary);
   }
 
   .profile i {
     width: 0.42rem;
     height: 0.42rem;
-    border-radius: 999px;
-    background: #80d967;
-    box-shadow: 0 0 0.5rem rgba(128, 217, 103, 0.8);
+    border-radius: var(--radius-pill);
+    background: var(--color-success-1);
+    box-shadow: 0 0 0.5rem rgb(135 215 107 / 0.8);
   }
 
   @media (max-width: 920px) {
@@ -160,13 +164,13 @@ export let accent: AccentTone = "silver";
 
     nav {
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      padding: 0 0.5rem;
+      padding: 0 var(--space-2);
     }
 
     nav button {
       text-align: center;
-      padding: 0.75rem 0.5rem;
-      border-radius: 0.7rem;
+      padding: var(--space-3) var(--space-2);
+      border-radius: var(--radius-sm);
     }
   }
 </style>

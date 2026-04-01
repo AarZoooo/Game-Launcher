@@ -1,8 +1,10 @@
 <script lang="ts">
-import type { AccentTone } from "$lib/stores/libraryStore";
+import type { AccentTone } from "$lib/types/Game";
+import { resolveAccentPresentation } from "$lib/utils/accent";
 
 export let type: "button" | "submit" = "button";
 export let accent: AccentTone = "gold";
+export let accentColor: string | undefined = undefined;
 export let quiet = false;
 export let wide = false;
 export let compact = false;
@@ -10,9 +12,23 @@ export let iconFirst = false;
 export let iconOnly = false;
 export let disabled = false;
 export let ariaLabel: string | undefined = undefined;
+
+let element: HTMLButtonElement;
+
+$: accentPresentation = resolveAccentPresentation({
+	accent,
+	accentColor,
+	accentHex: accentColor,
+});
+
+$: if (element) {
+	element.style.setProperty("--button-accent-rgb", accentPresentation.rgb);
+	element.style.setProperty("--button-accent-text", accentPresentation.text);
+}
 </script>
 
 <button
+  bind:this={element}
   {type}
   aria-label={ariaLabel}
   {disabled}
@@ -34,14 +50,17 @@ export let ariaLabel: string | undefined = undefined;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.48rem;
+    gap: var(--space-2);
     border: 0;
-    border-radius: 0.8rem;
-    min-height: 2.45rem;
-    padding: 0.65rem 1.1rem;
+    border-radius: var(--radius-md);
+    min-height: var(--control-height-md);
+    padding: 0 var(--space-4);
     font: inherit;
     font-weight: 700;
     letter-spacing: 0.01em;
+    background: rgb(var(--button-accent-rgb));
+    color: var(--button-accent-text);
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
     transition:
       transform var(--motion-fast) ease,
@@ -53,7 +72,7 @@ export let ariaLabel: string | undefined = undefined;
   }
 
   button:hover:not(:disabled) {
-    filter: brightness(1.03);
+    filter: brightness(1.04);
     transform: translateY(-1px);
   }
 
@@ -66,15 +85,15 @@ export let ariaLabel: string | undefined = undefined;
   }
 
   .compact {
-    min-height: 2.35rem;
-    padding: 0.55rem 0.95rem;
-    border-radius: 0.72rem;
+    min-height: var(--control-height-sm);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-sm);
     font-size: 0.84rem;
   }
 
   .icon-only {
-    width: 2.35rem;
-    min-width: 2.35rem;
+    width: var(--control-height-sm);
+    min-width: var(--control-height-sm);
     padding: 0;
   }
 
@@ -89,32 +108,28 @@ export let ariaLabel: string | undefined = undefined;
   }
 
   .gold {
-    background: #b69b57;
-    color: #fcfaf2;
-    box-shadow: 0 0.8rem 1.8rem rgba(182, 155, 87, 0.18);
+    background: rgb(var(--button-accent-rgb));
   }
 
   .olive {
-    background: #8a9a54;
-    color: #f7f7f2;
-    box-shadow: 0 0.8rem 1.8rem rgba(138, 154, 84, 0.16);
+    background: rgb(var(--button-accent-rgb));
   }
 
   .silver {
-    background: #d6d7dc;
-    color: #2c2e35;
-    box-shadow: 0 0.8rem 1.8rem rgba(214, 215, 220, 0.14);
+    background: rgb(var(--button-accent-rgb));
   }
 
   .quiet {
-    background: var(--field-background);
-    color: #f4f2f7;
+    background: var(--interactive-secondary-bg);
+    color: var(--interactive-secondary-text);
     box-shadow: inset 0 0 0 1px var(--field-border);
   }
 
   button:disabled {
     cursor: default;
-    opacity: 0.58;
+    background: var(--interactive-disabled-bg);
+    color: var(--interactive-disabled-text);
+    opacity: 1;
     transform: none;
     filter: none;
     box-shadow: none;

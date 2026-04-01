@@ -2,9 +2,10 @@
 import { createEventDispatcher } from "svelte";
 import { goto } from "$app/navigation";
 import Button from "$lib/components/common/Button.svelte";
-import { launchGame } from "$lib/services/tauriService";
-import type { Game } from "$lib/stores/libraryStore";
+import { pageLabels } from "$lib/data/labels";
+import { playGame } from "$lib/services/gameService";
 import { activeGameId, isGameRunning } from "$lib/stores/uiStore";
+import type { Game } from "$lib/types/Game";
 
 const dispatch = createEventDispatcher<{
 	launcherror: string;
@@ -17,7 +18,7 @@ export let showLabel = true;
 export let quiet = false;
 
 $: playing = $isGameRunning && $activeGameId === game.id;
-$: label = playing ? "Playing" : "Play";
+$: label = playing ? pageLabels.buttons.playing : pageLabels.buttons.play;
 
 async function handleClick() {
 	if (playing) return;
@@ -28,7 +29,7 @@ async function handleClick() {
 	}
 
 	try {
-		await launchGame(game.path, game.id);
+		await playGame(game);
 	} catch (error) {
 		dispatch(
 			"launcherror",
@@ -39,10 +40,11 @@ async function handleClick() {
 </script>
 
 <Button
+  accentColor={playing ? undefined : game.accentColor || game.accentHex}
   accent={playing ? 'silver' : game.accent}
   {compact}
   {wide}
-  {quiet}
+  quiet={quiet || playing}
   iconFirst
   disabled={playing}
   ariaLabel={`${label} ${game.title}`}

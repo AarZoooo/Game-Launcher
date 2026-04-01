@@ -3,40 +3,35 @@ import Button from "$lib/components/common/Button.svelte";
 import FilterPanel from "$lib/components/game/FilterPanel.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
 import ImportGamesModal from "$lib/components/game/ImportGamesModal.svelte";
-import { scanEpicGames, scanSteamGames } from "$lib/services/gameService";
+import { defaultGameFilters, sortOptions } from "$lib/data/filters";
+import { pageLabels } from "$lib/data/labels";
+import { performGameAction } from "$lib/services/gameService";
 import {
-	launchGame,
-	openGameFolder,
-	openSaveFolder,
-	pickGameExecutable,
-	scanLocalGames,
-} from "$lib/services/tauriService";
+	addImportedGamesToLibrary,
+	buildImportAddedMessage,
+	pickManualImportCandidate,
+	scanImportCandidates,
+} from "$lib/services/importService";
 import {
 	catalogGames,
-	type Game,
-	games,
 	hasDuplicateGame,
-	type ImportedGameResult,
 	installedGames,
 } from "$lib/stores/libraryStore";
 import { scanningState, uiStore } from "$lib/stores/uiStore";
-import { sortOptions } from "$lib/utils/constants";
+import type { Game, ImportedGameResult } from "$lib/types/Game";
+import type { GameMenuActionId } from "$lib/types/Menu";
+import type { GameFilterState, ScanPlatform } from "$lib/types/UI";
 
 let showFilters = false;
 let sortBy = "default";
-let scannedPlatform: "steam" | "epic" | "local" = "steam";
+let scannedPlatform: ScanPlatform = "steam";
 let showImportModal = false;
 let scanError = "";
 let scanResults: ImportedGameResult[] = [];
 let autoSearchMessage = "";
 let filteredInstalledGames: Game[] = [];
 let filteredCatalogGames: Game[] = [];
-let filters = {
-	genre: "",
-	coop: "",
-	status: "",
-	showFavorites: false,
-};
+let filters: GameFilterState = { ...defaultGameFilters };
 
 async function startScan(platform: "steam" | "epic") {
 	scannedPlatform = platform;
@@ -46,12 +41,11 @@ async function startScan(platform: "steam" | "epic") {
 	uiStore.setScanning(platform, true);
 
 	try {
-		const results =
-			platform === "steam" ? await scanSteamGames() : await scanEpicGames();
+		const results = await scanImportCandidates(platform);
 		scanResults = results.filter((item) => !hasDuplicateGame(item));
 	} catch (error) {
 		scanError =
-			error instanceof Error ? error.message : "Scan failed. Please try again.";
+			error instanceof Error ? error.message : pageLabels.games.scanFailed;
 	} finally {
 		uiStore.setScanning(platform, false);
 	}
@@ -69,7 +63,7 @@ function startAutoSearch() {
 	autoSearchMessage = "";
 	uiStore.setScanning("local", true);
 
-	void scanLocalGames()
+	void scanImportCandidates("local")
 		.then((results) => {
 			scanResults = results.filter((item) => !hasDuplicateGame(item));
 		})
@@ -77,7 +71,7 @@ function startAutoSearch() {
 			scanError =
 				error instanceof Error
 					? error.message
-					: "Auto search failed. Please try again.";
+					: pageLabels.games.autoSearchFailed;
 		})
 		.finally(() => {
 			uiStore.setScanning("local", false);
@@ -86,32 +80,32 @@ function startAutoSearch() {
 
 async function addManualGame() {
 	try {
-		const candidate = await pickGameExecutable();
+		const candidate = await pickManualImportCandidate();
 		if (!candidate || hasDuplicateGame(candidate)) {
 			return;
 		}
 
-		await games.addImportedGames([candidate]);
-		autoSearchMessage = `Added ${candidate.title} to your installed games list.`;
+		await addImportedGamesToLibrary([candidate]);
+		autoSearchMessage = buildImportAddedMessage(candidate.title);
 	} catch (error) {
 		scanError =
-			error instanceof Error
-				? error.message
-				: "Manual add failed. Please try again.";
+			error instanceof Error ? error.message : pageLabels.games.manualAddFailed;
 	}
 }
 
 function addSelected(event: CustomEvent<string[]>) {
 	const selected = scanResults.filter((item) => event.detail.includes(item.id));
-	games.addImportedGames(selected);
-	autoSearchMessage = `Added ${selected.length} local game${selected.length === 1 ? "" : "s"} to your installed list.`;
-	closeImport();
+	void addImportedGamesToLibrary(selected).then((message) => {
+		autoSearchMessage = message;
+		closeImport();
+	});
 }
 
 function addAll() {
-	games.addImportedGames(scanResults);
-	autoSearchMessage = `Added ${scanResults.length} local game${scanResults.length === 1 ? "" : "s"} to your installed list.`;
-	closeImport();
+	void addImportedGamesToLibrary(scanResults).then((message) => {
+		autoSearchMessage = message;
+		closeImport();
+	});
 }
 
 function closeImport() {
@@ -120,14 +114,7 @@ function closeImport() {
 	scanError = "";
 }
 
-function applyFilters(
-	event: CustomEvent<{
-		genre?: string;
-		coop?: string;
-		status?: string;
-		showFavorites?: boolean;
-	}>,
-) {
+function applyFilters(event: CustomEvent<GameFilterState>) {
 	filters = {
 		genre: event.detail.genre || "",
 		coop: event.detail.coop || "",
@@ -139,48 +126,10 @@ function applyFilters(
 }
 
 function handleMenuAction(event: CustomEvent<{ id: string; game: Game }>) {
-	const { id, game } = event.detail;
-
-	if (id === "play" && game.path) return launchGame(game.path, game.id);
-	if (id === "toggle-favorite") return games.toggleFavorite(game.id);
-	if (id === "open-folder") return openGameFolder(game.path);
-	if (id === "open-save-folder") return openSaveFolder(game.savePath);
-	if (id === "toggle-cloud-sync") return games.toggleCloudSync(game.id);
-	if (id === "remove-library") return games.removeFromLibrary(game.id);
-
-	if (id === "edit-details") {
-		const title = window.prompt("Game title", game.title);
-		if (title) games.updateDetails(game.id, { title });
-		return;
-	}
-
-	if (id === "change-cover") {
-		const cover = window.prompt(
-			"Cover image URL or local asset path",
-			game.cover,
-		);
-		if (cover) games.updateDetails(game.id, { cover });
-		return;
-	}
-
-	if (id === "launch-options") {
-		const value = window.prompt("Launch arguments", game.launchOptions || "");
-		if (value !== null) games.setLaunchOptions(game.id, value);
-		return;
-	}
-
-	if (id === "create-shortcut") {
-		window.alert(
-			`Desktop shortcut will be supported by the backend layer for ${game.title}.`,
-		);
-		return;
-	}
-
-	if (id === "sync-now") {
-		window.alert(
-			`Cloud sync for ${game.title} will be handled once backend sync is connected.`,
-		);
-	}
+	return performGameAction(
+		event.detail.id as GameMenuActionId,
+		event.detail.game,
+	);
 }
 
 function filterGames(items: Game[]) {
@@ -219,67 +168,67 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
 
 <div class="games">
   <div class="header">
-    <h1>All Games</h1>
+    <h1>{pageLabels.games.title}</h1>
 
     <div class="controls">
       <Button quiet compact on:click={() => startScan('steam')}>
-        {$scanningState.steam ? 'Scanning...' : 'Import Steam'}
+        {$scanningState.steam ? pageLabels.importModal.scanning : pageLabels.games.importSteam}
       </Button>
       <Button quiet compact on:click={() => startScan('epic')}>
-        {$scanningState.epic ? 'Scanning...' : 'Import Epic'}
+        {$scanningState.epic ? pageLabels.importModal.scanning : pageLabels.games.importEpic}
       </Button>
       <Button quiet compact on:click={startAutoSearch}>
-        {$scanningState.local ? 'Searching...' : 'Auto search'}
+        {$scanningState.local ? pageLabels.games.searching : pageLabels.games.autoSearch}
       </Button>
-      <Button quiet compact on:click={addManualGame}>Add manually</Button>
+      <Button quiet compact on:click={addManualGame}>{pageLabels.games.addManually}</Button>
 
       <label>
-        <span>Sort by:</span>
-        <select bind:value={sortBy}>
+        <span>{pageLabels.games.sortBy}</span>
+        <select class="field-control glass-dropdown" bind:value={sortBy}>
           {#each sortOptions as option}
             <option value={option.value}>{option.label}</option>
           {/each}
         </select>
       </label>
 
-      <button on:click={() => (showFilters = true)}>Filters</button>
+      <button on:click={() => (showFilters = true)}>{pageLabels.games.filters}</button>
     </div>
   </div>
 
   <section class="section">
     <div class="section-header">
       <div>
-        <h2>Installed Games</h2>
+        <h2>{pageLabels.games.installedGames}</h2>
         <p>
-          Loaded from your local backend storage.
+          {pageLabels.games.installedDescription}
           {#if autoSearchMessage}
             <span class="status-copy">{autoSearchMessage}</span>
           {/if}
         </p>
       </div>
-      <span>{filteredInstalledGames.length} shown</span>
+      <span>{filteredInstalledGames.length} {pageLabels.games.shownSuffix}</span>
     </div>
 
     {#if filteredInstalledGames.length > 0}
       <GameGrid games={filteredInstalledGames} context="library" on:action={handleMenuAction} />
     {:else}
-      <p class="empty">No installed games match the current filters.</p>
+      <p class="empty">{pageLabels.games.installedEmpty}</p>
     {/if}
   </section>
 
   <section class="section">
     <div class="section-header">
       <div>
-        <h2>Catalogue</h2>
-        <p>Temporary catalog and recommendation data kept separate from your installed library.</p>
+        <h2>{pageLabels.games.catalogue}</h2>
+        <p>{pageLabels.games.catalogueDescription}</p>
       </div>
-      <span>{filteredCatalogGames.length} shown</span>
+      <span>{filteredCatalogGames.length} {pageLabels.games.shownSuffix}</span>
     </div>
 
     {#if filteredCatalogGames.length > 0}
       <GameGrid games={filteredCatalogGames} context="explore" on:action={handleMenuAction} />
     {:else}
-      <p class="empty">No catalog games match the current filters.</p>
+      <p class="empty">{pageLabels.games.catalogEmpty}</p>
     {/if}
   </section>
 </div>
@@ -304,17 +253,17 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   .games {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--space-6);
   }
 
   .section {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1.2rem 1.25rem 1.3rem;
-    border-radius: 1.15rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
   }
 
   .header {
@@ -327,7 +276,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   h1 {
     margin: 0;
     font-size: 1.9rem;
-    font-family: 'Bahnschrift', 'Segoe UI Variable Text', sans-serif;
+    font-family: var(--font-display);
   }
 
   h2,
@@ -344,21 +293,21 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
 
   .section-header p,
   .section-header span {
-    color: rgba(226, 223, 231, 0.54);
+    color: var(--text-secondary);
     font-size: 0.8rem;
   }
 
   .status-copy {
     display: inline-block;
-    margin-left: 0.5rem;
-    color: rgba(244, 242, 247, 0.8);
+    margin-left: var(--space-2);
+    color: var(--text-primary);
   }
 
   .controls {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.8rem;
+    gap: var(--space-3);
   }
 
   label,
@@ -370,8 +319,8 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   label {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-    color: rgba(226, 223, 231, 0.54);
+    gap: var(--space-2);
+    color: var(--text-secondary);
     font-size: 0.8rem;
   }
 
@@ -380,11 +329,11 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     min-width: 7.2rem;
     border: 1px solid var(--surface-border);
     background: var(--surface-glass);
-    color: #f4f2f7;
+    color: var(--text-primary);
     padding: 0.6rem 0.85rem;
-    border-radius: 0.8rem;
-    box-shadow: var(--surface-shadow);
-    backdrop-filter: blur(var(--ui-blur));
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(10px);
   }
 
   .controls > button {
@@ -405,10 +354,10 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   }
 
   .empty {
-    padding: 1rem 1.1rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(226, 223, 231, 0.7);
+    padding: var(--space-4);
+    border: 1px solid var(--surface-border-soft);
+    background: var(--surface-card);
+    color: var(--text-secondary);
   }
 
   @media (max-width: 980px) {

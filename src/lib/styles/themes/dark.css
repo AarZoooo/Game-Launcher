@@ -1,0 +1,39 @@
+body[data-theme="dark"] {
+	color-scheme: dark;
+	--app-background: radial-gradient(
+			120% 120% at 0% 0%,
+			rgb(var(--accent-rgb) / 0.16) 0%,
+			transparent 36%
+		),
+		linear-gradient(180deg, var(--color-background-2), var(--color-background-1));
+	--app-panel: rgb(22 25 32 / 0.82);
+	--app-sidebar: linear-gradient(
+			180deg,
+			rgb(var(--accent-rgb) / 0.18),
+			rgba(255, 255, 255, 0.02)
+		),
+		rgba(22, 25, 32, 0.84);
+	--surface-glass: rgba(30, 30, 30, 0.6);
+	--surface-glass-strong: rgba(24, 24, 27, 0.82);
+	--surface-card: rgba(255, 255, 255, 0.04);
+	--surface-card-strong: rgba(255, 255, 255, 0.06);
+	--surface-border: var(--color-border-1);
+	--surface-border-soft: var(--color-border-2);
+	--surface-hover: rgba(255, 255, 255, 0.06);
+	--surface-shadow: var(--shadow-md);
+	--field-background: rgba(255, 255, 255, 0.08);
+	--field-background-strong: rgba(255, 255, 255, 0.12);
+	--field-border: var(--color-border-1);
+	--text-primary: var(--color-text-1);
+	--text-secondary: var(--color-text-2);
+	--text-muted: var(--color-text-3);
+	--interactive-primary-bg: var(--theme-accent);
+	--interactive-primary-text: var(--accent-contrast);
+	--interactive-secondary-bg: rgba(255, 255, 255, 0.08);
+	--interactive-secondary-text: var(--color-text-1);
+	--interactive-disabled-bg: rgba(186, 194, 207, 0.22);
+	--interactive-disabled-text: rgba(246, 247, 251, 0.6);
+	--ui-blur: var(--blur-md);
+	--motion-fast: 140ms;
+	--motion-base: 180ms;
+}

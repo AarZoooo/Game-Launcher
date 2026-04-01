@@ -3,8 +3,8 @@ import {
 	isGameRunning,
 	performanceMode,
 	resolveVariant,
-	type UIModeVariant,
 } from "$lib/stores/uiStore";
+import type { UIModeVariant } from "$lib/types/UI";
 
 export let loading = false;
 export let message = "Loading";
@@ -32,7 +32,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
 
 <style>
   .loader-shell {
-    --loader-accent: #b69b57;
+    --loader-accent: var(--interactive-primary-bg);
     --loader-track: rgba(255, 255, 255, 0.12);
     --loader-bg: #1e1e1e;
     display: inline-flex;
@@ -40,7 +40,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
     align-items: center;
     justify-content: center;
     gap: 0.8rem;
-    color: #f3f1f7;
+    color: var(--text-primary);
     transition:
       opacity 160ms ease,
       transform 160ms ease,
@@ -50,7 +50,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
   .overlay {
     position: fixed;
     inset: 0;
-    z-index: 70;
+    z-index: var(--z-loader);
     background: rgba(18, 18, 18, 0.88);
   }
 
@@ -89,7 +89,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
     inset: 0;
     border: 0.18rem solid transparent;
     border-top-color: var(--loader-accent);
-    border-right-color: rgba(182, 155, 87, 0.5);
+    border-right-color: rgb(var(--accent-rgb) / 0.5);
     animation: spin 900ms linear infinite;
   }
 
@@ -114,7 +114,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
     position: relative;
     width: 0.34rem;
     height: 0.34rem;
-    background: #d8d9de;
+    background: var(--text-primary);
     opacity: 0.38;
     animation: stepPulse 900ms steps(1, end) infinite;
   }
@@ -134,7 +134,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
   .loader-shell p {
     margin: 0;
     font-size: 0.82rem;
-    color: rgba(236, 233, 241, 0.72);
+    color: var(--text-secondary);
     letter-spacing: 0.01em;
   }
 

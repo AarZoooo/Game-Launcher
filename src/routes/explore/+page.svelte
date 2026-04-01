@@ -3,14 +3,15 @@ import { onMount } from "svelte";
 import { browser } from "$app/environment";
 import Button from "$lib/components/common/Button.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
+import { pageLabels, recommendationPrompt } from "$lib/data/labels";
+import { performGameAction } from "$lib/services/gameService";
 import {
 	explorePrimaryIds,
 	exploreSecondaryIds,
-	type Game,
-	games,
 	getGamesByIds,
 } from "$lib/stores/libraryStore";
-import { recommendationPrompt } from "$lib/utils/constants";
+import type { Game } from "$lib/types/Game";
+import type { GameMenuActionId } from "$lib/types/Menu";
 
 const primary = getGamesByIds(explorePrimaryIds);
 const featuredRecommendation = primary[0];
@@ -20,11 +21,10 @@ let isOnline = true;
 let prompt = recommendationPrompt;
 
 function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
-	const { id, game } = event.detail;
-
-	if (id === "status-want") return games.setStatus(game.id, "want");
-	if (id === "status-playing") return games.setStatus(game.id, "playing");
-	if (id === "status-played") return games.setStatus(game.id, "played");
+	return performGameAction(
+		event.detail.id as GameMenuActionId,
+		event.detail.game,
+	);
 }
 
 onMount(() => {
@@ -53,7 +53,7 @@ onMount(() => {
         </div>
 
         <div class="banner-copy">
-          <p>Recommended for you</p>
+          <p>{pageLabels.explore.recommendedForYou}</p>
           <h1>{featuredRecommendation.title}</h1>
           <span>{featuredRecommendation.genreLabel || featuredRecommendation.genres}</span>
         </div>
@@ -62,38 +62,38 @@ onMount(() => {
 
     <section>
       <div class="section-header compact">
-        <h2>Suggested Games</h2>
-        <span>based on what you play</span>
+        <h2>{pageLabels.explore.suggestedGames}</h2>
+        <span>{pageLabels.explore.basedOnWhatYouPlay}</span>
       </div>
       <GameGrid games={primaryGrid} compact context="explore" on:action={handleAction} />
-      <div class="actions"><Button quiet>Refresh</Button></div>
+      <div class="actions"><Button quiet>{pageLabels.explore.refresh}</Button></div>
     </section>
 
     <section class="assistant">
       <div class="section-header compact">
-        <h2>Recommendation Assistant</h2>
-        <span>just tell us what you want</span>
+        <h2>{pageLabels.explore.recommendationAssistant}</h2>
+        <span>{pageLabels.explore.assistantHint}</span>
       </div>
 
       <div class="prompt-box">
-        <input bind:value={prompt} />
-        <button aria-label="Generate recommendations">Go</button>
+        <input class="field-control" bind:value={prompt} />
+        <button aria-label="Generate recommendations">{pageLabels.explore.go}</button>
       </div>
 
-      <p>Suggestions will show up below</p>
+      <p>{pageLabels.explore.suggestionsPending}</p>
     </section>
 
     <section>
-      <h3>Suggested Games</h3>
+      <h3>{pageLabels.explore.suggestedGames}</h3>
       <GameGrid games={secondary} compact context="explore" on:action={handleAction} />
-      <div class="actions"><Button quiet>Refresh</Button></div>
+      <div class="actions"><Button quiet>{pageLabels.explore.refresh}</Button></div>
     </section>
   </div>
 {:else}
   <section class="offline">
     <div class="icon">?</div>
-    <h2>It seems that you're offline.</h2>
-    <p>Come back when you have an active internet connection.</p>
+    <h2>{pageLabels.explore.offlineTitle}</h2>
+    <p>{pageLabels.explore.offlineBody}</p>
   </section>
 {/if}
 
@@ -101,16 +101,16 @@ onMount(() => {
   .explore {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: var(--space-8);
   }
 
   .featured-banner {
     position: relative;
     overflow: hidden;
-    border-radius: 1.2rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.03);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--surface-border);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-inset);
   }
 
   .banner-media {
@@ -152,19 +152,19 @@ onMount(() => {
   }
 
   .banner-copy p {
-    color: rgba(239, 235, 243, 0.66);
+    color: var(--text-secondary);
     font-size: 0.76rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
   .banner-copy h1 {
-    font: 700 clamp(1.55rem, 2.6vw, 2.2rem) / 1.05 'Bahnschrift', 'Segoe UI Variable Text', sans-serif;
-    color: #f7f5fa;
+    font: 700 clamp(1.55rem, 2.6vw, 2.2rem) / 1.05 var(--font-display);
+    color: var(--text-primary);
   }
 
   .banner-copy span {
-    color: rgba(239, 235, 243, 0.74);
+    color: var(--text-secondary);
     font-size: 0.86rem;
   }
 
@@ -188,7 +188,7 @@ onMount(() => {
 
   span,
   p {
-    color: rgba(226, 223, 231, 0.42);
+    color: var(--text-muted);
     font-size: 0.75rem;
   }
 
@@ -201,35 +201,36 @@ onMount(() => {
   .assistant {
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
+    gap: var(--space-4);
   }
 
   .prompt-box {
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 0.7rem;
-    padding: 0.28rem;
+    gap: var(--space-3);
+    padding: var(--space-1);
     border: 1px solid var(--surface-border);
-    border-radius: 1rem;
-    background: var(--surface-glass);
-    box-shadow: inset 0 0 0 1px rgba(183, 155, 87, 0.12);
-    backdrop-filter: blur(var(--ui-blur));
+    border-radius: var(--radius-lg);
+    background: rgba(30, 30, 30, 0.6);
+    box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.12);
+    backdrop-filter: blur(10px);
   }
 
   .prompt-box input {
     border: 0;
     background: transparent;
-    color: #f4f2f7;
-    padding: 0.85rem;
+    color: var(--text-primary);
+    padding: 0 var(--space-3);
     font: inherit;
+    box-shadow: none;
   }
 
   .prompt-box button {
     min-width: 3.1rem;
     border: 0;
-    border-radius: 0.8rem;
-    background: rgba(255, 255, 255, 0.9);
-    color: #404149;
+    border-radius: var(--radius-md);
+    background: var(--interactive-primary-bg);
+    color: var(--interactive-primary-text);
     font-weight: 700;
   }
 
@@ -240,7 +241,7 @@ onMount(() => {
     align-content: center;
     gap: 0.6rem;
     text-align: center;
-    color: rgba(232, 229, 237, 0.48);
+    color: var(--text-muted);
   }
 
   .icon {

@@ -1,6 +1,8 @@
 <script lang="ts">
 import { onMount } from "svelte";
+import "$lib/styles/index.css";
 import AppShell from "$lib/components/layout/AppShell.svelte";
+import { appBrand } from "$lib/data/navigation";
 import { listenForGameProcessEvents } from "$lib/services/tauriService";
 import { games } from "$lib/stores/libraryStore";
 import { uiStore } from "$lib/stores/uiStore";
@@ -49,7 +51,7 @@ onMount(() => {
 </script>
 
 <svelte:head>
-  <title>Scoped Launcher</title>
+  <title>{appBrand.title}</title>
 </svelte:head>
 
 <AppShell>
