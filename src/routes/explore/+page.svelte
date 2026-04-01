@@ -216,8 +216,8 @@ onMount(() => {
     border: 1px solid var(--surface-border);
     border-radius: var(--radius-lg);
     background: var(--surface-glass);
-    box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.12);
-    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-accent-outline-soft);
+    backdrop-filter: blur(var(--blur-md));
   }
 
   .prompt-box input {

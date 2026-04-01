@@ -1,3 +1,194 @@
+.menu-root {
+	position: relative;
+	z-index: var(--z-card-hover);
+}
+
+.menu-root:focus-within {
+	z-index: var(--z-menu);
+}
+
+.menu-trigger {
+	display: inline-grid;
+	place-items: center;
+	border: 0;
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	cursor: pointer;
+	font: inherit;
+	font-weight: 700;
+	line-height: 1;
+	border-radius: var(--radius-sm);
+	opacity: 0.26;
+	transform: scale(0.96);
+	background: var(--surface-glass);
+	color: var(--text-primary);
+	box-shadow: var(--shadow-outline-soft);
+	backdrop-filter: blur(var(--blur-md));
+	transition:
+		opacity var(--motion-fast) ease,
+		transform var(--motion-fast) ease,
+		background-color var(--motion-fast) ease,
+		color var(--motion-fast) ease,
+		box-shadow var(--motion-fast) ease;
+}
+
+.menu-root:hover .menu-trigger,
+.menu-root:focus-within .menu-trigger,
+.menu-trigger.open {
+	opacity: 0.92;
+	transform: scale(1);
+}
+
+.menu-trigger:hover,
+.menu-trigger:focus-visible,
+.menu-trigger.open {
+	background: var(--surface-hover);
+	color: var(--text-primary);
+	box-shadow: var(--shadow-outline);
+}
+
+.menu-panel,
+.select-menu {
+	padding: var(--space-1);
+	border-radius: var(--radius-lg);
+	background: var(--surface-glass);
+	border: 1px solid var(--surface-border);
+	box-shadow: var(--shadow-md);
+	backdrop-filter: blur(var(--blur-md));
+	z-index: var(--z-menu);
+}
+
+.menu-panel {
+	position: absolute;
+	right: 0;
+	top: calc(100% + 0.45rem);
+	min-width: 10.5rem;
+	max-width: 11.5rem;
+}
+
+.menu-panel.side-right {
+	top: auto;
+	bottom: 0;
+	right: auto;
+	left: calc(100% + 0.55rem);
+}
+
+.menu-panel.above-right {
+	top: auto;
+	bottom: calc(100% + 0.45rem);
+	right: 0;
+	left: auto;
+}
+
+.menu-group {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.menu-item,
+.select-option {
+	width: 100%;
+	border: 0;
+	background: transparent;
+	color: var(--text-primary);
+	text-align: left;
+	font: inherit;
+	border-radius: var(--radius-sm);
+	transition:
+		background-color var(--motion-fast) ease,
+		color var(--motion-fast) ease,
+		opacity var(--motion-fast) ease;
+}
+
+.menu-item {
+	padding: var(--space-2) var(--space-3);
+	font-size: 0.72rem;
+	line-height: 1.2;
+	cursor: pointer;
+}
+
+.menu-item:hover,
+.select-option:hover,
+.select-option.selected {
+	background: var(--surface-hover);
+}
+
+.menu-item.danger {
+	color: var(--color-danger-1);
+}
+
+.menu-item:disabled {
+	cursor: default;
+	opacity: 0.55;
+}
+
+.menu-separator {
+	height: 1px;
+	margin: var(--space-2) 0;
+	background: var(--surface-border-soft);
+}
+
+.select-root {
+	position: relative;
+	min-width: 7.2rem;
+}
+
+.select-root.full-width {
+	width: 100%;
+}
+
+.select-trigger {
+	width: 100%;
+	min-height: var(--control-height-md);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: 0.6rem 0.85rem;
+	text-align: left;
+	cursor: pointer;
+}
+
+.select-trigger:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+
+.select-value {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.select-chevron {
+	flex: 0 0 auto;
+	width: 0.5rem;
+	height: 0.5rem;
+	border-right: 2px solid var(--text-primary);
+	border-bottom: 2px solid var(--text-primary);
+	transform: translateY(-0.08rem) rotate(45deg);
+	transition: transform var(--motion-fast) ease;
+}
+
+.select-trigger.open .select-chevron {
+	transform: translateY(0.08rem) rotate(-135deg);
+}
+
+.select-menu {
+	position: absolute;
+	top: calc(100% + 0.45rem);
+	right: 0;
+	left: 0;
+}
+
+.select-option {
+	padding: var(--space-2) var(--space-3);
+	font-size: 0.78rem;
+	cursor: pointer;
+}
+
 .selection-check-row {
 	display: grid;
 	grid-template-columns: auto 1fr;
@@ -34,7 +225,7 @@
 	border-radius: var(--radius-pill);
 	border: 1px solid var(--surface-border);
 	background: var(--surface-card);
-	box-shadow: inset 0 0 0 1px var(--surface-border-soft);
+	box-shadow: var(--shadow-outline-soft);
 	transition:
 		background-color var(--motion-fast) ease,
 		border-color var(--motion-fast) ease,
@@ -49,9 +240,7 @@
 .selection-check-shell input:checked + .selection-check-indicator {
 	background: var(--interactive-primary-bg);
 	border-color: var(--surface-border);
-	box-shadow:
-		inset 0 0 0 1px rgb(var(--accent-rgb) / 0.28),
-		0 0 0 0.18rem rgb(var(--accent-rgb) / 0.2);
+	box-shadow: var(--shadow-accent-ring);
 }
 
 .selection-check-shell input:focus-visible + .selection-check-indicator {

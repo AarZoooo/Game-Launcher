@@ -1,10 +1,12 @@
 import type { AccentTone, Game } from "$lib/types/Game";
 
-const toneMap: Record<AccentTone, string> = {
+export const ACCENT_PALETTE: Record<AccentTone, string> = {
 	gold: "#b69b57",
 	olive: "#8a9a54",
 	silver: "#d6d7dc",
 };
+
+export const DEFAULT_ACCENT: AccentTone = "gold";
 
 function normalizeHex(value: string) {
 	const trimmed = value.trim();
@@ -26,12 +28,16 @@ function clampChannel(channel: number) {
 }
 
 export function hexToRgbTriplet(hex: string) {
-	const normalized = normalizeHex(hex) || toneMap.gold;
+	const normalized = normalizeHex(hex) || ACCENT_PALETTE[DEFAULT_ACCENT];
 	const red = parseInt(normalized.slice(1, 3), 16);
 	const green = parseInt(normalized.slice(3, 5), 16);
 	const blue = parseInt(normalized.slice(5, 7), 16);
 
 	return `${clampChannel(red)} ${clampChannel(green)} ${clampChannel(blue)}`;
+}
+
+export function getAccentHexByTone(tone: AccentTone = DEFAULT_ACCENT) {
+	return ACCENT_PALETTE[tone];
 }
 
 export function resolveAccentHex(
@@ -40,7 +46,7 @@ export function resolveAccentHex(
 	return (
 		(source?.accentColor && normalizeHex(source.accentColor)) ||
 		(source?.accentHex && normalizeHex(source.accentHex)) ||
-		toneMap[source?.accent || "gold"]
+		getAccentHexByTone(source?.accent || DEFAULT_ACCENT)
 	);
 }
 

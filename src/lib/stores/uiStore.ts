@@ -1,5 +1,4 @@
 import { derived, writable } from "svelte/store";
-
 import type {
 	ResolvedUIMode,
 	ScanPlatform,
@@ -7,6 +6,7 @@ import type {
 	UIModeVariant,
 	UIState,
 } from "$lib/types/UI";
+import { DEFAULT_ACCENT, getAccentHexByTone } from "$lib/utils/accent";
 
 export type {
 	ResolvedUIMode,
@@ -26,7 +26,7 @@ const initialState: UIState = {
 		epic: false,
 		local: false,
 	},
-	activeAccent: "#b69b57",
+	activeAccent: getAccentHexByTone(DEFAULT_ACCENT),
 	theme: "dark",
 	libraryBusy: false,
 	libraryBusyMessage: "Updating library...",

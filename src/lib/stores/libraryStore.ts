@@ -17,6 +17,7 @@ import type {
 	PlatformType,
 	ResumeState,
 } from "$lib/types/Game";
+import { getAccentHexByTone } from "$lib/utils/accent";
 
 export type {
 	AccentTone,
@@ -50,22 +51,17 @@ const defaultGameBanner = appImages.banners.default;
 function buildImportedGame(input: ImportedGameResult): Game {
 	const platformLabel =
 		input.platform === "steam"
-			? "Steam"
+			? pageLabels.platforms.steam
 			: input.platform === "epic"
-				? "Epic"
-				: "Local";
+				? pageLabels.platforms.epic
+				: pageLabels.platforms.local;
 	const accent =
 		input.platform === "steam"
 			? "gold"
 			: input.platform === "epic"
 				? "silver"
 				: "olive";
-	const accentHex =
-		input.platform === "steam"
-			? "#b69b57"
-			: input.platform === "epic"
-				? "#d6d7dc"
-				: "#8a9a54";
+	const accentHex = getAccentHexByTone(accent);
 
 	return {
 		id: input.id || slugify(input.title),
@@ -633,12 +629,6 @@ function inferPlatformType(platform: string): PlatformType {
 }
 
 function normalizeGame(game: Game, index: number): Game {
-	const accentHexMap: Record<AccentTone, string> = {
-		gold: "#b69b57",
-		olive: "#8a9a54",
-		silver: "#d6d7dc",
-	};
-
 	const defaultStatus: GameStatus =
 		parseHours(game.hours) > 50
 			? "played"
@@ -649,9 +639,9 @@ function normalizeGame(game: Game, index: number): Game {
 	return {
 		...game,
 		platformType: game.platformType || inferPlatformType(game.platform),
-		accentHex: game.accentHex || accentHexMap[game.accent],
+		accentHex: game.accentHex || getAccentHexByTone(game.accent),
 		accentColor:
-			game.accentColor || game.accentHex || accentHexMap[game.accent],
+			game.accentColor || game.accentHex || getAccentHexByTone(game.accent),
 		status: game.status || defaultStatus,
 		favorite: game.favorite ?? index < 4,
 		cloudSyncEnabled: game.cloudSyncEnabled ?? Boolean(game.syncStatus),

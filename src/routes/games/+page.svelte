@@ -321,7 +321,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     padding: 0.6rem 0.85rem;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--blur-md));
   }
 
   .controls > button {

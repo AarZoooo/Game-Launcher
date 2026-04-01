@@ -108,7 +108,7 @@ $: showPlayButton = game.inLibrary !== false;
     color: var(--text-primary);
     cursor: pointer;
     border-radius: var(--radius-sm);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--blur-md));
   }
 
   .window-actions {

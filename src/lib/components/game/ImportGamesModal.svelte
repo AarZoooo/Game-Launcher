@@ -28,9 +28,9 @@ $: if (!open) {
 
 $: platformLabel =
 	platform === "steam"
-		? "Steam"
+		? pageLabels.platforms.steam
 		: platform === "epic"
-			? "Epic"
+			? pageLabels.platforms.epic
 			: pageLabels.importModal.autoSearch;
 
 $: allSelected = results.length > 0 && selectedIds.length === results.length;

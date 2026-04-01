@@ -51,7 +51,7 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     inset: -30% -20% auto;
     height: 60%;
     background: radial-gradient(circle, var(--surface-hover) 0%, transparent 60%);
-    filter: blur(38px);
+    filter: blur(var(--blur-xl));
     opacity: 0.65;
     pointer-events: none;
   }
@@ -155,7 +155,7 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     height: 0.42rem;
     border-radius: var(--radius-pill);
     background: var(--color-success-1);
-    box-shadow: 0 0 0.5rem var(--color-success-1);
+    box-shadow: var(--shadow-status-glow-sm);
   }
 
   @media (max-width: 920px) {

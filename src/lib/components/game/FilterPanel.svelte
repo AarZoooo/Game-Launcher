@@ -87,7 +87,7 @@ function close() {
       var(--surface-glass);
     border-left: 1px solid var(--surface-border);
     box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--blur-md));
     padding: var(--space-7);
     display: flex;
     flex-direction: column;

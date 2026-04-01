@@ -90,7 +90,7 @@ onDestroy(() => {
     on:click|stopPropagation={toggle}
   >
     <span class="select-value">{selectedLabel}</span>
-    <span class="chevron" aria-hidden="true"></span>
+    <span class="select-chevron" aria-hidden="true"></span>
   </button>
 
   {#if open}
@@ -105,7 +105,7 @@ onDestroy(() => {
         <button
           type="button"
           class:selected={option.value === value}
-          class="option"
+          class="select-option"
           role="option"
           aria-selected={option.value === value}
           on:click={() => selectOption(option)}
@@ -116,88 +116,3 @@ onDestroy(() => {
     </div>
   {/if}
 </div>
-
-<style>
-  .select-root {
-    position: relative;
-    min-width: 7.2rem;
-  }
-
-  .select-root.full-width {
-    width: 100%;
-  }
-
-  .select-trigger {
-    width: 100%;
-    min-height: var(--control-height-md);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: 0.6rem 0.85rem;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .select-trigger:disabled {
-    cursor: default;
-    opacity: 0.6;
-  }
-
-  .select-value {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .chevron {
-    flex: 0 0 auto;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-right: 2px solid var(--text-primary);
-    border-bottom: 2px solid var(--text-primary);
-    transform: translateY(-0.08rem) rotate(45deg);
-    transition: transform var(--motion-fast) ease;
-  }
-
-  .select-trigger.open .chevron {
-    transform: translateY(0.08rem) rotate(-135deg);
-  }
-
-  .select-menu {
-    position: absolute;
-    top: calc(100% + 0.45rem);
-    right: 0;
-    left: 0;
-    padding: var(--space-1);
-    border-radius: var(--radius-lg);
-    background: var(--surface-glass);
-    border: 1px solid var(--surface-border);
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(10px);
-    z-index: var(--z-menu);
-  }
-
-  .option {
-    width: 100%;
-    border: 0;
-    background: transparent;
-    color: var(--text-primary);
-    text-align: left;
-    padding: var(--space-2) var(--space-3);
-    font: inherit;
-    font-size: 0.78rem;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition:
-      background-color var(--motion-fast) ease,
-      color var(--motion-fast) ease,
-      opacity var(--motion-fast) ease;
-  }
-
-  .option:hover,
-  .option.selected {
-    background: var(--surface-hover);
-  }
-</style>

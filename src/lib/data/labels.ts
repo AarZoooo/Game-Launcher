@@ -8,6 +8,11 @@ export const pageLabels = {
 		favorite: "Favorite",
 		openMenuFor: (title: string) => `Open menu for ${title}`,
 	},
+	platforms: {
+		steam: "Steam",
+		epic: "Epic",
+		local: "Local",
+	},
 	home: {
 		recentlyPlayed: "Recently Played",
 		exploreNew: "Explore New",
@@ -99,6 +104,7 @@ export const pageLabels = {
 	actions: {
 		play: "Play",
 		playing: "Playing",
+		openGame: (title: string) => `Open ${title}`,
 		favorite: "Favorite",
 		addFavorite: "Add Favorite",
 		removeFavorite: "Remove Favorite",
