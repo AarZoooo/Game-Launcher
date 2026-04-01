@@ -162,11 +162,23 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     .sidebar {
       position: static;
       height: auto;
-      gap: 1rem;
-      padding-bottom: 1.25rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        "brand profile"
+        "nav nav";
+      align-items: start;
+      gap: var(--space-4);
+      padding: var(--space-4) 0 1.25rem;
+    }
+
+    .brand {
+      grid-area: brand;
+      padding: 0 var(--space-4);
     }
 
     nav {
+      grid-area: nav;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       padding: 0 var(--space-2);
     }
@@ -175,6 +187,19 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
       text-align: center;
       padding: var(--space-3) var(--space-2);
       border-radius: var(--radius-sm);
+    }
+
+    .profile {
+      grid-area: profile;
+      justify-self: end;
+      align-self: start;
+      padding: 0 var(--space-4);
+      gap: var(--space-2);
+    }
+
+    .profile strong,
+    .profile span {
+      white-space: nowrap;
     }
   }
 </style>
