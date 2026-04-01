@@ -12,7 +12,6 @@ export type GameMenuActionId =
 	| "open-folder"
 	| "open-save-folder"
 	| "edit-details"
-	| "change-cover"
 	| "sync-now"
 	| "toggle-cloud-sync"
 	| "launch-options"

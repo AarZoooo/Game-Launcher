@@ -1,23 +1,32 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
-import { appIcons, getGameBanner } from "$lib/assets";
+import { appIcons } from "$lib/assets";
 import Icon from "$lib/components/common/Icon.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
 import { pageLabels } from "$lib/data/labels";
+import { effectiveUIMode } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
+import { resolveAccentPresentation } from "$lib/utils/accent";
+import { getGameImage } from "$lib/utils/getGameMedia";
 
 export let game: Game;
 export let similarGames: Game[] = [];
 export let backHref = "/";
 
 let launchError = "";
+let heroElement: HTMLElement;
 $: showPlayButton = game.inLibrary !== false;
+$: accentPresentation = resolveAccentPresentation(game);
+
+$: if (heroElement) {
+	heroElement.style.setProperty("--details-accent-rgb", accentPresentation.rgb);
+}
 </script>
 
 <section class="details">
-  <div class="hero">
-    <img class="hero-media" src={getGameBanner(game)} alt="" loading="lazy" />
+  <div bind:this={heroElement} class="hero" class:performance={$effectiveUIMode === 'gaming'}>
+    <img class="hero-media" src={getGameImage(game, 'banner')} alt="" loading="lazy" />
     <div class="hero-top">
       <button class="back" aria-label={pageLabels.common.goBack} on:click={() => goto(backHref)}>
         <Icon src={appIcons.ui.back} size="1rem" />
@@ -85,7 +94,13 @@ $: showPlayButton = game.inLibrary !== false;
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, transparent 8%, var(--surface-glass-strong) 100%);
+    background:
+      linear-gradient(180deg, transparent 8%, var(--surface-glass-strong) 100%),
+      radial-gradient(circle at 80% 12%, rgb(var(--details-accent-rgb) / 0.18), transparent 34%);
+  }
+
+  .hero.performance {
+    transition: none;
   }
 
   .hero-top,

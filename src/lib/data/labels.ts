@@ -112,7 +112,6 @@ export const pageLabels = {
 		openGameFolder: "Open Game Folder",
 		openSaveFolder: "Open Save Folder",
 		editDetails: "Edit Details",
-		changeCover: "Change Cover Art",
 		syncNow: "Sync Now",
 		enableCloudSync: "Toggle Cloud Sync",
 		disableCloudSync: "Disable Cloud Sync",
@@ -132,7 +131,6 @@ export const pageLabels = {
 	},
 	fields: {
 		gameTitlePrompt: "Game title",
-		coverPrompt: "Cover image URL or local asset path",
 		launchArgumentsPrompt: "Launch arguments",
 	},
 	messages: {

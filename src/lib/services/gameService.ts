@@ -80,14 +80,6 @@ export async function performGameAction(
 		return;
 	}
 
-	if (actionId === "change-cover") {
-		const cover = promptForValue(pageLabels.fields.coverPrompt, game.cover);
-		if (cover) {
-			return games.updateDetails(game.id, { cover });
-		}
-		return;
-	}
-
 	if (actionId === "launch-options") {
 		const value = promptForValue(
 			pageLabels.fields.launchArgumentsPrompt,

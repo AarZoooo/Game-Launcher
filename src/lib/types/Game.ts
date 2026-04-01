@@ -26,6 +26,12 @@ export interface ImportedGameResult {
 export interface Game {
 	id: string;
 	title: string;
+	coverVertical?: string;
+	coverHorizontal?: string;
+	banner?: string;
+	icon?: string;
+	cover?: string;
+	hero?: string;
 	hours: string;
 	platform: string;
 	platformType?: PlatformType;
@@ -33,8 +39,6 @@ export interface Game {
 	rating: string;
 	coop: string;
 	completion: string;
-	cover: string;
-	hero?: string;
 	accent: AccentTone;
 	accentHex?: string;
 	accentColor?: string;

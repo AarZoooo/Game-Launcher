@@ -8,7 +8,12 @@ export interface StoredGame {
 	id: string;
 	title: string;
 	exePath: string;
-	coverArt: string;
+	coverVertical?: string;
+	coverHorizontal?: string;
+	banner?: string;
+	icon?: string;
+	accentColor?: string;
+	coverArt?: string;
 	platform: string;
 	totalPlaytime: number;
 	lastPlayed: string | null;

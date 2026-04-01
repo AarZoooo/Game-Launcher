@@ -1,21 +1,31 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte";
-import { getGameBanner } from "$lib/assets";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
 import SyncBadge from "$lib/components/sync/SyncBadge.svelte";
 import { pageLabels } from "$lib/data/labels";
+import { effectiveUIMode } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
+import { resolveAccentPresentation } from "$lib/utils/accent";
+import { getGameImage } from "$lib/utils/getGameMedia";
 
 const dispatch = createEventDispatcher<{
 	action: { id: string; game: Game };
 }>();
 
 export let game: Game;
+
+let heroElement: HTMLElement;
+
+$: accentPresentation = resolveAccentPresentation(game);
+
+$: if (heroElement) {
+	heroElement.style.setProperty("--hero-accent-rgb", accentPresentation.rgb);
+}
 </script>
 
-<section class="hero">
-  <img class="hero-media" src={getGameBanner(game)} alt="" loading="lazy" />
+<section bind:this={heroElement} class="hero" class:performance={$effectiveUIMode === 'gaming'}>
+  <img class="hero-media" src={getGameImage(game, 'horizontal')} alt="" loading="lazy" />
   <div class="veil"></div>
   <div class="hero-menu">
     <GameMenu
@@ -71,8 +81,14 @@ export let game: Game;
     inset: 0;
     background:
       linear-gradient(90deg, var(--surface-glass-strong) 0%, var(--surface-glass) 45%, transparent 100%),
-      radial-gradient(circle at 50% 0%, rgb(var(--accent-rgb) / 0.18) 0%, transparent 48%);
+      radial-gradient(circle at 50% 0%, rgb(var(--hero-accent-rgb) / 0.18) 0%, transparent 48%);
     backdrop-filter: blur(calc(var(--ui-blur) * 0.08));
+  }
+
+  .hero.performance,
+  .hero.performance .veil {
+    transition: none;
+    backdrop-filter: none;
   }
 
   .content {

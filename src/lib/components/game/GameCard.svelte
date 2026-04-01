@@ -2,12 +2,12 @@
 import { createEventDispatcher } from "svelte";
 import { goto } from "$app/navigation";
 import { page } from "$app/stores";
-import { getGameCover } from "$lib/assets";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import { pageLabels } from "$lib/data/labels";
 import type { Game } from "$lib/types/Game";
 import type { GameMenuContext, MenuPlacement } from "$lib/types/Menu";
 import { resolveAccentPresentation } from "$lib/utils/accent";
+import { getGameImage } from "$lib/utils/getGameMedia";
 
 const dispatch = createEventDispatcher<{
 	action: { id: string; game: Game };
@@ -48,7 +48,12 @@ function openGame() {
     aria-label={pageLabels.actions.openGame(game.title)}
     on:click={openGame}
   >
-    <img class="game-card-image" src={getGameCover(game)} alt="" loading="lazy" />
+    <img
+      class="game-card-image"
+      src={getGameImage(game, 'vertical')}
+      alt=""
+      loading="lazy"
+    />
   </button>
 
   <div class="game-card-info">

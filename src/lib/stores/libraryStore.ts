@@ -1,6 +1,5 @@
 import { derived, get, writable } from "svelte/store";
 
-import { appImages } from "$lib/assets";
 import { pageLabels } from "$lib/data/labels";
 import {
 	getGames as loadStoredGames,
@@ -45,8 +44,8 @@ function wait(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const defaultGameCover = appImages.placeholders.gameCover;
-const defaultGameBanner = appImages.banners.default;
+const defaultGameCover = "";
+const defaultGameBanner = "";
 
 function buildImportedGame(input: ImportedGameResult): Game {
 	const platformLabel =
@@ -73,7 +72,6 @@ function buildImportedGame(input: ImportedGameResult): Game {
 		rating: "0.0",
 		coop: "Unknown",
 		completion: "Unknown",
-		cover: defaultGameCover,
 		accent,
 		accentHex,
 		accentColor: accentHex,
@@ -793,9 +791,12 @@ function mapStoredGame(game: StoredGame): Game {
 			rating: "0.0",
 			coop: "Unknown",
 			completion: "Unknown",
-			cover: game.coverArt || defaultGameCover,
-			hero: game.coverArt || defaultGameBanner,
+			coverVertical: game.coverVertical || game.coverArt,
+			coverHorizontal: game.coverHorizontal,
+			banner: game.banner,
+			icon: game.icon,
 			accent,
+			accentColor: game.accentColor,
 			path: game.exePath,
 			lastPlayed: formatLastPlayed(game.lastPlayed),
 			totalPlaytime: formatPlaytime(game.totalPlaytime),
@@ -822,7 +823,12 @@ function toStoredGame(game: Game): StoredGame {
 		id: game.id,
 		title: game.title,
 		exePath: game.path || "",
-		coverArt: game.cover,
+		coverVertical: game.coverVertical,
+		coverHorizontal: game.coverHorizontal,
+		banner: game.banner,
+		icon: game.icon,
+		accentColor: game.accentColor,
+		coverArt: game.coverVertical || game.cover,
 		platform:
 			game.platformType &&
 			game.platformType !== "suggested" &&
@@ -945,9 +951,7 @@ function createGameStore() {
 			),
 		updateDetails: (
 			id: string,
-			payload: Partial<
-				Pick<Game, "title" | "path" | "tags" | "cover" | "savePath">
-			>,
+			payload: Partial<Pick<Game, "title" | "path" | "tags" | "savePath">>,
 		) =>
 			updateAndPersist(
 				(items) =>
