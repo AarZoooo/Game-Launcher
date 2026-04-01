@@ -76,9 +76,9 @@ export let game: Game;
   }
 
   .content {
-    position: relative;
+    position: absolute;
+    inset: 0;
     z-index: 1;
-    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
