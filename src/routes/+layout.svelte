@@ -22,7 +22,12 @@ onMount(() => {
 			return;
 		}
 
-		uiStore.finishGame(event.gameId);
+		if (event.state === "exited") {
+			uiStore.finishGame(event.gameId);
+			return;
+		}
+
+		console.error("Game process event error:", event.message || event.exePath);
 	})
 		.then((unlisten) => {
 			if (disposed) {

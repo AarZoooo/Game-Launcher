@@ -54,8 +54,10 @@ export async function launchGame(exePath: string, gameId?: string) {
 		throw new Error("No executable path was provided for this game.");
 	}
 
+	const optimisticStart = Boolean(gameId);
+
 	try {
-		if (gameId) {
+		if (optimisticStart) {
 			uiStore.startGame(gameId);
 		} else {
 			uiStore.setGameRunning(true);
@@ -63,14 +65,21 @@ export async function launchGame(exePath: string, gameId?: string) {
 
 		await invoke("launch_game", { exePath, gameId: gameId || null });
 	} catch (err) {
-		if (gameId) {
-			uiStore.finishGame(gameId);
-		} else {
+		const error = err instanceof Error ? err : new Error(String(err));
+
+		if (!optimisticStart) {
 			uiStore.setGameRunning(false);
+			console.error("Failed to launch game:", error);
+			throw error;
 		}
 
-		console.error("Failed to launch game:", err);
-		throw err instanceof Error ? err : new Error(String(err));
+		// Some backend flows can launch successfully and then still reject the invoke
+		// while process tracking settles. Keep the optimistic running state and let
+		// subsequent process events reconcile the UI back to idle.
+		console.warn(
+			"Launch invoke returned an error after starting the game; preserving running state until process events update it.",
+			error,
+		);
 	}
 }
 
