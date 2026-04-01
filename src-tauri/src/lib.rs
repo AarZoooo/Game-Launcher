@@ -9,6 +9,7 @@ pub fn run() {
             commands::storage::read_games,
             commands::storage::write_games,
             commands::storage::scan_local_games,
+            commands::manual_add::pick_game_executable,
             commands::launch_game::launch_game
         ])
         .run(tauri::generate_context!())
