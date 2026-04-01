@@ -2,7 +2,7 @@
 import { createEventDispatcher } from "svelte";
 import GameCard from "$lib/components/game/GameCard.svelte";
 import type { Game } from "$lib/types/Game";
-import type { GameMenuContext } from "$lib/types/Menu";
+import type { GameMenuContext, MenuPlacement } from "$lib/types/Menu";
 
 const dispatch = createEventDispatcher<{
 	action: { id: string; game: Game };
@@ -12,12 +12,19 @@ export let games: Game[] = [];
 export let horizontal = false;
 export let compact = false;
 export let context: GameMenuContext = "library";
+export let menuPlacement: MenuPlacement = "above-right";
 </script>
 
 <div class:horizontal class="grid">
   {#each games as game}
     <div class="item">
-      <GameCard {game} {compact} {context} on:action={(event) => dispatch('action', event.detail)} />
+      <GameCard
+        {game}
+        {compact}
+        {context}
+        {menuPlacement}
+        on:action={(event) => dispatch('action', event.detail)}
+      />
     </div>
   {/each}
 </div>

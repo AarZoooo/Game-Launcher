@@ -50,7 +50,7 @@ let launchError = "";
 
   <section class="similar">
     <h2>{pageLabels.game.similarTitles}</h2>
-    <GameGrid games={similarGames} horizontal compact />
+    <GameGrid games={similarGames} horizontal compact menuPlacement="side-right" />
   </section>
 </section>
 

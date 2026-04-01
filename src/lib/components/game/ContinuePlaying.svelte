@@ -17,13 +17,20 @@ export let game: Game;
 <section class="hero">
   <img class="hero-media" src={getGameBanner(game)} alt="" loading="lazy" />
   <div class="veil"></div>
+  <div class="hero-menu">
+    <GameMenu
+      {game}
+      context="home"
+      placement="above-right"
+      on:action={(event) => dispatch('action', event.detail)}
+    />
+  </div>
   <div class="content">
     <p class="eyebrow">{pageLabels.continuePlaying.eyebrow}</p>
     <h1>{game.title}</h1>
 
     <div class="actions">
       <GamePlayButton {game} compact />
-      <GameMenu {game} context="home" on:action={(event) => dispatch('action', event.detail)} />
     </div>
 
     <div class="meta">
@@ -77,6 +84,13 @@ export let game: Game;
     justify-content: flex-end;
     gap: var(--space-4);
     padding: var(--space-9) var(--space-8) var(--space-7);
+  }
+
+  .hero-menu {
+    position: absolute;
+    right: var(--space-6);
+    bottom: var(--space-6);
+    z-index: var(--z-menu);
   }
 
   .eyebrow {

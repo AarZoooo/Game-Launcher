@@ -6,7 +6,7 @@ import { getGameCover } from "$lib/assets";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import { pageLabels } from "$lib/data/labels";
 import type { Game } from "$lib/types/Game";
-import type { GameMenuContext } from "$lib/types/Menu";
+import type { GameMenuContext, MenuPlacement } from "$lib/types/Menu";
 import { resolveAccentPresentation } from "$lib/utils/accent";
 
 const dispatch = createEventDispatcher<{
@@ -16,6 +16,7 @@ const dispatch = createEventDispatcher<{
 export let game: Game;
 export let compact = false;
 export let context: GameMenuContext = "library";
+export let menuPlacement: MenuPlacement = "above-right";
 
 let cardElement: HTMLElement;
 
@@ -36,7 +37,7 @@ function openGame() {
     <GameMenu
       {game}
       {context}
-      placement="above-right"
+      placement={menuPlacement}
       on:action={(event) => dispatch('action', event.detail)}
     />
   </div>

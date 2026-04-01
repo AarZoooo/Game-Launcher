@@ -40,7 +40,14 @@ $: featuredGame =
         <h2>{pageLabels.home.recentlyPlayed}</h2>
         <span>{pageLabels.home.seeMore}</span>
       </div>
-      <GameGrid games={$continuePlayingGames} horizontal compact context="home" on:action={handleAction} />
+      <GameGrid
+        games={$continuePlayingGames}
+        horizontal
+        compact
+        context="home"
+        menuPlacement="side-right"
+        on:action={handleAction}
+      />
     </section>
 
     <section>
@@ -48,7 +55,14 @@ $: featuredGame =
         <h2>{pageLabels.home.exploreNew}</h2>
         <span>{pageLabels.home.seeMore}</span>
       </div>
-      <GameGrid games={suggestedGames} horizontal compact context="explore" on:action={handleAction} />
+      <GameGrid
+        games={suggestedGames}
+        horizontal
+        compact
+        context="explore"
+        menuPlacement="side-right"
+        on:action={handleAction}
+      />
     </section>
 
     <StatsDashboard />
