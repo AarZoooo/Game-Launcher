@@ -1,21 +1,30 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte";
-import { getGameBanner } from "$lib/assets";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
-import SyncBadge from "$lib/components/sync/SyncBadge.svelte";
 import { pageLabels } from "$lib/data/labels";
+import { effectiveUIMode } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
+import { resolveAccentPresentation } from "$lib/utils/accent";
+import { getGameImage } from "$lib/utils/getGameMedia";
 
 const dispatch = createEventDispatcher<{
 	action: { id: string; game: Game };
 }>();
 
 export let game: Game;
+
+let heroElement: HTMLElement;
+
+$: accentPresentation = resolveAccentPresentation(game);
+
+$: if (heroElement) {
+	heroElement.style.setProperty("--hero-accent-rgb", accentPresentation.rgb);
+}
 </script>
 
-<section class="hero">
-  <img class="hero-media" src={getGameBanner(game)} alt="" loading="lazy" />
+<section bind:this={heroElement} class="hero" class:performance={$effectiveUIMode === 'gaming'}>
+  <img class="hero-media" src={getGameImage(game, 'horizontal')} alt="" loading="lazy" />
   <div class="veil"></div>
   <div class="hero-menu">
     <GameMenu
@@ -31,19 +40,15 @@ export let game: Game;
 
     <div class="actions">
       <GamePlayButton {game} compact />
-    </div>
 
-    <div class="meta">
-      {#each game.metrics || [] as metric}
-        <div class="metric">
-          <span>{metric.label}</span>
-          {#if metric.label === 'Cloud Sync'}
-            <SyncBadge status={metric.value} />
-          {:else}
+      <div class="meta">
+        {#each (game.metrics || []).filter((metric) => metric.label !== 'Cloud Sync') as metric}
+          <div class="metric">
+            <span>{metric.label}</span>
             <p>{metric.value}</p>
-          {/if}
-        </div>
-      {/each}
+          </div>
+        {/each}
+      </div>
     </div>
   </div>
 </section>
@@ -71,8 +76,14 @@ export let game: Game;
     inset: 0;
     background:
       linear-gradient(90deg, var(--surface-glass-strong) 0%, var(--surface-glass) 45%, transparent 100%),
-      radial-gradient(circle at 50% 0%, rgb(var(--accent-rgb) / 0.18) 0%, transparent 48%);
+      radial-gradient(circle at 50% 0%, rgb(var(--hero-accent-rgb) / 0.18) 0%, transparent 48%);
     backdrop-filter: blur(calc(var(--ui-blur) * 0.08));
+  }
+
+  .hero.performance,
+  .hero.performance .veil {
+    transition: none;
+    backdrop-filter: none;
   }
 
   .content {
@@ -115,17 +126,22 @@ export let game: Game;
   .actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-3);
   }
 
   .meta {
     display: flex;
-    gap: var(--space-6);
+    flex: 1 1 24rem;
     flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
   }
 
   .metric {
-    min-width: 7.5rem;
+    min-width: 0;
+    flex: 1 1 9rem;
   }
 
   .metric span {
@@ -149,6 +165,10 @@ export let game: Game;
 
     .content {
       padding: var(--space-6);
+    }
+
+    .meta {
+      flex-basis: 100%;
     }
   }
 </style>

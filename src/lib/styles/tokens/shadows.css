@@ -4,4 +4,18 @@
 	--shadow-md: 0 1rem 2.4rem rgba(0, 0, 0, 0.3);
 	--shadow-lg: 0 1.4rem 3rem rgba(0, 0, 0, 0.34);
 	--shadow-inset: inset 0 1px rgba(255, 255, 255, 0.08);
+	--shadow-outline-soft: inset 0 0 0 1px var(--surface-border-soft);
+	--shadow-outline: inset 0 0 0 1px var(--surface-border);
+	--shadow-border: 0 0 0 1px var(--surface-border);
+	--shadow-accent-outline-soft: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.12);
+	--shadow-accent-ring:
+		inset 0 0 0 1px rgb(var(--accent-rgb) / 0.28),
+		0 0 0 0.18rem rgb(var(--accent-rgb) / 0.2);
+	--shadow-status-glow: 0 0 0.6rem var(--color-success-1);
+	--shadow-status-glow-sm: 0 0 0.5rem var(--color-success-1);
+	--shadow-soft-glow: 0 0 1rem var(--surface-border-soft);
+	--shadow-card-hover: 0 1rem 2rem rgb(var(--card-accent-rgb) / 0.18);
+	--shadow-card-image:
+		inset 0 -1.2rem 2rem rgb(var(--card-accent-rgb) / 0.2),
+		var(--shadow-sm);
 }

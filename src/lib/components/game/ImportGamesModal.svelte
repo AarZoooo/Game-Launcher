@@ -26,21 +26,23 @@ $: if (!open) {
 	selectedIds = [];
 }
 
-$: if (results.length && !selectedIds.length) {
-	selectedIds = results.map((item) => item.id);
-}
-
 $: platformLabel =
 	platform === "steam"
-		? "Steam"
+		? pageLabels.platforms.steam
 		: platform === "epic"
-			? "Epic"
+			? pageLabels.platforms.epic
 			: pageLabels.importModal.autoSearch;
+
+$: allSelected = results.length > 0 && selectedIds.length === results.length;
 
 function toggle(id: string) {
 	selectedIds = selectedIds.includes(id)
 		? selectedIds.filter((value) => value !== id)
 		: [...selectedIds, id];
+}
+
+function toggleAll() {
+	selectedIds = allSelected ? [] : results.map((item) => item.id);
 }
 
 function truncate(path: string) {
@@ -71,17 +73,34 @@ function truncate(path: string) {
   {:else if !results.length}
     <EmptyState kind="noResults" message={pageLabels.importModal.noResults} />
   {:else}
-    <div class="results">
-      {#each results as game}
-        <label class="row" title={game.path}>
+    <div class="selection-bar">
+      <label class="select-all selection-check-row">
+        <span class="selection-check-shell">
           <input
             type="checkbox"
-            checked={selectedIds.includes(game.id)}
-            on:change={() => toggle(game.id)}
+            checked={allSelected}
+            on:change={toggleAll}
           />
+          <span class="selection-check-indicator" aria-hidden="true"></span>
+        </span>
+        <span class="selection-check-label">{pageLabels.importModal.selectAll}</span>
+      </label>
+    </div>
+
+    <div class="results">
+      {#each results as game}
+        <label class="row selection-check-row" title={game.path}>
+          <span class="selection-check-shell">
+            <input
+              type="checkbox"
+              checked={selectedIds.includes(game.id)}
+              on:change={() => toggle(game.id)}
+            />
+            <span class="selection-check-indicator" aria-hidden="true"></span>
+          </span>
           <div class="copy">
-            <strong>{game.title}</strong>
-            <span>{truncate(game.path)}</span>
+            <strong class="selection-copy-title">{game.title}</strong>
+            <span class="selection-copy-meta">{truncate(game.path)}</span>
           </div>
         </label>
       {/each}
@@ -93,10 +112,7 @@ function truncate(path: string) {
       <Button quiet compact on:click={() => dispatch('cancel')}>
         {pageLabels.importModal.cancel}
       </Button>
-      <Button quiet compact on:click={() => dispatch('addall')}>
-        {pageLabels.importModal.addAll}
-      </Button>
-      <Button compact on:click={() => dispatch('addselected', selectedIds)}>
+      <Button compact disabled={!selectedIds.length} on:click={() => dispatch('addselected', selectedIds)}>
         {pageLabels.importModal.addSelected}
       </Button>
     </div>
@@ -120,10 +136,14 @@ function truncate(path: string) {
     padding-right: 0.2rem;
   }
 
+  .selection-bar {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: var(--space-2);
+    padding: 0 var(--space-1);
+  }
+
   .row {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--space-3);
     align-items: start;
     padding: var(--space-3) var(--space-1);
     border-radius: var(--radius-md);
@@ -131,16 +151,8 @@ function truncate(path: string) {
     border: 1px solid var(--surface-border-soft);
   }
 
-  .copy strong {
-    display: block;
-    font-size: 0.88rem;
-  }
-
-  .copy span {
-    display: block;
-    margin-top: var(--space-1);
-    color: var(--text-secondary);
-    font-size: 0.75rem;
+  .row :global(.selection-check-shell) {
+    margin-top: 0.08rem;
   }
 
   .footer {

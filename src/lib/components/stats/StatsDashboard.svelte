@@ -217,7 +217,7 @@ $: if (heatmapCard) {
   button.cell:focus-visible {
     transform: scale(1.18);
     filter: brightness(1.08);
-    box-shadow: 0 0 0 1px var(--surface-border);
+    box-shadow: var(--shadow-border);
     outline: none;
   }
 
@@ -239,7 +239,7 @@ $: if (heatmapCard) {
     border-radius: var(--radius-md);
     background: var(--surface-glass);
     border: 1px solid var(--surface-border-soft);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--blur-md));
   }
 
   .streak-card span,
@@ -295,7 +295,7 @@ $: if (heatmapCard) {
         var(--color-secondary-1) 33% 60%,
         var(--color-primary-1) 60% 100%
       );
-    box-shadow: 0 0 1rem var(--surface-border-soft);
+    box-shadow: var(--shadow-soft-glow);
   }
 
   .legend p {

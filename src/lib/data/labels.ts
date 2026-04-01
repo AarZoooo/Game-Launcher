@@ -8,6 +8,11 @@ export const pageLabels = {
 		favorite: "Favorite",
 		openMenuFor: (title: string) => `Open menu for ${title}`,
 	},
+	platforms: {
+		steam: "Steam",
+		epic: "Epic",
+		local: "Local",
+	},
 	home: {
 		recentlyPlayed: "Recently Played",
 		exploreNew: "Explore New",
@@ -84,6 +89,7 @@ export const pageLabels = {
 		reviewResults:
 			"Review the detected games below. Checked items will be added to your library.",
 		noResults: "No games were detected on your connected drives.",
+		selectAll: "Select all",
 		cancel: "Cancel",
 		addAll: "Add All",
 		addSelected: "Add Selected",
@@ -98,6 +104,7 @@ export const pageLabels = {
 	actions: {
 		play: "Play",
 		playing: "Playing",
+		openGame: (title: string) => `Open ${title}`,
 		favorite: "Favorite",
 		addFavorite: "Add Favorite",
 		removeFavorite: "Remove Favorite",
@@ -105,7 +112,6 @@ export const pageLabels = {
 		openGameFolder: "Open Game Folder",
 		openSaveFolder: "Open Save Folder",
 		editDetails: "Edit Details",
-		changeCover: "Change Cover Art",
 		syncNow: "Sync Now",
 		enableCloudSync: "Toggle Cloud Sync",
 		disableCloudSync: "Disable Cloud Sync",
@@ -125,7 +131,6 @@ export const pageLabels = {
 	},
 	fields: {
 		gameTitlePrompt: "Game title",
-		coverPrompt: "Cover image URL or local asset path",
 		launchArgumentsPrompt: "Launch arguments",
 	},
 	messages: {

@@ -1,7 +1,6 @@
 <script lang="ts">
 import { onMount } from "svelte";
 import { browser } from "$app/environment";
-import { getGameBanner } from "$lib/assets";
 import Button from "$lib/components/common/Button.svelte";
 import EmptyState from "$lib/components/common/EmptyState.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
@@ -12,8 +11,11 @@ import {
 	exploreSecondaryIds,
 	getGamesByIds,
 } from "$lib/stores/libraryStore";
+import { effectiveUIMode } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
 import type { GameMenuActionId } from "$lib/types/Menu";
+import { resolveAccentPresentation } from "$lib/utils/accent";
+import { getGameImage } from "$lib/utils/getGameMedia";
 
 const primary = getGamesByIds(explorePrimaryIds);
 const featuredRecommendation = primary[0];
@@ -21,6 +23,7 @@ const primaryGrid = primary.slice(1);
 const secondary = getGamesByIds(exploreSecondaryIds);
 let isOnline = true;
 let prompt = recommendationPrompt;
+let featuredBannerElement: HTMLElement;
 
 function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
 	return performGameAction(
@@ -44,14 +47,29 @@ onMount(() => {
 		window.removeEventListener("offline", onOffline);
 	};
 });
+
+$: featuredAccentPresentation = featuredRecommendation
+	? resolveAccentPresentation(featuredRecommendation)
+	: null;
+
+$: if (featuredBannerElement && featuredAccentPresentation) {
+	featuredBannerElement.style.setProperty(
+		"--featured-accent-rgb",
+		featuredAccentPresentation.rgb,
+	);
+}
 </script>
 
 {#if isOnline}
   <div class="explore">
     {#if featuredRecommendation}
-      <section class="featured-banner">
+      <section
+        bind:this={featuredBannerElement}
+        class="featured-banner"
+        class:performance={$effectiveUIMode === 'gaming'}
+      >
         <div class="banner-media">
-          <img src={getGameBanner(featuredRecommendation)} alt="" loading="lazy" />
+          <img src={getGameImage(featuredRecommendation, 'banner')} alt="" loading="lazy" />
         </div>
 
         <div class="banner-copy">
@@ -128,7 +146,8 @@ onMount(() => {
     inset: 0;
     background:
       linear-gradient(180deg, transparent 15%, var(--surface-glass-strong) 100%),
-      linear-gradient(90deg, transparent 20%, var(--surface-glass) 100%);
+      linear-gradient(90deg, transparent 20%, var(--surface-glass) 100%),
+      radial-gradient(circle at 82% 18%, rgb(var(--featured-accent-rgb) / 0.2), transparent 30%);
   }
 
   .banner-media img {
@@ -170,6 +189,12 @@ onMount(() => {
   .banner-copy span {
     color: var(--text-secondary);
     font-size: 0.86rem;
+  }
+
+  .featured-banner.performance .banner-media::after {
+    background:
+      linear-gradient(180deg, transparent 18%, var(--surface-glass-strong) 100%),
+      linear-gradient(90deg, transparent 20%, var(--surface-glass) 100%);
   }
 
   .section-header {
@@ -216,8 +241,8 @@ onMount(() => {
     border: 1px solid var(--surface-border);
     border-radius: var(--radius-lg);
     background: var(--surface-glass);
-    box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.12);
-    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-accent-outline-soft);
+    backdrop-filter: blur(var(--blur-md));
   }
 
   .prompt-box input {

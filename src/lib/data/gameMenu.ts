@@ -58,10 +58,7 @@ const menuConfig: Record<GameMenuContext, MenuActionFactory[][]> = {
 			() => ({ id: "open-folder", label: labels.openGameFolder }),
 			() => ({ id: "open-save-folder", label: labels.openSaveFolder }),
 		],
-		[
-			() => ({ id: "edit-details", label: labels.editDetails }),
-			() => ({ id: "change-cover", label: labels.changeCover }),
-		],
+		[() => ({ id: "edit-details", label: labels.editDetails })],
 		[() => ({ id: "sync-now", label: labels.syncNow }), cloudSyncAction],
 		[
 			() => ({ id: "launch-options", label: labels.launchOptions }),

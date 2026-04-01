@@ -1,22 +1,32 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
-import { appIcons, getGameBanner } from "$lib/assets";
+import { appIcons } from "$lib/assets";
 import Icon from "$lib/components/common/Icon.svelte";
 import GameGrid from "$lib/components/game/GameGrid.svelte";
 import GamePlayButton from "$lib/components/game/GamePlayButton.svelte";
 import { pageLabels } from "$lib/data/labels";
+import { effectiveUIMode } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
+import { resolveAccentPresentation } from "$lib/utils/accent";
+import { getGameImage } from "$lib/utils/getGameMedia";
 
 export let game: Game;
 export let similarGames: Game[] = [];
 export let backHref = "/";
 
 let launchError = "";
+let heroElement: HTMLElement;
+$: showPlayButton = game.inLibrary !== false;
+$: accentPresentation = resolveAccentPresentation(game);
+
+$: if (heroElement) {
+	heroElement.style.setProperty("--details-accent-rgb", accentPresentation.rgb);
+}
 </script>
 
 <section class="details">
-  <div class="hero">
-    <img class="hero-media" src={getGameBanner(game)} alt="" loading="lazy" />
+  <div bind:this={heroElement} class="hero" class:performance={$effectiveUIMode === 'gaming'}>
+    <img class="hero-media" src={getGameImage(game, 'banner')} alt="" loading="lazy" />
     <div class="hero-top">
       <button class="back" aria-label={pageLabels.common.goBack} on:click={() => goto(backHref)}>
         <Icon src={appIcons.ui.back} size="1rem" />
@@ -29,22 +39,25 @@ let launchError = "";
     <div class="hero-copy">
       <h1>{game.title}</h1>
       <div class="actions">
-        <GamePlayButton
-          {game}
-          compact
-          on:launcherror={(event) => (launchError = event.detail)}
-        />
+        {#if showPlayButton}
+          <GamePlayButton
+            {game}
+            compact
+            on:launcherror={(event) => (launchError = event.detail)}
+          />
+        {/if}
+
+        <div class="meta-row">
+          <div><span>{pageLabels.game.genres}</span><p>{game.genres}</p></div>
+          <div><span>{pageLabels.game.rating}</span><p>{game.rating}/10</p></div>
+          <div><span>{pageLabels.game.coopSupport}</span><p>{game.coop}</p></div>
+          <div><span>{pageLabels.game.completionTime}</span><p>{game.completion}</p></div>
+        </div>
       </div>
-      {#if launchError}
+
+      {#if showPlayButton && launchError}
         <p class="error">{launchError}</p>
       {/if}
-
-      <div class="meta-row">
-        <div><span>{pageLabels.game.genres}</span><p>{game.genres}</p></div>
-        <div><span>{pageLabels.game.rating}</span><p>{game.rating}/10</p></div>
-        <div><span>{pageLabels.game.coopSupport}</span><p>{game.coop}</p></div>
-        <div><span>{pageLabels.game.completionTime}</span><p>{game.completion}</p></div>
-      </div>
     </div>
   </div>
 
@@ -82,7 +95,13 @@ let launchError = "";
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, transparent 8%, var(--surface-glass-strong) 100%);
+    background:
+      linear-gradient(180deg, transparent 8%, var(--surface-glass-strong) 100%),
+      radial-gradient(circle at 80% 12%, rgb(var(--details-accent-rgb) / 0.18), transparent 34%);
+  }
+
+  .hero.performance {
+    transition: none;
   }
 
   .hero-top,
@@ -105,7 +124,7 @@ let launchError = "";
     color: var(--text-primary);
     cursor: pointer;
     border-radius: var(--radius-sm);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--blur-md));
   }
 
   .window-actions {
@@ -132,6 +151,7 @@ let launchError = "";
   .actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-3);
   }
 
@@ -152,8 +172,15 @@ let launchError = "";
 
   .meta-row {
     display: flex;
+    flex: 1 1 24rem;
     flex-wrap: wrap;
-    gap: var(--space-6);
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .meta-row > div {
+    min-width: 0;
+    flex: 1 1 9rem;
   }
 
   .meta-row span {
@@ -174,5 +201,11 @@ let launchError = "";
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+  }
+
+  @media (max-width: 900px) {
+    .meta-row {
+      flex-basis: 100%;
+    }
   }
 </style>

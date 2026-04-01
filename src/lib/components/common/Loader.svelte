@@ -55,7 +55,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
   }
 
   .loader-shell.normal.overlay {
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(var(--blur-sm));
   }
 
   .loader {

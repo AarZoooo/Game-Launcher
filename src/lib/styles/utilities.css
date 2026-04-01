@@ -3,6 +3,14 @@
 	--control-height-sm: 2.2rem;
 }
 
+.glass-surface {
+	border: 1px solid var(--surface-border);
+	background: var(--surface-glass);
+	color: var(--text-primary);
+	backdrop-filter: blur(var(--blur-md));
+	box-shadow: var(--shadow-sm);
+}
+
 .glass-card {
 	background: var(--surface-card);
 	border: 1px solid var(--surface-border);
@@ -13,9 +21,9 @@
 .glass-dropdown,
 .field-control {
 	border: 1px solid var(--surface-border);
-	background: rgba(30, 30, 30, 0.6);
+	background: var(--surface-glass);
 	color: var(--text-primary);
-	backdrop-filter: blur(10px);
+	backdrop-filter: blur(var(--blur-md));
 	box-shadow: var(--shadow-sm);
 }
 

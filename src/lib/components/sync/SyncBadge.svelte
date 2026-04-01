@@ -20,6 +20,6 @@ export let status = "Up to date";
     height: 0.48rem;
     border-radius: var(--radius-pill);
     background: var(--color-success-1);
-    box-shadow: 0 0 0.6rem rgb(135 215 107 / 0.7);
+    box-shadow: var(--shadow-status-glow);
   }
 </style>

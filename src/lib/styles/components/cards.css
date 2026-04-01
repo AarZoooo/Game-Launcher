@@ -1,0 +1,114 @@
+.game-card {
+	position: relative;
+	z-index: 0;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	min-width: 0;
+	padding: var(--space-3);
+	background:
+		linear-gradient(180deg, rgb(var(--card-accent-rgb) / 0.08), transparent 38%),
+		var(--surface-card);
+	border: 1px solid var(--surface-border-soft);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-inset);
+	transition:
+		transform var(--motion-base) ease,
+		opacity var(--motion-base) ease,
+		box-shadow var(--motion-base) ease,
+		border-color var(--motion-base) ease;
+}
+
+.game-card:hover {
+	transform: translateY(-0.24rem);
+	box-shadow: var(--shadow-card-hover);
+	border-color: rgb(var(--card-accent-rgb) / 0.22);
+}
+
+.game-card:hover,
+.game-card:focus-within {
+	z-index: 24;
+}
+
+.game-card-menu-shell {
+	position: absolute;
+	bottom: var(--space-3);
+	right: var(--space-3);
+	z-index: 12;
+}
+
+.game-card:hover .game-card-menu-shell .menu-trigger,
+.game-card:focus-within .game-card-menu-shell .menu-trigger {
+	opacity: 0.92;
+	transform: scale(1);
+}
+
+.game-card-poster {
+	display: block;
+	width: 100%;
+	border: 0;
+	padding: 0;
+	background: transparent;
+	cursor: pointer;
+	text-align: left;
+}
+
+.game-card-image {
+	display: block;
+	width: 100%;
+	height: clamp(15rem, 30vw, 17.5rem);
+	object-fit: cover;
+	background-color: var(--color-background-4);
+	border-radius: calc(var(--radius-lg) - var(--space-1));
+	border: 1px solid var(--surface-border-soft);
+	box-shadow: var(--shadow-card-image);
+}
+
+.game-card-info {
+	min-height: 3.9rem;
+	padding: 0 calc(var(--space-1) + 2.75rem) 0 var(--space-1);
+}
+
+.game-card.compact .game-card-info {
+	min-height: 3.55rem;
+}
+
+.game-card-title-row {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--space-3);
+	align-items: start;
+}
+
+.game-card-copy {
+	min-width: 0;
+}
+
+.game-card-title {
+	margin: 0;
+	font-size: 0.95rem;
+	font-weight: 650;
+	color: var(--text-primary);
+	line-height: 1.2;
+	display: -webkit-box;
+	overflow: hidden;
+	line-clamp: 2;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.game-card-meta {
+	margin: var(--space-2) 0 0;
+	color: var(--text-secondary);
+	font-size: 0.76rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.game-card-favorite {
+	color: rgb(var(--card-accent-rgb));
+	font-size: 0.9rem;
+	line-height: 1;
+}

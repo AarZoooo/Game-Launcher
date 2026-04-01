@@ -103,13 +103,6 @@ function addSelected(event: CustomEvent<string[]>) {
 	});
 }
 
-function addAll() {
-	void addImportedGamesToLibrary(scanResults).then((message) => {
-		autoSearchMessage = message;
-		closeImport();
-	});
-}
-
 function closeImport() {
 	showImportModal = false;
 	scanResults = [];
@@ -243,7 +236,6 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   results={scanResults}
   on:cancel={closeImport}
   on:close={closeImport}
-  on:addall={addAll}
   on:addselected={addSelected}
 />
 
@@ -329,7 +321,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     padding: 0.6rem 0.85rem;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--blur-md));
   }
 
   .controls > button {
