@@ -39,13 +39,14 @@ fn refresh_games_media_from_database(app: &AppHandle) -> Result<Vec<Game>, Strin
 }
 
 fn write_games_to_database(app: &AppHandle, games: &[Game]) -> Result<String, String> {
+    let enriched_games = resolver::enrich_games(app, games.to_vec())?;
     let mut connection = database::open_database(app)?;
-    game_db::sync_installed_games(&mut connection, games)?;
+    game_db::sync_installed_games(&mut connection, &enriched_games)?;
 
     let database_path = database::database_path(app)?;
     Ok(format!(
         "Saved {} game(s) to {}",
-        games.len(),
+        enriched_games.len(),
         database_path.display()
     ))
 }

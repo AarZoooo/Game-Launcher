@@ -4,7 +4,6 @@ use crate::db::{database, games as game_db};
 use crate::models::game::Game;
 
 use super::fallbacks::local_files;
-use super::matching::title::normalize_title;
 use super::placeholders::{PlaceholderKind, placeholder_data_url};
 use super::providers::igdb;
 
@@ -32,18 +31,37 @@ fn is_missing(value: Option<&String>) -> bool {
     value.map(|item| item.trim().is_empty()).unwrap_or(true)
 }
 
+fn is_placeholder_media(value: &str) -> bool {
+    value.starts_with("data:image/svg+xml;base64,")
+}
+
+fn should_replace_media(value: Option<&String>) -> bool {
+    value
+        .map(|item| item.trim().is_empty() || is_placeholder_media(item))
+        .unwrap_or(true)
+}
+
+fn has_default_genres(genres: &[String]) -> bool {
+    genres.is_empty()
+        || genres.iter().all(|genre| genre.trim().is_empty())
+        || genres.len() == 1
+            && matches!(
+                genres[0].trim().to_ascii_lowercase().as_str(),
+                "uncategorized" | "unknown"
+            )
+}
+
 fn has_resolved_media(game: &Game) -> bool {
-    !is_missing(game.cover_vertical.as_ref())
-        && !is_missing(game.cover_horizontal.as_ref())
+    !should_replace_media(game.cover_vertical.as_ref())
+        && !should_replace_media(game.cover_horizontal.as_ref())
+}
+
+fn needs_media_resolution(game: &Game, force_refresh: bool) -> bool {
+    force_refresh || !has_resolved_media(game)
 }
 
 fn apply_provider_media(game: &Game, media: &mut ResolvedMedia) {
     if let Ok(Some(best_match)) = igdb::search_best_match(&game.title) {
-        println!(
-            "[media] igdb match title='{}' matched='{}' score={}",
-            game.title, best_match.name, best_match.score
-        );
-
         media.cover_vertical = best_match.cover_url.clone();
         media.cover_horizontal = best_match
             .screenshot_urls
@@ -55,48 +73,72 @@ fn apply_provider_media(game: &Game, media: &mut ResolvedMedia) {
     }
 }
 
+fn finalize_media(game: &mut Game) {
+    game.cover_vertical
+        .get_or_insert_with(|| placeholder_data_url(&game.title, PlaceholderKind::Vertical));
+    game.cover_horizontal
+        .get_or_insert_with(|| placeholder_data_url(&game.title, PlaceholderKind::Horizontal));
+    if should_replace_media(game.banner.as_ref()) {
+        game.banner = game.cover_horizontal.clone();
+    }
+    if game.cover_art.trim().is_empty() || is_placeholder_media(&game.cover_art) {
+        game.cover_art = game.cover_vertical.clone().unwrap_or_default();
+    }
+    if game.accent_color.as_deref().map(str::is_empty).unwrap_or(true) {
+        game.accent_color = accent_for_platform(&game.platform);
+    }
+}
+
 fn merge_media(mut game: Game, media: ResolvedMedia) -> Game {
-    if game.cover_vertical.as_deref().map(str::is_empty).unwrap_or(true) {
+    if should_replace_media(game.cover_vertical.as_ref()) {
         game.cover_vertical = media.cover_vertical;
     }
-    if game.cover_horizontal.as_deref().map(str::is_empty).unwrap_or(true) {
+    if should_replace_media(game.cover_horizontal.as_ref()) {
         game.cover_horizontal = media.cover_horizontal;
     }
-    if game.icon.as_deref().map(str::is_empty).unwrap_or(true) {
+    if should_replace_media(game.banner.as_ref()) {
+        game.banner = media.banner.or_else(|| game.cover_horizontal.clone());
+    }
+    if should_replace_media(game.icon.as_ref()) {
         game.icon = media.icon;
     }
     if game.accent_color.as_deref().map(str::is_empty).unwrap_or(true) {
-        game.accent_color = media.accent_color.or_else(|| accent_for_platform(&game.platform));
+        game.accent_color = media.accent_color;
     }
-    if game.cover_art.trim().is_empty() {
-        game.cover_art = game.cover_vertical.clone().unwrap_or_default();
-    }
-    if game.genres.is_empty() && !media.genres.is_empty() {
+    if has_default_genres(&game.genres) && !media.genres.is_empty() {
         game.genres = media.genres;
     }
     if game.description.trim().is_empty() {
         game.description = media.description.unwrap_or_default();
     }
 
-    game.cover_vertical
-        .get_or_insert_with(|| placeholder_data_url(&game.title, PlaceholderKind::Vertical));
-    game.cover_horizontal
-        .get_or_insert_with(|| placeholder_data_url(&game.title, PlaceholderKind::Horizontal));
-    if game.banner.as_deref().map(str::is_empty).unwrap_or(true) {
-        game.banner = game.cover_horizontal.clone();
-    }
-
-    if game.cover_art.trim().is_empty() {
-        game.cover_art = game.cover_vertical.clone().unwrap_or_default();
-    }
-
+    finalize_media(&mut game);
     game
 }
 
-fn resolve_missing_media(game: &Game) -> Game {
+fn overwrite_media(mut game: Game, media: ResolvedMedia) -> Game {
+    game.cover_vertical = media.cover_vertical;
+    game.cover_horizontal = media.cover_horizontal;
+    game.banner = game.cover_horizontal.clone();
+    game.icon = media.icon;
+    game.accent_color = media.accent_color.or_else(|| accent_for_platform(&game.platform));
+    if !media.genres.is_empty() {
+        game.genres = media.genres;
+    }
+    if let Some(description) = media.description {
+        if !description.trim().is_empty() {
+            game.description = description;
+        }
+    }
+
+    finalize_media(&mut game);
+    game
+}
+
+fn resolve_media(game: &Game, force_refresh: bool) -> Game {
     let mut media = ResolvedMedia::default();
 
-    if !game.cover_art.trim().is_empty() && is_missing(game.cover_vertical.as_ref()) {
+    if !force_refresh && !game.cover_art.trim().is_empty() && is_missing(game.cover_vertical.as_ref()) {
         media.cover_vertical = Some(game.cover_art.clone());
     }
 
@@ -118,7 +160,11 @@ fn resolve_missing_media(game: &Game) -> Game {
 
     media.accent_color = accent_for_platform(&game.platform);
 
-    merge_media(game.clone(), media)
+    if force_refresh {
+        overwrite_media(game.clone(), media)
+    } else {
+        merge_media(game.clone(), media)
+    }
 }
 
 fn enrich_games_inner(app: &AppHandle, games: Vec<Game>, force_refresh: bool) -> Result<Vec<Game>, String> {
@@ -126,12 +172,9 @@ fn enrich_games_inner(app: &AppHandle, games: Vec<Game>, force_refresh: bool) ->
     let mut enriched = Vec::with_capacity(games.len());
 
     for game in games {
-        let needs_resolution = force_refresh
-            || !has_resolved_media(&game)
-            || game.cover_art.trim().is_empty()
-            || (game.genres.is_empty() && normalize_title(&game.title) != "uncategorized");
+        let needs_resolution = needs_media_resolution(&game, force_refresh);
         let resolved = if needs_resolution {
-            let updated_game = resolve_missing_media(&game);
+            let updated_game = resolve_media(&game, force_refresh);
             if updated_game != game {
                 game_db::update_game_media(&connection, &updated_game)?;
             }
@@ -155,7 +198,7 @@ pub fn force_refresh_games(app: &AppHandle, games: Vec<Game>) -> Result<Vec<Game
 
 #[cfg(test)]
 mod tests {
-    use super::{ResolvedMedia, merge_media};
+    use super::{ResolvedMedia, merge_media, needs_media_resolution};
     use crate::models::game::Game;
 
     fn empty_game() -> Game {
@@ -190,7 +233,44 @@ mod tests {
     fn preserves_existing_backend_media() {
         let mut game = empty_game();
         game.cover_vertical = Some("https://example.com/cover.png".into());
+        game.cover_horizontal = Some("https://example.com/hero.png".into());
         let merged = merge_media(game, ResolvedMedia::default());
         assert_eq!(merged.cover_vertical.as_deref(), Some("https://example.com/cover.png"));
+    }
+
+    #[test]
+    fn does_not_trigger_auto_resolution_for_missing_legacy_cover_art_or_genres() {
+        let mut game = empty_game();
+        game.cover_vertical = Some("https://example.com/cover.png".into());
+        game.cover_horizontal = Some("https://example.com/hero.png".into());
+
+        assert!(!needs_media_resolution(&game, false));
+    }
+
+    #[test]
+    fn replaces_placeholder_media_and_default_genres() {
+        let mut game = empty_game();
+        game.cover_vertical = Some("data:image/svg+xml;base64,placeholder".into());
+        game.cover_horizontal = Some("data:image/svg+xml;base64,placeholder".into());
+        game.banner = Some("data:image/svg+xml;base64,placeholder".into());
+        game.cover_art = "data:image/svg+xml;base64,placeholder".into();
+        game.genres = vec!["Uncategorized".into()];
+
+        let merged = merge_media(
+            game,
+            ResolvedMedia {
+                cover_vertical: Some("https://example.com/cover.png".into()),
+                cover_horizontal: Some("https://example.com/hero.png".into()),
+                banner: Some("https://example.com/banner.png".into()),
+                genres: vec!["Factory".into(), "Simulation".into()],
+                ..ResolvedMedia::default()
+            },
+        );
+
+        assert_eq!(merged.cover_vertical.as_deref(), Some("https://example.com/cover.png"));
+        assert_eq!(merged.cover_horizontal.as_deref(), Some("https://example.com/hero.png"));
+        assert_eq!(merged.banner.as_deref(), Some("https://example.com/banner.png"));
+        assert_eq!(merged.cover_art, "https://example.com/cover.png");
+        assert_eq!(merged.genres, vec!["Factory".to_string(), "Simulation".to_string()]);
     }
 }
