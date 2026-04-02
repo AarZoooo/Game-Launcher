@@ -20,6 +20,7 @@ pub fn run() {
             commands::storage::read_games,
             commands::storage::write_games,
             commands::storage::scan_local_games,
+            commands::storage::refresh_installed_game_media,
             commands::manual_add::pick_game_executable,
             commands::launch_game::launch_game,
             commands::stats::get_today_playtime,

@@ -121,12 +121,13 @@ fn resolve_missing_media(game: &Game) -> Game {
     merge_media(game.clone(), media)
 }
 
-pub fn enrich_games(app: &AppHandle, games: Vec<Game>) -> Result<Vec<Game>, String> {
+fn enrich_games_inner(app: &AppHandle, games: Vec<Game>, force_refresh: bool) -> Result<Vec<Game>, String> {
     let connection = database::open_database(app)?;
     let mut enriched = Vec::with_capacity(games.len());
 
     for game in games {
-        let needs_resolution = !has_resolved_media(&game)
+        let needs_resolution = force_refresh
+            || !has_resolved_media(&game)
             || game.cover_art.trim().is_empty()
             || (game.genres.is_empty() && normalize_title(&game.title) != "uncategorized");
         let resolved = if needs_resolution {
@@ -142,6 +143,14 @@ pub fn enrich_games(app: &AppHandle, games: Vec<Game>) -> Result<Vec<Game>, Stri
     }
 
     Ok(enriched)
+}
+
+pub fn enrich_games(app: &AppHandle, games: Vec<Game>) -> Result<Vec<Game>, String> {
+    enrich_games_inner(app, games, false)
+}
+
+pub fn force_refresh_games(app: &AppHandle, games: Vec<Game>) -> Result<Vec<Game>, String> {
+    enrich_games_inner(app, games, true)
 }
 
 #[cfg(test)]

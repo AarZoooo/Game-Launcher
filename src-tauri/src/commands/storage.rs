@@ -32,6 +32,12 @@ fn read_games_from_database(app: &AppHandle) -> Result<Vec<Game>, String> {
     resolver::enrich_games(app, games)
 }
 
+fn refresh_games_media_from_database(app: &AppHandle) -> Result<Vec<Game>, String> {
+    let connection = database::open_database(app)?;
+    let games = game_db::get_all_games(&connection)?;
+    resolver::force_refresh_games(app, games)
+}
+
 fn write_games_to_database(app: &AppHandle, games: &[Game]) -> Result<String, String> {
     let mut connection = database::open_database(app)?;
     game_db::sync_installed_games(&mut connection, games)?;
@@ -698,4 +704,9 @@ pub fn scan_local_games(app: AppHandle) -> Result<Vec<ScannedGameCandidate>, Str
     discovered.sort_by(|left, right| left.title.cmp(&right.title));
 
     Ok(discovered)
+}
+
+#[tauri::command]
+pub fn refresh_installed_game_media(app: AppHandle) -> Result<Vec<Game>, String> {
+    refresh_games_media_from_database(&app)
 }
