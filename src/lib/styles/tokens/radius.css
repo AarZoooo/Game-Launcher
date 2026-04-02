@@ -1,13 +1,13 @@
 :root {
 	/* Base radius scale */
 	--radius-0: 0px;
-	--radius-xs: 0.35rem;
-	--radius-sm: 0.65rem;
-	--radius-md: 0.9rem;
-	--radius-lg: 1.15rem;
-	--radius-xl: 1.45rem;
-	--radius-pill: 999px;
-	--radius-round: 999px;
+	--radius-xs: var(--radius-0); /* 0.35rem */ /* This makes corners rounded */
+	--radius-sm: var(--radius-0); /* 0.65rem */
+	--radius-md: var(--radius-0); /* 0.9rem */
+	--radius-lg: var(--radius-0); /* 1.15rem */
+	--radius-xl: var(--radius-0); /* 1.45rem */
+	--radius-pill: var(--radius-0); /* 999px */
+	--radius-round: var(--radius-0); /* 999px */
 
 	/* Semantic radius mappings */
 	--radius-control-sm: var(--radius-sm);
