@@ -6,8 +6,8 @@
 	--radius-md: var(--radius-0); /* 0.9rem */
 	--radius-lg: var(--radius-0); /* 1.15rem */
 	--radius-xl: var(--radius-0); /* 1.45rem */
-	--radius-pill: var(--radius-0); /* 999px */
-	--radius-round: var(--radius-0); /* 999px */
+	--radius-pill: 999px;
+	--radius-round: 999px;
 
 	/* Semantic radius mappings */
 	--radius-control-sm: var(--radius-sm);

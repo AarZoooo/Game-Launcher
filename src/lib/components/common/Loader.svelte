@@ -66,7 +66,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
 
   .loader span {
     position: absolute;
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     transform-origin: center;
   }
 
