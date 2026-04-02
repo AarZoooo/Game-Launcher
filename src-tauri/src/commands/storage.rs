@@ -3,6 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::db::{database, games as game_db};
+use crate::media::resolver;
 use crate::models::game::Game;
 use serde::Serialize;
 use tauri::AppHandle;
@@ -27,7 +28,8 @@ struct CandidateMatch {
 
 fn read_games_from_database(app: &AppHandle) -> Result<Vec<Game>, String> {
     let connection = database::open_database(app)?;
-    game_db::get_all_games(&connection)
+    let games = game_db::get_all_games(&connection)?;
+    resolver::enrich_games(app, games)
 }
 
 fn write_games_to_database(app: &AppHandle, games: &[Game]) -> Result<String, String> {

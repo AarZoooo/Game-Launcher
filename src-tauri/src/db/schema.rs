@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS games (
   exe_path TEXT NOT NULL UNIQUE,
   installed INTEGER NOT NULL DEFAULT 1,
   cover_art TEXT,
+  cover_vertical TEXT,
+  cover_horizontal TEXT,
+  banner TEXT,
+  icon TEXT,
+  accent_color TEXT,
   platform TEXT NOT NULL,
   total_playtime INTEGER NOT NULL DEFAULT 0,
   last_played TEXT,
@@ -61,6 +66,23 @@ fn ensure_games_columns(connection: &Connection) -> Result<(), String> {
                 [],
             )
             .map_err(|error| format!("Failed to add installed column to games table: {error}"))?;
+    }
+
+    for (column, definition) in [
+        ("cover_vertical", "TEXT"),
+        ("cover_horizontal", "TEXT"),
+        ("banner", "TEXT"),
+        ("icon", "TEXT"),
+        ("accent_color", "TEXT"),
+    ] {
+        if !existing.iter().any(|existing_column| existing_column == column) {
+            connection
+                .execute(
+                    &format!("ALTER TABLE games ADD COLUMN {column} {definition}"),
+                    [],
+                )
+                .map_err(|error| format!("Failed to add {column} column to games table: {error}"))?;
+        }
     }
 
     Ok(())

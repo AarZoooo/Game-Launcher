@@ -1,11 +1,15 @@
 mod commands;
 mod db;
 mod launch;
+mod media;
 mod models;
 mod tracking;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let _ = dotenvy::from_filename("src-tauri/.env")
+        .or_else(|_| dotenvy::from_filename(".env"));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
@@ -18,7 +22,8 @@ pub fn run() {
             commands::storage::scan_local_games,
             commands::manual_add::pick_game_executable,
             commands::launch_game::launch_game,
-            commands::stats::get_today_playtime
+            commands::stats::get_today_playtime,
+            commands::igdb::search_igdb_game
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

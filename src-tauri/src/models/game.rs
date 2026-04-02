@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Game {
     pub id: String,
@@ -8,6 +8,16 @@ pub struct Game {
     pub exe_path: String,
     #[serde(default)]
     pub cover_art: String,
+    #[serde(default)]
+    pub cover_vertical: Option<String>,
+    #[serde(default)]
+    pub cover_horizontal: Option<String>,
+    #[serde(default)]
+    pub banner: Option<String>,
+    #[serde(default)]
+    pub icon: Option<String>,
+    #[serde(default)]
+    pub accent_color: Option<String>,
     pub platform: String,
     #[serde(default)]
     pub total_playtime: u64,

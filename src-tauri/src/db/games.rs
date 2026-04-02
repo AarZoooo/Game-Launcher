@@ -13,7 +13,8 @@ pub struct GameStatsSnapshot {
 pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
     let mut statement = connection
         .prepare(
-            "SELECT id, title, exe_path, cover_art, platform, total_playtime, last_played, status, genres, description
+            "SELECT id, title, exe_path, cover_art, cover_vertical, cover_horizontal, banner, icon, accent_color,
+                    platform, total_playtime, last_played, status, genres, description
              FROM games
              WHERE installed = 1
              ORDER BY title COLLATE NOCASE ASC",
@@ -22,10 +23,10 @@ pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
 
     let rows = statement
         .query_map([], |row| {
-            let genres_json: String = row.get(8)?;
+            let genres_json: String = row.get(13)?;
             let genres = serde_json::from_str::<Vec<String>>(&genres_json).unwrap_or_default();
             let total_playtime = row
-                .get::<_, i64>(5)?
+                .get::<_, i64>(10)?
                 .try_into()
                 .unwrap_or_default();
 
@@ -34,12 +35,17 @@ pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
                 title: row.get(1)?,
                 exe_path: row.get(2)?,
                 cover_art: row.get(3)?,
-                platform: row.get(4)?,
+                cover_vertical: row.get(4)?,
+                cover_horizontal: row.get(5)?,
+                banner: row.get(6)?,
+                icon: row.get(7)?,
+                accent_color: row.get(8)?,
+                platform: row.get(9)?,
                 total_playtime,
-                last_played: row.get(6)?,
-                status: row.get(7)?,
+                last_played: row.get(11)?,
+                status: row.get(12)?,
                 genres,
-                description: row.get(9)?,
+                description: row.get(14)?,
             })
         })
         .map_err(|error| format!("Failed to query games: {error}"))?;
@@ -93,17 +99,27 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
                          title = ?2,
                          exe_path = ?3,
                          cover_art = ?4,
-                         platform = ?5,
-                         status = ?6,
-                         genres = ?7,
-                         description = ?8,
+                         cover_vertical = ?5,
+                         cover_horizontal = ?6,
+                         banner = ?7,
+                         icon = ?8,
+                         accent_color = ?9,
+                         platform = ?10,
+                         status = ?11,
+                         genres = ?12,
+                         description = ?13,
                          installed = 1
-                     WHERE id = ?9",
+                     WHERE id = ?14",
                     params![
                         game.id,
                         game.title,
                         game.exe_path,
                         game.cover_art,
+                        game.cover_vertical,
+                        game.cover_horizontal,
+                        game.banner,
+                        game.icon,
+                        game.accent_color,
                         game.platform,
                         game.status,
                         genres_json,
@@ -116,14 +132,19 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
             transaction
                 .execute(
                     "INSERT INTO games (
-                        id, title, exe_path, installed, cover_art, platform, total_playtime,
-                        last_played, status, genres, description, created_at
-                     ) VALUES (?1, ?2, ?3, 1, ?4, ?5, ?6, ?7, ?8, ?9, ?10, CURRENT_TIMESTAMP)",
+                        id, title, exe_path, installed, cover_art, cover_vertical, cover_horizontal, banner, icon,
+                        accent_color, platform, total_playtime, last_played, status, genres, description, created_at
+                     ) VALUES (?1, ?2, ?3, 1, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, CURRENT_TIMESTAMP)",
                     params![
                         game.id,
                         game.title,
                         game.exe_path,
                         game.cover_art,
+                        game.cover_vertical,
+                        game.cover_horizontal,
+                        game.banner,
+                        game.icon,
+                        game.accent_color,
                         game.platform,
                         game.total_playtime as i64,
                         game.last_played,
@@ -184,4 +205,35 @@ pub fn get_game_stats_snapshot(
         )
         .optional()
         .map_err(|error| format!("Failed to read game stats snapshot: {error}"))
+}
+
+pub fn update_game_media(connection: &Connection, game: &Game) -> Result<(), String> {
+    connection
+        .execute(
+            "UPDATE games
+             SET cover_art = ?2,
+                 cover_vertical = ?3,
+                 cover_horizontal = ?4,
+                 banner = ?5,
+                 icon = ?6,
+                 accent_color = ?7,
+                 genres = ?8,
+                 description = ?9
+             WHERE id = ?1",
+            params![
+                game.id,
+                game.cover_art,
+                game.cover_vertical,
+                game.cover_horizontal,
+                game.banner,
+                game.icon,
+                game.accent_color,
+                serde_json::to_string(&game.genres)
+                    .map_err(|error| format!("Failed to serialize updated game genres: {error}"))?,
+                game.description,
+            ],
+        )
+        .map_err(|error| format!("Failed to update media for game '{}': {error}", game.title))?;
+
+    Ok(())
 }
