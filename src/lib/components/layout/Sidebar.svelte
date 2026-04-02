@@ -182,9 +182,9 @@ async function refreshInstalledMedia() {
   }
 
   nav button.active {
-    color: var(--interactive-primary-text);
+    color: var(--sidebar-active-text);
     background:
-      linear-gradient(90deg, rgb(var(--accent-rgb) / 0.78), rgb(var(--accent-rgb) / 0.58)),
+      linear-gradient(90deg, var(--sidebar-active-bg-start), var(--sidebar-active-bg-end)),
       var(--surface-glass);
     font-weight: 700;
     box-shadow: var(--shadow-sm);
