@@ -6,6 +6,7 @@
 	--shadow-inset: inset 0 1px rgba(255, 255, 255, 0.08);
 	--shadow-outline-soft: inset 0 0 0 1px var(--surface-border-soft);
 	--shadow-outline: inset 0 0 0 1px var(--surface-border);
+	--shadow-outline-subtle: inset 0 0 0 1px var(--color-border-3);
 	--shadow-border: 0 0 0 1px var(--surface-border);
 	--shadow-accent-outline-soft: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.12);
 	--shadow-accent-ring:

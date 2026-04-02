@@ -412,8 +412,8 @@ $: if (heatmapCard) {
     display: grid;
     place-items: center;
     border-radius: var(--radius-round);
-    background: rgb(255 255 255 / 0.05);
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04);
+    background: var(--color-surface-1);
+    box-shadow: var(--shadow-outline-subtle);
   }
 
   .ring {
