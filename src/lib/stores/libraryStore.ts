@@ -749,7 +749,17 @@ function formatPlaytime(minutes?: number) {
 
 function formatHours(minutes?: number) {
 	if (!minutes) return "0h";
-	return `${Math.max(1, Math.round(minutes / 60))}h`;
+
+	if (minutes < 1) {
+		return "0m";
+	}
+
+	if (minutes < 60) {
+		return `${minutes}m`;
+	}
+
+	const hours = Math.floor(minutes / 60);
+	return `${hours}h`;
 }
 
 function formatLastPlayed(value: string | null) {
