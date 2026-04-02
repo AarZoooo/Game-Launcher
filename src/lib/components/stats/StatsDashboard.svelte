@@ -1,15 +1,124 @@
 <script lang="ts">
-import { genreShares, pageLabels } from "$lib/data/labels";
+import { pageLabels } from "$lib/data/labels";
 import { games } from "$lib/stores/libraryStore";
+import type { Game } from "$lib/types/Game";
 import {
 	buildActivityCalendar,
 	formatActivityDate,
 	mockPlayActivityHours,
 } from "$lib/utils/playActivity";
 
+type GenreSlice = {
+	label: string;
+	value: string;
+	percent: number;
+	minutes: number;
+	color: string;
+};
+
+const genrePalette = ["#ffb48a", "#c884ff", "#7cf08e", "#f7cf74", "#a8aebb"];
+
 function parseHours(value: string) {
 	const match = value.match(/\d+/);
 	return match ? parseInt(match[0], 10) : 0;
+}
+
+function parsePlayMinutes(value?: string) {
+	if (!value) return 0;
+
+	const hourMatch = value.match(/(\d+)\s*h/i);
+	const minuteMatch = value.match(/(\d+)\s*m/i);
+
+	if (hourMatch || minuteMatch) {
+		const hours = hourMatch ? parseInt(hourMatch[1], 10) : 0;
+		const minutes = minuteMatch ? parseInt(minuteMatch[1], 10) : 0;
+		return hours * 60 + minutes;
+	}
+
+	return parseHours(value) * 60;
+}
+
+function normalizeGenreLabel(value: string) {
+	const normalized = value.trim().toLowerCase();
+
+	if (!normalized) return "";
+	if (normalized === "rpg" || normalized === "role playing") return "RPG";
+
+	return normalized
+		.split(/\s+/)
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join(" ");
+}
+
+function getGenres(game: Game) {
+	const rawGenres = game.storageGenres?.length
+		? game.storageGenres
+		: game.genres.split(/[•/,|]+/);
+
+	return [...new Set(rawGenres.map(normalizeGenreLabel).filter(Boolean))];
+}
+
+function formatPercent(value: number) {
+	const rounded = Math.round(value * 10) / 10;
+	return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
+}
+
+function buildGenreDistribution(items: Game[]) {
+	const genreMinutes = new Map<string, number>();
+
+	for (const game of items.filter((item) => item.inLibrary !== false)) {
+		const minutes =
+			parsePlayMinutes(game.totalPlaytime) || parsePlayMinutes(game.hours);
+		const genres = getGenres(game);
+
+		if (!minutes || !genres.length) continue;
+
+		const share = minutes / genres.length;
+
+		for (const genre of genres) {
+			genreMinutes.set(genre, (genreMinutes.get(genre) || 0) + share);
+		}
+	}
+
+	const ranked = [...genreMinutes.entries()]
+		.map(([label, minutes]) => ({ label, minutes }))
+		.sort((left, right) => right.minutes - left.minutes);
+
+	const topGenres = ranked.slice(0, 4);
+	const otherMinutes = ranked
+		.slice(4)
+		.reduce((sum, item) => sum + item.minutes, 0);
+
+	const groups = otherMinutes
+		? [...topGenres, { label: "Other", minutes: otherMinutes }]
+		: topGenres;
+
+	const totalMinutes = groups.reduce((sum, item) => sum + item.minutes, 0);
+	const slices: GenreSlice[] = groups.map((item, index) => {
+		const percent = totalMinutes ? (item.minutes / totalMinutes) * 100 : 0;
+
+		return {
+			label: item.label,
+			minutes: item.minutes,
+			percent,
+			value: formatPercent(percent),
+			color: genrePalette[index] || genrePalette[genrePalette.length - 1],
+		};
+	});
+
+	let offset = 0;
+	const gradientStops = slices.map((slice) => {
+		const start = offset;
+		offset += slice.percent;
+		return `${slice.color} ${start}% ${offset}%`;
+	});
+
+	return {
+		slices,
+		gradient: gradientStops.length
+			? `conic-gradient(from 210deg, ${gradientStops.join(", ")})`
+			: "conic-gradient(from 210deg, rgb(255 255 255 / 0.12) 0% 100%)",
+	};
 }
 
 let heatmapCard: HTMLDivElement;
@@ -30,6 +139,7 @@ $: insightMetrics = [
 		value: mostPlayed?.title || pageLabels.stats.noDataYet,
 	},
 ];
+$: genreDistribution = buildGenreDistribution($games);
 
 $: if (heatmapCard) {
 	heatmapCard.style.setProperty(
@@ -98,11 +208,22 @@ $: if (heatmapCard) {
     </div>
 
     <div class="genre-block">
-      <div class="ring"></div>
+      <div class="ring-shell">
+        <div class="ring" style={`background: ${genreDistribution.gradient};`}></div>
+      </div>
       <div class="legend">
-        {#each genreShares as item}
-          <p><span>{item.label}</span><b>{item.value}</b></p>
-        {/each}
+        {#if genreDistribution.slices.length}
+          {#each genreDistribution.slices as item}
+            <p style={`--genre-color: ${item.color};`}>
+              <span>{item.label}</span>
+              <b>{item.value}</b>
+            </p>
+          {/each}
+        {:else}
+          <p class="empty-legend">
+            <span>{pageLabels.stats.noDataYet}</span>
+          </p>
+        {/if}
       </div>
     </div>
   </div>
@@ -283,19 +404,30 @@ $: if (heatmapCard) {
     gap: var(--space-4);
   }
 
+  .ring-shell {
+    position: relative;
+    width: 4.5rem;
+    height: 4.5rem;
+    flex: 0 0 auto;
+  }
+
   .ring {
-    width: 3.1rem;
-    height: 3.1rem;
-    border-radius: var(--radius-round);
-    background:
-      radial-gradient(circle at center, var(--color-background-4) 46%, transparent 47%),
-      conic-gradient(
-        var(--color-tertiary-2) 0 13%,
-        var(--color-danger-1) 13% 33%,
-        var(--color-secondary-1) 33% 60%,
-        var(--color-primary-1) 60% 100%
-      );
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
     box-shadow: var(--shadow-soft-glow);
+  }
+
+  .ring::after {
+    content: '';
+    position: absolute;
+    inset: 0.5rem;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.08), transparent 55%),
+      var(--surface-card);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05);
   }
 
   .legend p {
@@ -303,18 +435,22 @@ $: if (heatmapCard) {
     gap: var(--space-3);
     justify-content: space-between;
     margin: 0 0 var(--space-1);
-    min-width: 7rem;
+    min-width: 8.75rem;
     color: var(--text-secondary);
-    font-size: 0.72rem;
+    font-size: 0.76rem;
   }
 
   .legend span {
-    color: var(--text-secondary);
+    color: var(--text-primary);
   }
 
   .legend b {
-    color: var(--text-primary);
+    color: var(--genre-color, var(--text-primary));
     font-weight: 600;
+  }
+
+  .empty-legend span {
+    color: var(--text-secondary);
   }
 
   @media (max-width: 1100px) {
