@@ -70,7 +70,7 @@ pub fn get_today_playtime(connection: &Connection) -> Result<Vec<TodayPlaytime>,
                          ELSE CAST(
                              (
                                  MIN(COALESCE(strftime('%s', ended_at), strftime('%s', 'now')), bounds.day_end_utc) -
-                                 MAX(strftime('%s', started_at), bounds.day_start_utc)
+                                 MAX(strftime('%s', started_at), bounds.day_start_utc) + 30
                              ) / 60 AS INTEGER
                          )
                      END
@@ -117,7 +117,7 @@ pub fn get_game_today_playtime_minutes(
                      ELSE CAST(
                          (
                              MIN(COALESCE(strftime('%s', ended_at), strftime('%s', 'now')), bounds.day_end_utc) -
-                             MAX(strftime('%s', started_at), bounds.day_start_utc)
+                             MAX(strftime('%s', started_at), bounds.day_start_utc) + 30
                          ) / 60 AS INTEGER
                      )
                  END
