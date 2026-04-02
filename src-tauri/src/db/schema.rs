@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS games (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   exe_path TEXT NOT NULL UNIQUE,
+  installed INTEGER NOT NULL DEFAULT 1,
   cover_art TEXT,
   platform TEXT NOT NULL,
   total_playtime INTEGER NOT NULL DEFAULT 0,
@@ -51,6 +52,15 @@ fn ensure_games_columns(connection: &Connection) -> Result<(), String> {
                 [],
             )
             .map_err(|error| format!("Failed to add genres column to games table: {error}"))?;
+    }
+
+    if !existing.iter().any(|column| column == "installed") {
+        connection
+            .execute(
+                "ALTER TABLE games ADD COLUMN installed INTEGER NOT NULL DEFAULT 1",
+                [],
+            )
+            .map_err(|error| format!("Failed to add installed column to games table: {error}"))?;
     }
 
     Ok(())

@@ -17,7 +17,8 @@ pub fn run() {
             commands::storage::write_games,
             commands::storage::scan_local_games,
             commands::manual_add::pick_game_executable,
-            commands::launch_game::launch_game
+            commands::launch_game::launch_game,
+            commands::stats::get_today_playtime
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

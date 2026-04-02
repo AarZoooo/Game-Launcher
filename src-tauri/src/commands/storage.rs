@@ -12,7 +12,7 @@ const MAX_DISCOVERED_GAMES: usize = 32;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ScannedGameCandidate {
+pub struct ScannedGameCandidate { 
     pub id: String,
     pub title: String,
     pub path: String,
@@ -32,7 +32,7 @@ fn read_games_from_database(app: &AppHandle) -> Result<Vec<Game>, String> {
 
 fn write_games_to_database(app: &AppHandle, games: &[Game]) -> Result<String, String> {
     let mut connection = database::open_database(app)?;
-    game_db::replace_all_games(&mut connection, games)?;
+    game_db::sync_installed_games(&mut connection, games)?;
 
     let database_path = database::database_path(app)?;
     Ok(format!(

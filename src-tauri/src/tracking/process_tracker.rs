@@ -3,12 +3,14 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use sysinfo::{Process, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, UpdateKind};
 use tauri::AppHandle;
 
 use super::events::emit_game_process_state;
 use super::registry::{replace_tracker, tracker_key, unregister_tracker};
+use super::session_store;
 
 const SHORT_SESSION_THRESHOLD: Duration = Duration::from_secs(15);
 const FAST_POLL_INTERVAL: Duration = Duration::from_secs(2);
@@ -110,6 +112,7 @@ fn monitor_game_process(
     app: AppHandle,
     exe_path: String,
     game_id: Option<String>,
+    session_id: Option<String>,
     key: String,
     cancel_token: Arc<AtomicBool>,
 ) {
@@ -129,6 +132,7 @@ fn monitor_game_process(
     let mut poll_interval = FAST_POLL_INTERVAL;
     let mut extended_watch_enabled = false;
     let mut short_watch_started_at: Option<Instant> = None;
+    let mut pending_session_end_at: Option<i64> = None;
 
     loop {
         if cancel_token.load(Ordering::SeqCst) {
@@ -151,6 +155,7 @@ fn monitor_game_process(
                 session_started_at = Instant::now();
             }
 
+            pending_session_end_at = None;
             reappearance_deadline = None;
             poll_interval = FAST_POLL_INTERVAL;
             extended_watch_enabled = false;
@@ -161,6 +166,7 @@ fn monitor_game_process(
         if is_marked_running {
             emit_game_process_state(&app, &game_id, &exe_path, "exited", None);
             is_marked_running = false;
+            pending_session_end_at = Some(current_epoch_seconds());
 
             if session_started_at.elapsed() < SHORT_SESSION_THRESHOLD {
                 let now = Instant::now();
@@ -217,14 +223,68 @@ fn monitor_game_process(
         }
     }
 
+    if let (Some(game_id), Some(session_id), Some(ended_at)) =
+        (game_id.as_deref(), session_id.as_deref(), pending_session_end_at)
+    {
+        match session_store::finish_session(&app, game_id, session_id, ended_at) {
+            Ok(Some(summary)) => {
+                println!(
+                    "[playtime]\n  game: {}\n  game_id: {}\n  total_playtime: {}\n  played_today: {}\n  last_played: {}\n",
+                    summary.title,
+                    summary.game_id,
+                    format_minutes(summary.total_playtime_minutes),
+                    format_minutes(summary.minutes_played_today),
+                    summary.last_played.unwrap_or_else(|| "Never".to_string())
+                );
+            }
+            Ok(None) => {}
+            Err(error) => {
+                println!(
+                    "[launch_game] failed to persist finished session game_id={} session_id={} error={}",
+                    game_id, session_id, error
+                );
+            }
+        }
+    }
+
     unregister_tracker(&key, &cancel_token);
+}
+
+fn current_epoch_seconds() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_secs() as i64)
+        .unwrap_or_default()
+}
+
+fn format_minutes(minutes: i64) -> String {
+    if minutes <= 0 {
+        return "0m".to_string();
+    }
+
+    let hours = minutes / 60;
+    let remaining_minutes = minutes % 60;
+
+    if hours == 0 {
+        format!("{remaining_minutes}m")
+    } else if remaining_minutes == 0 {
+        format!("{hours}h")
+    } else {
+        format!("{hours}h {remaining_minutes}m")
+    }
 }
 
 pub fn start_tracking(app: AppHandle, exe_path: String, game_id: Option<String>) {
     let key = tracker_key(&game_id, &exe_path);
     let cancel_token = replace_tracker(&key);
+    let session_id = game_id
+        .as_deref()
+        .and_then(|id| session_store::start_session(&app, id).map_err(|error| {
+            println!("[launch_game] failed to start play session game_id={} error={}", id, error);
+            error
+        }).ok());
 
     println!("[launch_game] registered tracker key={key}");
 
-    thread::spawn(move || monitor_game_process(app, exe_path, game_id, key, cancel_token));
+    thread::spawn(move || monitor_game_process(app, exe_path, game_id, session_id, key, cancel_token));
 }
