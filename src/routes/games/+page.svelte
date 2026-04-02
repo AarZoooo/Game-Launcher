@@ -15,6 +15,10 @@ import {
 	scanImportCandidates,
 } from "$lib/services/importService";
 import {
+	type IgdbSearchResult,
+	searchIgdbGame,
+} from "$lib/services/tauriService";
+import {
 	catalogGames,
 	hasDuplicateGame,
 	installedGames,
@@ -31,9 +35,29 @@ let showImportModal = false;
 let scanError = "";
 let scanResults: ImportedGameResult[] = [];
 let autoSearchMessage = "";
+let igdbDebugLoading = false;
+let igdbDebugError = "";
+let igdbDebugResults: IgdbSearchResult[] = [];
 let filteredInstalledGames: Game[] = [];
 let filteredCatalogGames: Game[] = [];
 let filters: GameFilterState = { ...defaultGameFilters };
+
+async function runIgdbDebugSearch() {
+	igdbDebugLoading = true;
+	igdbDebugError = "";
+
+	try {
+		const results = await searchIgdbGame("Satisfactory");
+		igdbDebugResults = results;
+		console.log("IGDB debug results for Satisfactory:", results);
+	} catch (error) {
+		igdbDebugResults = [];
+		igdbDebugError = error instanceof Error ? error.message : String(error);
+		console.error("IGDB debug search failed:", error);
+	} finally {
+		igdbDebugLoading = false;
+	}
+}
 
 async function startScan(platform: "steam" | "epic") {
 	scannedPlatform = platform;
@@ -231,6 +255,42 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
       <EmptyState kind="noResults" message={pageLabels.games.catalogEmpty} />
     {/if}
   </section>
+
+  <section class="section debug-panel">
+    <div class="section-header">
+      <div>
+        <h2>IGDB Debug</h2>
+        <p>Temporary frontend-only test hook for `search_igdb_game` with hardcoded title `Satisfactory`.</p>
+      </div>
+      <Button quiet compact on:click={runIgdbDebugSearch}>
+        {igdbDebugLoading ? 'Searching...' : 'Test IGDB Search'}
+      </Button>
+    </div>
+
+    {#if igdbDebugError}
+      <p class="debug-error">{igdbDebugError}</p>
+    {/if}
+
+    {#if igdbDebugResults.length > 0}
+      <div class="debug-results">
+        {#each igdbDebugResults as result}
+          <article class="debug-result">
+            <strong>{result.name}</strong>
+            <span>ID: {result.id}</span>
+            <span>Slug: {result.slug || 'n/a'}</span>
+            <span>Genres: {result.genres.length ? result.genres.join(', ') : 'none'}</span>
+            <span>Cover: {result.coverUrl || 'n/a'}</span>
+            <span>Screenshots: {result.screenshotUrls.length}</span>
+            {#if result.summary}
+              <p>{result.summary}</p>
+            {/if}
+          </article>
+        {/each}
+      </div>
+    {:else if !igdbDebugLoading}
+      <p class="debug-placeholder">No debug results yet.</p>
+    {/if}
+  </section>
 </div>
 
 {#if showFilters}
@@ -349,6 +409,46 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
 
   .controls > button:hover {
     transform: translateY(-1px);
+  }
+
+  .debug-panel {
+    gap: var(--space-3);
+  }
+
+  .debug-results {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .debug-result {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border: 1px solid var(--surface-border-soft);
+    background: var(--surface-glass);
+    color: var(--text-secondary);
+  }
+
+  .debug-result strong {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+
+  .debug-result span,
+  .debug-result p,
+  .debug-placeholder,
+  .debug-error {
+    margin: 0;
+    font-size: 0.8rem;
+  }
+
+  .debug-result p {
+    margin-top: var(--space-2);
+    line-height: 1.45;
+  }
+
+  .debug-error {
+    color: var(--color-danger-1);
   }
 
   @media (max-width: 980px) {

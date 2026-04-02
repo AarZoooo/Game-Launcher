@@ -27,6 +27,16 @@ export interface TodayPlaytimeEntry {
 	minutesPlayedToday: number;
 }
 
+export interface IgdbSearchResult {
+	id: number;
+	name: string;
+	slug?: string;
+	genres: string[];
+	coverUrl?: string;
+	screenshotUrls: string[];
+	summary?: string;
+}
+
 export interface LocalScanResult extends ImportedGameResult {}
 
 export interface ManualGameCandidate {
@@ -53,6 +63,12 @@ export async function saveGames(games: StoredGame[]): Promise<string> {
 
 export async function getTodayPlaytime(): Promise<TodayPlaytimeEntry[]> {
 	return invoke<TodayPlaytimeEntry[]>("get_today_playtime");
+}
+
+export async function searchIgdbGame(
+	title: string,
+): Promise<IgdbSearchResult[]> {
+	return invoke<IgdbSearchResult[]>("search_igdb_game", { title });
 }
 
 export async function scanLocalGames(): Promise<LocalScanResult[]> {
