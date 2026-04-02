@@ -1,14 +1,42 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
 import { page } from "$app/stores";
+import { appIcons } from "$lib/assets";
+import Icon from "$lib/components/common/Icon.svelte";
+import { pageLabels } from "$lib/data/labels";
 import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
+import { games } from "$lib/stores/libraryStore";
+import { libraryBusy } from "$lib/stores/uiStore";
+
+async function refreshInstalledMedia() {
+	try {
+		await games.refreshInstalledGameMedia();
+	} catch (error) {
+		console.error("Failed to refresh installed game media:", error);
+	}
+}
 </script>
 
 <aside class="sidebar">
-  <button type="button" class="brand" on:click={() => goto('/')}>
-    <strong>{appBrand.name}</strong>
-    <span>{appBrand.version}</span>
-  </button>
+  <div class="brand-row">
+    <button type="button" class="brand" on:click={() => goto('/')}>
+      <strong>{appBrand.name}</strong>
+      <span>{appBrand.version}</span>
+    </button>
+
+    <button
+      type="button"
+      class="menu-trigger refresh-button"
+      aria-label={pageLabels.common.refreshInstalledMedia}
+      title={pageLabels.common.refreshInstalledMedia}
+      disabled={$libraryBusy}
+      on:click={refreshInstalledMedia}
+    >
+      <span class:spinning={$libraryBusy} class="refresh-icon-shell">
+        <Icon src={appIcons.ui.refresh} size="0.95rem" />
+      </span>
+    </button>
+  </div>
 
   <nav>
     {#each navItems as item}
@@ -71,6 +99,7 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     pointer-events: none;
   }
 
+  .brand-row,
   .brand,
   nav,
   .profile {
@@ -78,10 +107,18 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     z-index: 1;
   }
 
+  .brand-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0 var(--space-6);
+  }
+
   .brand {
     border: 0;
     background: transparent;
-    padding: 0 var(--space-6);
+    padding: 0;
     text-align: left;
     cursor: pointer;
   }
@@ -94,6 +131,28 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
   .brand span {
     color: var(--text-muted);
     font-size: 0.72rem;
+  }
+
+  .refresh-button {
+    margin-top: 0.1rem;
+    opacity: 0.82;
+    transform: scale(1);
+    flex: 0 0 auto;
+  }
+
+  .refresh-button:disabled {
+    cursor: default;
+    opacity: 0.52;
+    transform: scale(1);
+  }
+
+  .refresh-icon-shell {
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .refresh-icon-shell.spinning {
+    animation: spin 900ms linear infinite;
   }
 
   nav {
@@ -190,6 +249,10 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     }
 
     .brand {
+      padding: 0;
+    }
+
+    .brand-row {
       grid-area: brand;
       padding: 0 var(--space-4);
     }
@@ -217,6 +280,16 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     .profile strong,
     .profile span {
       white-space: nowrap;
+    }
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
     }
   }
 </style>

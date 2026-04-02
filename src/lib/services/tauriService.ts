@@ -57,6 +57,10 @@ export async function getGames(): Promise<StoredGame[]> {
 	return invoke<StoredGame[]>("read_games");
 }
 
+export async function refreshInstalledGameMedia(): Promise<StoredGame[]> {
+	return invoke<StoredGame[]>("refresh_installed_game_media");
+}
+
 export async function saveGames(games: StoredGame[]): Promise<string> {
 	return invoke<string>("write_games", { games });
 }

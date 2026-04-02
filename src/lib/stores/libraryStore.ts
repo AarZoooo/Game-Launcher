@@ -4,6 +4,7 @@ import { pageLabels } from "$lib/data/labels";
 import {
 	getGames as loadStoredGames,
 	getTodayPlaytime as loadTodayPlaytime,
+	refreshInstalledGameMedia as refreshStoredInstalledGameMedia,
 	type StoredGame,
 	saveGames as saveStoredGames,
 	type TodayPlaytimeEntry,
@@ -1002,6 +1003,29 @@ function createGameStore() {
 		reset: () => set(fallbackGames),
 		async loadFromBackend() {
 			set(await readBackendSnapshot());
+		},
+		async refreshInstalledGameMedia() {
+			uiStore.setLibraryBusy(true, "Refreshing installed game media...");
+			const startedAt = Date.now();
+
+			try {
+				const [storedGames, todayPlaytimeEntries] = await Promise.all([
+					refreshStoredInstalledGameMedia(),
+					loadTodayPlaytime().catch((error) => {
+						console.error("Failed to load today's playtime:", error);
+						return [];
+					}),
+				]);
+
+				set(mergeStoredLibrary(storedGames, todayPlaytimeEntries));
+
+				const elapsed = Date.now() - startedAt;
+				if (elapsed < 450) {
+					await wait(450 - elapsed);
+				}
+			} finally {
+				uiStore.setLibraryBusy(false);
+			}
 		},
 		async refreshAfterGameExit(gameId?: string | null) {
 			const currentItems = get(games);

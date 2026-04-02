@@ -6,6 +6,7 @@ export const pageLabels = {
 		cancel: "Cancel",
 		goBack: "Go back",
 		favorite: "Favorite",
+		refreshInstalledMedia: "Refresh installed game media",
 		openMenuFor: (title: string) => `Open menu for ${title}`,
 	},
 	platforms: {
