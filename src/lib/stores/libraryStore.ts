@@ -915,6 +915,18 @@ function mergeStoredLibrary(
 function createGameStore() {
 	const { subscribe, update, set } = writable<Game[]>(fallbackGames);
 
+	async function readBackendSnapshot() {
+		const [storedGames, todayPlaytimeEntries] = await Promise.all([
+			loadStoredGames(),
+			loadTodayPlaytime().catch((error) => {
+				console.error("Failed to load today's playtime:", error);
+				return [];
+			}),
+		]);
+
+		return mergeStoredLibrary(storedGames, todayPlaytimeEntries);
+	}
+
 	async function persistLibrary(items: Game[]) {
 		const storedGames = items
 			.filter((game) => game.inLibrary !== false)
@@ -964,14 +976,42 @@ function createGameStore() {
 		subscribe,
 		reset: () => set(fallbackGames),
 		async loadFromBackend() {
-			const [storedGames, todayPlaytimeEntries] = await Promise.all([
-				loadStoredGames(),
-				loadTodayPlaytime().catch((error) => {
-					console.error("Failed to load today's playtime:", error);
-					return [];
-				}),
-			]);
-			set(mergeStoredLibrary(storedGames, todayPlaytimeEntries));
+			set(await readBackendSnapshot());
+		},
+		async refreshAfterGameExit(gameId?: string | null) {
+			const currentGame = gameId
+				? get(games).find((game) => game.id === gameId)
+				: null;
+			const previousTotalMinutes =
+				currentGame?.storageTotalPlaytimeMinutes ?? 0;
+			const previousLastPlayed = currentGame?.storageLastPlayedRaw ?? null;
+			const previousPlayedToday = currentGame?.storageMinutesPlayedToday ?? 0;
+
+			for (let attempt = 0; attempt < 5; attempt += 1) {
+				const nextItems = await readBackendSnapshot();
+				set(nextItems);
+
+				if (!gameId) {
+					return;
+				}
+
+				const updatedGame = nextItems.find((game) => game.id === gameId);
+				if (!updatedGame) {
+					return;
+				}
+
+				const statsChanged =
+					(updatedGame.storageTotalPlaytimeMinutes ?? 0) !==
+						previousTotalMinutes ||
+					(updatedGame.storageLastPlayedRaw ?? null) !== previousLastPlayed ||
+					(updatedGame.storageMinutesPlayedToday ?? 0) !== previousPlayedToday;
+
+				if (statsChanged || attempt === 4) {
+					return;
+				}
+
+				await wait(250);
+			}
 		},
 		toggleFavorite: (id: string) =>
 			update((items) =>
