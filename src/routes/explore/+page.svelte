@@ -11,19 +11,14 @@ import {
 	exploreSecondaryIds,
 	getGamesByIds,
 } from "$lib/stores/libraryStore";
-import { effectiveUIMode } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
 import type { GameMenuActionId } from "$lib/types/Menu";
-import { resolveAccentPresentation } from "$lib/utils/accent";
-import { getGameImage } from "$lib/utils/getGameMedia";
 
 const primary = getGamesByIds(explorePrimaryIds);
-const featuredRecommendation = primary[0];
 const primaryGrid = primary.slice(1);
 const secondary = getGamesByIds(exploreSecondaryIds);
 let isOnline = true;
 let prompt = recommendationPrompt;
-let featuredBannerElement: HTMLElement;
 
 function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
 	return performGameAction(
@@ -47,42 +42,21 @@ onMount(() => {
 		window.removeEventListener("offline", onOffline);
 	};
 });
-
-$: featuredAccentPresentation = featuredRecommendation
-	? resolveAccentPresentation(featuredRecommendation)
-	: null;
-
-$: if (featuredBannerElement && featuredAccentPresentation) {
-	featuredBannerElement.style.setProperty(
-		"--featured-accent-rgb",
-		featuredAccentPresentation.rgb,
-	);
-}
 </script>
 
 {#if isOnline}
   <div class="explore">
-    {#if featuredRecommendation}
-      <section
-        bind:this={featuredBannerElement}
-        class="featured-banner"
-        class:performance={$effectiveUIMode === 'gaming'}
-      >
-        <div class="banner-media">
-          <img src={getGameImage(featuredRecommendation, 'banner')} alt="" loading="lazy" />
-        </div>
-
-        <div class="banner-copy">
-          <p>{pageLabels.explore.recommendedForYou}</p>
-          <h1>{featuredRecommendation.title}</h1>
-          <span>{featuredRecommendation.genreLabel || featuredRecommendation.genres}</span>
-        </div>
-      </section>
-    {/if}
-
-    <section>
+    <section class="content-section">
       <div class="section-header compact">
-        <h2>{pageLabels.explore.suggestedGames}</h2>
+        <div class="section-title">
+          <span class="ai-sparkle" aria-hidden="true">
+            <svg viewBox="0 0 44 32" focusable="false">
+              <path d="M14 1c1.1 5.7 2.55 8.93 4.95 11.33C21.35 14.73 24.58 16.18 30.28 17.28c-5.7 1.1-8.93 2.55-11.33 4.95C16.55 24.63 15.1 27.86 14 33.56c-1.1-5.7-2.55-8.93-4.95-11.33-2.4-2.4-5.63-3.85-11.33-4.95 5.7-1.1 8.93-2.55 11.33-4.95C11.45 9.93 12.9 6.7 14 1Z" transform="translate(2 -1.5) scale(0.9 0.82)" />
+              <path d="M31.3 13.1c.62 3.18 1.45 4.95 2.83 6.33 1.38 1.38 3.15 2.21 6.33 2.83-3.18.62-4.95 1.45-6.33 2.83-1.38 1.38-2.21 3.15-2.83 6.33-.62-3.18-1.45-4.95-2.83-6.33-1.38-1.38-3.15-2.21-6.33-2.83 3.18-.62 4.95-1.45 6.33-2.83 1.38-1.38 2.21-3.15 2.83-6.33Z" transform="translate(0 -1)" />
+            </svg>
+          </span>
+          <h2>{pageLabels.explore.suggestedGames}</h2>
+        </div>
         <span>{pageLabels.explore.basedOnWhatYouPlay}</span>
       </div>
       <GameGrid games={primaryGrid} compact context="explore" on:action={handleAction} />
@@ -103,8 +77,16 @@ $: if (featuredBannerElement && featuredAccentPresentation) {
       <p>{pageLabels.explore.suggestionsPending}</p>
     </section>
 
-    <section>
-      <h3>{pageLabels.explore.suggestedGames}</h3>
+    <section class="content-section">
+      <div class="section-title">
+        <span class="ai-sparkle" aria-hidden="true">
+          <svg viewBox="0 0 44 32" focusable="false">
+            <path d="M14 1c1.1 5.7 2.55 8.93 4.95 11.33C21.35 14.73 24.58 16.18 30.28 17.28c-5.7 1.1-8.93 2.55-11.33 4.95C16.55 24.63 15.1 27.86 14 33.56c-1.1-5.7-2.55-8.93-4.95-11.33-2.4-2.4-5.63-3.85-11.33-4.95 5.7-1.1 8.93-2.55 11.33-4.95C11.45 9.93 12.9 6.7 14 1Z" transform="translate(2 -1.5) scale(0.9 0.82)" />
+            <path d="M31.3 13.1c.62 3.18 1.45 4.95 2.83 6.33 1.38 1.38 3.15 2.21 6.33 2.83-3.18.62-4.95 1.45-6.33 2.83-1.38 1.38-2.21 3.15-2.83 6.33-.62-3.18-1.45-4.95-2.83-6.33-1.38-1.38-3.15-2.21-6.33-2.83 3.18-.62 4.95-1.45 6.33-2.83 1.38-1.38 2.21-3.15 2.83-6.33Z" transform="translate(0 -1)" />
+          </svg>
+        </span>
+        <h3>{pageLabels.explore.suggestedGames}</h3>
+      </div>
       <GameGrid games={secondary} compact context="explore" on:action={handleAction} />
       <div class="actions"><Button quiet>{pageLabels.explore.refresh}</Button></div>
     </section>
@@ -126,87 +108,23 @@ $: if (featuredBannerElement && featuredAccentPresentation) {
     gap: var(--space-8);
   }
 
-  .featured-banner {
-    position: relative;
-    overflow: hidden;
-    border-radius: var(--radius-banner);
-    border: 1px solid var(--surface-border);
-    background: var(--surface-card);
-    box-shadow: var(--shadow-inset);
-  }
-
-  .banner-media {
-    position: relative;
-    height: clamp(16.25rem, 32vw, 18.75rem);
-  }
-
-  .banner-media::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(180deg, transparent 15%, var(--surface-glass-strong) 100%),
-      linear-gradient(90deg, transparent 20%, var(--surface-glass) 100%),
-      radial-gradient(circle at 82% 18%, rgb(var(--featured-accent-rgb) / 0.2), transparent 30%);
-  }
-
-  .banner-media img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: inherit;
-  }
-
-  .banner-copy {
-    position: absolute;
-    inset: auto 0 0 0;
-    z-index: 1;
+  .content-section {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
-    padding: 1.4rem 1.5rem 1.45rem;
-  }
-
-  .banner-copy p,
-  .banner-copy span,
-  .banner-copy h1 {
-    margin: 0;
-  }
-
-  .banner-copy p {
-    color: var(--text-secondary);
-    font-size: 0.76rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .banner-copy h1 {
-    font: 700 clamp(1.55rem, 2.6vw, 2.2rem) / 1.05 var(--font-display);
-    color: var(--text-primary);
-    display: -webkit-box;
-    overflow: hidden;
-    line-clamp: 2;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-
-  .banner-copy span {
-    color: var(--text-secondary);
-    font-size: 0.86rem;
-  }
-
-  .featured-banner.performance .banner-media::after {
-    background:
-      linear-gradient(180deg, transparent 18%, var(--surface-glass-strong) 100%),
-      linear-gradient(90deg, transparent 20%, var(--surface-glass) 100%);
+    gap: clamp(0.85rem, 1.5vw, 1.2rem);
   }
 
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
   }
 
   .compact {
@@ -218,6 +136,23 @@ $: if (featuredBannerElement && featuredAccentPresentation) {
   h3 {
     margin: 0;
     font-size: 1rem;
+  }
+
+  .ai-sparkle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    height: 1.05rem;
+    color: color-mix(in srgb, var(--text-primary) 84%, var(--interactive-primary-bg));
+    filter: drop-shadow(0 0 0.35rem rgb(255 255 255 / 0.14));
+    flex: 0 0 auto;
+  }
+
+  .ai-sparkle svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
   }
 
   span,
@@ -272,15 +207,5 @@ $: if (featuredBannerElement && featuredAccentPresentation) {
     min-height: 62vh;
     display: grid;
     place-items: center;
-  }
-
-  @media (max-width: 720px) {
-    .banner-copy {
-      padding: 1.1rem;
-    }
-
-    .banner-media {
-      height: 16.4rem;
-    }
   }
 </style>
