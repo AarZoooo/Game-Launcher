@@ -21,6 +21,7 @@ export let menuPlacement: MenuPlacement = "above-right";
 let cardElement: HTMLElement;
 
 $: accentPresentation = resolveAccentPresentation(game);
+$: compactMeta = game.genreLabel || game.genres;
 
 $: if (cardElement) {
 	cardElement.style.setProperty("--card-accent-rgb", accentPresentation.rgb);
@@ -65,7 +66,7 @@ function openGame() {
       <div class="game-card-copy">
         <h3 class="game-card-title">{game.title}</h3>
         <p class="game-card-meta">
-          {compact ? game.genreLabel || game.genres : `${game.hours} • ${game.platform}`}
+          {compact ? compactMeta : `${game.hours} • ${game.platform}`}
         </p>
       </div>
     </div>

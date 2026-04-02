@@ -18,6 +18,19 @@ let launchError = "";
 let heroElement: HTMLElement;
 $: showPlayButton = game.inLibrary !== false;
 $: accentPresentation = resolveAccentPresentation(game);
+$: detailMetrics = [
+	{
+		label: "Played Today",
+		value:
+			game.metrics?.find((metric) => metric.label === "Played Today")?.value ||
+			"0m",
+	},
+	{ label: "Total Play", value: game.totalPlaytime || game.hours },
+	{ label: pageLabels.game.genres, value: game.genres },
+	{ label: pageLabels.game.rating, value: `${game.rating}/10` },
+	{ label: pageLabels.game.coopSupport, value: game.coop },
+	{ label: pageLabels.game.completionTime, value: game.completion },
+];
 
 $: if (heroElement) {
 	heroElement.style.setProperty("--details-accent-rgb", accentPresentation.rgb);
@@ -48,10 +61,12 @@ $: if (heroElement) {
         {/if}
 
         <div class="meta-row">
-          <div><span>{pageLabels.game.genres}</span><p>{game.genres}</p></div>
-          <div><span>{pageLabels.game.rating}</span><p>{game.rating}/10</p></div>
-          <div><span>{pageLabels.game.coopSupport}</span><p>{game.coop}</p></div>
-          <div><span>{pageLabels.game.completionTime}</span><p>{game.completion}</p></div>
+          {#each detailMetrics as item}
+            <div>
+              <span>{item.label}</span>
+              <p>{item.value}</p>
+            </div>
+          {/each}
         </div>
       </div>
 
@@ -77,7 +92,7 @@ $: if (heroElement) {
   .hero {
     position: relative;
     min-height: 25rem;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-banner);
     overflow: hidden;
     box-shadow: var(--shadow-inset);
     transition: box-shadow var(--motion-base) ease;
@@ -123,7 +138,7 @@ $: if (heroElement) {
     background: var(--surface-glass);
     color: var(--text-primary);
     cursor: pointer;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control-sm);
     backdrop-filter: blur(var(--blur-md));
   }
 
@@ -135,7 +150,7 @@ $: if (heroElement) {
   .window-actions span {
     width: 0.65rem;
     height: 0.65rem;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-round);
     background: var(--text-secondary);
   }
 

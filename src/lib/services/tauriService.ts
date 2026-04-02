@@ -22,6 +22,11 @@ export interface StoredGame {
 	description: string;
 }
 
+export interface TodayPlaytimeEntry {
+	gameId: string;
+	minutesPlayedToday: number;
+}
+
 export interface LocalScanResult extends ImportedGameResult {}
 
 export interface ManualGameCandidate {
@@ -44,6 +49,10 @@ export async function getGames(): Promise<StoredGame[]> {
 
 export async function saveGames(games: StoredGame[]): Promise<string> {
 	return invoke<string>("write_games", { games });
+}
+
+export async function getTodayPlaytime(): Promise<TodayPlaytimeEntry[]> {
+	return invoke<TodayPlaytimeEntry[]>("get_today_playtime");
 }
 
 export async function scanLocalGames(): Promise<LocalScanResult[]> {

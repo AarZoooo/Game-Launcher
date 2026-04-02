@@ -3,8 +3,10 @@ import { derived, get, writable } from "svelte/store";
 import { pageLabels } from "$lib/data/labels";
 import {
 	getGames as loadStoredGames,
+	getTodayPlaytime as loadTodayPlaytime,
 	type StoredGame,
 	saveGames as saveStoredGames,
+	type TodayPlaytimeEntry,
 } from "$lib/services/tauriService";
 import { uiStore } from "$lib/stores/uiStore";
 import type {
@@ -38,6 +40,21 @@ function slugify(value: string) {
 function parseHours(value: string) {
 	const match = value.match(/\d+/);
 	return match ? parseInt(match[0], 10) : 0;
+}
+
+function parsePlaytimeToMinutes(value?: string) {
+	if (!value) return 0;
+
+	const hourMatch = value.match(/(\d+)\s*h/i);
+	const minuteMatch = value.match(/(\d+)\s*m/i);
+
+	if (hourMatch || minuteMatch) {
+		const hours = hourMatch ? parseInt(hourMatch[1], 10) : 0;
+		const minutes = minuteMatch ? parseInt(minuteMatch[1], 10) : 0;
+		return hours * 60 + minutes;
+	}
+
+	return parseHours(value) * 60;
 }
 
 function wait(ms: number) {
@@ -85,6 +102,8 @@ function buildImportedGame(input: ImportedGameResult): Game {
 		resumeState: "resume",
 		storageDescription: "",
 		storageGenres: ["Uncategorized"],
+		storageTotalPlaytimeMinutes: 0,
+		storageMinutesPlayedToday: 0,
 		storageLastPlayedRaw: null,
 	};
 }
@@ -648,6 +667,10 @@ function normalizeGame(game: Game, index: number): Game {
 			game.resumeState || (parseHours(game.hours) > 0 ? "resume" : "restart"),
 		storageDescription: game.storageDescription ?? game.blurb ?? "",
 		storageGenres: game.storageGenres ?? splitGenres(game.genres),
+		storageTotalPlaytimeMinutes:
+			game.storageTotalPlaytimeMinutes ??
+			parsePlaytimeToMinutes(game.totalPlaytime || game.hours),
+		storageMinutesPlayedToday: game.storageMinutesPlayedToday ?? 0,
 		storageLastPlayedRaw: game.storageLastPlayedRaw ?? null,
 	};
 }
@@ -730,7 +753,7 @@ function formatHours(minutes?: number) {
 }
 
 function formatLastPlayed(value: string | null) {
-	if (!value) return undefined;
+	if (!value) return "Never";
 
 	const parsed = new Date(value);
 
@@ -767,7 +790,10 @@ function buildAccent(platformType: PlatformType): AccentTone {
 
 function toMetrics(game: Game): GameMetric[] {
 	return [
-		{ label: "Last Play", value: game.lastPlayed || "Never" },
+		{
+			label: "Played Today",
+			value: formatPlaytime(game.storageMinutesPlayedToday),
+		},
 		{ label: "Total Play", value: game.totalPlaytime || game.hours },
 		{ label: "Genres", value: game.genres },
 		{ label: "Path", value: game.path || "Unavailable" },
@@ -812,6 +838,8 @@ function mapStoredGame(game: StoredGame): Game {
 			metrics: [],
 			storageDescription: game.description,
 			storageGenres: game.genres,
+			storageTotalPlaytimeMinutes: game.totalPlaytime,
+			storageMinutesPlayedToday: 0,
 			storageLastPlayedRaw: game.lastPlayed,
 		},
 		0,
@@ -835,7 +863,9 @@ function toStoredGame(game: Game): StoredGame {
 			game.platformType !== "wishlist"
 				? game.platformType
 				: game.platform.toLowerCase(),
-		totalPlaytime: parseHours(game.hours) * 60,
+		totalPlaytime:
+			game.storageTotalPlaytimeMinutes ??
+			parsePlaytimeToMinutes(game.totalPlaytime || game.hours),
 		lastPlayed: game.storageLastPlayedRaw ?? null,
 		status: mapUiStatus(game.status),
 		genres: game.storageGenres?.length
@@ -845,8 +875,32 @@ function toStoredGame(game: Game): StoredGame {
 	};
 }
 
-function mergeStoredLibrary(storedGames: StoredGame[]) {
-	const libraryGames = storedGames.map(mapStoredGame).map((game) => ({
+function mergeTodayPlaytime(
+	items: Game[],
+	todayPlaytimeEntries: TodayPlaytimeEntry[],
+) {
+	const todayMinutesByGameId = new Map(
+		todayPlaytimeEntries.map((entry) => [
+			entry.gameId.toLowerCase(),
+			entry.minutesPlayedToday,
+		]),
+	);
+
+	return items.map((game) => ({
+		...game,
+		storageMinutesPlayedToday:
+			todayMinutesByGameId.get(game.id.toLowerCase()) || 0,
+	}));
+}
+
+function mergeStoredLibrary(
+	storedGames: StoredGame[],
+	todayPlaytimeEntries: TodayPlaytimeEntry[] = [],
+) {
+	const libraryGames = mergeTodayPlaytime(
+		storedGames.map(mapStoredGame),
+		todayPlaytimeEntries,
+	).map((game) => ({
 		...game,
 		metrics: toMetrics(game),
 	}));
@@ -910,8 +964,14 @@ function createGameStore() {
 		subscribe,
 		reset: () => set(fallbackGames),
 		async loadFromBackend() {
-			const storedGames = await loadStoredGames();
-			set(mergeStoredLibrary(storedGames));
+			const [storedGames, todayPlaytimeEntries] = await Promise.all([
+				loadStoredGames(),
+				loadTodayPlaytime().catch((error) => {
+					console.error("Failed to load today's playtime:", error);
+					return [];
+				}),
+			]);
+			set(mergeStoredLibrary(storedGames, todayPlaytimeEntries));
 		},
 		toggleFavorite: (id: string) =>
 			update((items) =>
@@ -1029,11 +1089,43 @@ export const catalogGames = derived(games, ($games) =>
 export const favoriteGames = derived(games, ($games) =>
 	$games.filter((game) => game.favorite),
 );
-export const continuePlayingGames = derived(games, ($games) =>
-	$games
-		.filter((game) => !game.hiddenFromContinue && parseHours(game.hours) > 0)
-		.slice(0, 5),
-);
+export const continuePlayingGames = derived(games, ($games) => {
+	const installedVisibleGames = $games.filter(
+		(game) => game.inLibrary === true && !game.hiddenFromContinue,
+	);
+
+	const sortByRecentActivity = (left: Game, right: Game) => {
+		const leftLastPlayed = left.storageLastPlayedRaw
+			? Date.parse(left.storageLastPlayedRaw)
+			: 0;
+		const rightLastPlayed = right.storageLastPlayedRaw
+			? Date.parse(right.storageLastPlayedRaw)
+			: 0;
+		const safeLeftLastPlayed = Number.isNaN(leftLastPlayed)
+			? 0
+			: leftLastPlayed;
+		const safeRightLastPlayed = Number.isNaN(rightLastPlayed)
+			? 0
+			: rightLastPlayed;
+
+		if (safeRightLastPlayed !== safeLeftLastPlayed) {
+			return safeRightLastPlayed - safeLeftLastPlayed;
+		}
+
+		return (
+			(right.storageTotalPlaytimeMinutes ?? 0) -
+			(left.storageTotalPlaytimeMinutes ?? 0)
+		);
+	};
+
+	const recentGames = installedVisibleGames.filter(
+		(game) => (game.storageTotalPlaytimeMinutes ?? 0) > 0,
+	);
+
+	return (recentGames.length ? recentGames : installedVisibleGames)
+		.sort(sortByRecentActivity)
+		.slice(0, 5);
+});
 export const playingGames = derived(games, ($games) =>
 	$games.filter((game) => game.status === "playing"),
 );

@@ -119,7 +119,7 @@ function close() {
     padding: 0 var(--space-4);
     background: var(--interactive-primary-bg);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-control-md);
     cursor: pointer;
     color: var(--interactive-primary-text);
     font-weight: 700;

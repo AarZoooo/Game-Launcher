@@ -150,7 +150,11 @@ function sortGames(items: Game[]) {
 	}
 
 	if (sortBy === "hours") {
-		return [...items].sort((a, b) => parseInt(b.hours) - parseInt(a.hours));
+		return [...items].sort(
+			(a, b) =>
+				(b.storageTotalPlaytimeMinutes ?? 0) -
+				(a.storageTotalPlaytimeMinutes ?? 0),
+		);
 	}
 
 	if (sortBy === "rating") {
@@ -257,7 +261,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     flex-direction: column;
     gap: var(--space-4);
     padding: var(--space-5);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-panel);
     background: var(--surface-card);
     border: 1px solid var(--surface-border);
   }
@@ -325,7 +329,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     background: var(--surface-glass);
     color: var(--text-primary);
     padding: 0.6rem 0.85rem;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-control-md);
     box-shadow: var(--shadow-sm);
     backdrop-filter: blur(var(--blur-md));
   }

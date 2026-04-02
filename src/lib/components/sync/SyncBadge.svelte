@@ -18,7 +18,7 @@ export let status = "Up to date";
     content: '';
     width: 0.48rem;
     height: 0.48rem;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-round);
     background: var(--color-success-1);
     box-shadow: var(--shadow-status-glow);
   }

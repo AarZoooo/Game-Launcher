@@ -24,7 +24,7 @@ export let message = "";
 		padding: var(--space-5);
 		text-align: center;
 		border: 1px solid var(--surface-border-soft);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-panel);
 		background: var(--surface-card);
 	}
 

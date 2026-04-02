@@ -1,8 +1,41 @@
 :root {
-	--radius-xs: 0.35rem;
-	--radius-sm: 0.65rem;
-	--radius-md: 0.9rem;
-	--radius-lg: 1.15rem;
-	--radius-xl: 1.45rem;
+	/* Base radius scale */
+	--radius-0: 0px;
+	--radius-xs: var(--radius-0); /* 0.35rem */ /* This makes corners rounded */
+	--radius-sm: var(--radius-0); /* 0.65rem */
+	--radius-md: var(--radius-0); /* 0.9rem */
+	--radius-lg: var(--radius-0); /* 1.15rem */
+	--radius-xl: var(--radius-0); /* 1.45rem */
 	--radius-pill: 999px;
+	--radius-round: 999px;
+
+	/* Semantic radius mappings */
+	--radius-control-sm: var(--radius-sm);
+	--radius-control-md: var(--radius-md);
+	--radius-card: var(--radius-lg);
+	--radius-card-inner: clamp(0px, calc(var(--radius-card) - var(--space-1)), var(--radius-card));
+	--radius-panel: var(--radius-lg);
+	--radius-panel-sm: var(--radius-md);
+	--radius-modal: var(--radius-lg);
+	--radius-modal-compact: var(--radius-sm);
+	--radius-banner: var(--radius-xl);
+	--radius-heatmap-cell: var(--radius-xs);
+	--radius-pill-ui: var(--radius-pill);
+}
+
+:root[data-corner-mode="slight"] {
+	--radius-xs: 0.2rem;
+	--radius-sm: 0.4rem;
+	--radius-md: 0.6rem;
+	--radius-lg: 0.85rem;
+	--radius-xl: 1.1rem;
+}
+
+:root[data-corner-mode="sharp"] {
+	--radius-xs: var(--radius-0);
+	--radius-sm: var(--radius-0);
+	--radius-md: var(--radius-0);
+	--radius-lg: var(--radius-0);
+	--radius-xl: var(--radius-0);
+	--radius-pill: var(--radius-0);
 }

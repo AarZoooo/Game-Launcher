@@ -126,7 +126,7 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     place-items: center;
     width: 2rem;
     height: 2rem;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-round);
     background: linear-gradient(
       135deg,
       rgb(var(--accent-rgb) / 0.9),
@@ -153,7 +153,7 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
   .profile i {
     width: 0.42rem;
     height: 0.42rem;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-round);
     background: var(--color-success-1);
     box-shadow: var(--shadow-status-glow-sm);
   }
@@ -186,7 +186,7 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     nav button {
       text-align: center;
       padding: var(--space-3) var(--space-2);
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-control-sm);
     }
 
     .profile {

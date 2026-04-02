@@ -30,7 +30,7 @@
 .field-control {
 	min-height: var(--control-height-md);
 	padding: 0 var(--space-4);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-control-md);
 	transition:
 		border-color var(--motion-fast) ease,
 		background-color var(--motion-fast) ease,
@@ -48,7 +48,7 @@
 
 .section-card {
 	padding: var(--space-5);
-	border-radius: var(--radius-lg);
+	border-radius: var(--radius-panel);
 	background: var(--surface-card);
 	border: 1px solid var(--surface-border);
 	box-shadow: var(--shadow-inset);

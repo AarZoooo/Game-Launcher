@@ -12,6 +12,19 @@ export let game: Game;
 let heroElement: HTMLElement;
 
 $: accentPresentation = resolveAccentPresentation(game);
+$: heroMetrics = [
+	{
+		label: "Played Today",
+		value:
+			game.metrics?.find((metric) => metric.label === "Played Today")?.value ||
+			"0m",
+	},
+	{ label: "Total Play", value: game.totalPlaytime || game.hours },
+	{ label: "Genres", value: game.genres },
+	{ label: "Rating", value: game.rating ? `${game.rating}/10` : "N/A" },
+	{ label: "Co-Op Support", value: game.coop || "Unknown" },
+	{ label: "Completion Time", value: game.completion || "Unknown" },
+];
 
 $: if (heroElement) {
 	heroElement.style.setProperty("--hero-accent-rgb", accentPresentation.rgb);
@@ -43,7 +56,7 @@ function toggleFavorite() {
       <GamePlayButton {game} compact />
 
       <div class="meta">
-        {#each (game.metrics || []).filter((metric) => metric.label !== 'Cloud Sync') as metric}
+        {#each heroMetrics as metric}
           <div class="metric">
             <span>{metric.label}</span>
             <p>{metric.value}</p>
@@ -58,7 +71,7 @@ function toggleFavorite() {
   .hero {
     position: relative;
     min-height: 25rem;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-banner);
     overflow: hidden;
     box-shadow: var(--shadow-inset);
     transition: transform var(--motion-base) ease, box-shadow var(--motion-base) ease;
@@ -108,7 +121,7 @@ function toggleFavorite() {
     width: 2.25rem;
     height: 2.25rem;
     border: 1px solid rgb(255 255 255 / 0.12);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-pill-ui);
     background: var(--surface-glass);
     color: var(--text-secondary);
     box-shadow: var(--shadow-outline);

@@ -63,5 +63,7 @@ export interface Game {
 	resumeState?: ResumeState;
 	storageDescription?: string;
 	storageGenres?: string[];
+	storageTotalPlaytimeMinutes?: number;
+	storageMinutesPlayedToday?: number;
 	storageLastPlayedRaw?: string | null;
 }
