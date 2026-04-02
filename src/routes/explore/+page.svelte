@@ -184,6 +184,11 @@ $: if (featuredBannerElement && featuredAccentPresentation) {
   .banner-copy h1 {
     font: 700 clamp(1.55rem, 2.6vw, 2.2rem) / 1.05 var(--font-display);
     color: var(--text-primary);
+    display: -webkit-box;
+    overflow: hidden;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   .banner-copy span {

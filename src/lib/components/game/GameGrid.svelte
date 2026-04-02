@@ -15,7 +15,7 @@ export let context: GameMenuContext = "library";
 export let menuPlacement: MenuPlacement = "above-right";
 </script>
 
-<div class:horizontal class="grid">
+<div class:horizontal class:compact class="grid">
   {#each games as game}
     <div class="item">
       <GameCard
@@ -33,6 +33,9 @@ export let menuPlacement: MenuPlacement = "above-right";
   .item {
     position: relative;
     z-index: 0;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
   }
 
   .item:hover,
@@ -41,10 +44,21 @@ export let menuPlacement: MenuPlacement = "above-right";
   }
 
   .grid {
+    --card-width: var(--card-width-md);
+    --card-height: var(--card-height-md);
+    --card-title-height: var(--card-title-height-md);
+    --card-info-height: var(--card-info-height-md);
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(12.25rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr));
     gap: var(--space-6);
     align-items: start;
+  }
+
+  .grid.compact {
+    --card-width: var(--card-width-sm);
+    --card-height: var(--card-height-sm);
+    --card-title-height: var(--card-title-height-sm);
+    --card-info-height: var(--card-info-height-sm);
   }
 
   .horizontal {
@@ -62,23 +76,26 @@ export let menuPlacement: MenuPlacement = "above-right";
   }
 
   .horizontal .item {
-    flex: 0 0 12rem;
-    min-width: 12rem;
+    flex: 0 0 var(--card-width);
+    min-width: var(--card-width);
+  }
+
+  .item :global(.game-card) {
+    flex: 1 0 auto;
   }
 
   @media (max-width: 720px) {
     .grid {
-      grid-template-columns: repeat(auto-fill, minmax(10.4rem, 1fr));
+      --card-width: var(--card-width-sm);
+      --card-height: var(--card-height-sm);
+      --card-title-height: var(--card-title-height-sm);
+      --card-info-height: var(--card-info-height-sm);
+      grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr));
       gap: var(--space-4);
     }
 
     .horizontal {
       gap: var(--space-4);
-    }
-
-    .horizontal .item {
-      flex-basis: 10.8rem;
-      min-width: 10.8rem;
     }
   }
 </style>

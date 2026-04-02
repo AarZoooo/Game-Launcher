@@ -177,6 +177,11 @@ $: if (heroElement) {
 
   h1 {
     font: 700 clamp(1.9rem, 3vw, 2.45rem) / 1.05 var(--font-display);
+    display: -webkit-box;
+    overflow: hidden;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   .error {

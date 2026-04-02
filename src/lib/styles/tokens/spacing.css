@@ -11,4 +11,18 @@
 	--space-10: 3rem;
 	--page-padding-x: var(--space-7);
 	--page-padding-y: var(--space-6);
+	--card-width-sm: 10.75rem;
+	--card-width-md: 12.25rem;
+	--card-width-lg: 14rem;
+	--card-height-sm: 17.75rem;
+	--card-height-md: 20.5rem;
+	--card-height-lg: 23rem;
+	--card-title-height-sm: 2.2rem;
+	--card-title-height-md: 2.35rem;
+	--card-title-height-lg: 2.5rem;
+	--card-meta-height: 1rem;
+	--card-info-height-sm: 3.5rem;
+	--card-info-height-md: 3.85rem;
+	--card-info-height-lg: 4.15rem;
+	--card-media-aspect-portrait: 3 / 4;
 }
