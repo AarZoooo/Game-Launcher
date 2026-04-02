@@ -922,6 +922,21 @@ function mergeStoredLibrary(
 	];
 }
 
+function buildInstalledStatsSignature(items: Game[]) {
+	return items
+		.filter((game) => game.inLibrary === true)
+		.map((game) =>
+			[
+				game.id,
+				game.storageTotalPlaytimeMinutes ?? 0,
+				game.storageMinutesPlayedToday ?? 0,
+				game.storageLastPlayedRaw ?? "",
+			].join(":"),
+		)
+		.sort()
+		.join("|");
+}
+
 function createGameStore() {
 	const { subscribe, update, set } = writable<Game[]>(fallbackGames);
 
@@ -989,39 +1004,45 @@ function createGameStore() {
 			set(await readBackendSnapshot());
 		},
 		async refreshAfterGameExit(gameId?: string | null) {
+			const currentItems = get(games);
 			const currentGame = gameId
-				? get(games).find((game) => game.id === gameId)
+				? currentItems.find((game) => game.id === gameId)
 				: null;
 			const previousTotalMinutes =
 				currentGame?.storageTotalPlaytimeMinutes ?? 0;
 			const previousLastPlayed = currentGame?.storageLastPlayedRaw ?? null;
 			const previousPlayedToday = currentGame?.storageMinutesPlayedToday ?? 0;
+			const previousInstalledSignature =
+				buildInstalledStatsSignature(currentItems);
+			const deadline = Date.now() + 35000;
+			let attempt = 0;
 
-			for (let attempt = 0; attempt < 5; attempt += 1) {
+			while (Date.now() < deadline) {
 				const nextItems = await readBackendSnapshot();
 				set(nextItems);
+				const installedSignatureChanged =
+					buildInstalledStatsSignature(nextItems) !==
+					previousInstalledSignature;
 
-				if (!gameId) {
+				const updatedGame = gameId
+					? nextItems.find((game) => game.id === gameId)
+					: null;
+				const targetGameChanged = updatedGame
+					? (updatedGame.storageTotalPlaytimeMinutes ?? 0) !==
+							previousTotalMinutes ||
+						(updatedGame.storageLastPlayedRaw ?? null) !== previousLastPlayed ||
+						(updatedGame.storageMinutesPlayedToday ?? 0) !== previousPlayedToday
+					: false;
+
+				if (targetGameChanged || installedSignatureChanged) {
 					return;
 				}
 
-				const updatedGame = nextItems.find((game) => game.id === gameId);
-				if (!updatedGame) {
-					return;
-				}
-
-				const statsChanged =
-					(updatedGame.storageTotalPlaytimeMinutes ?? 0) !==
-						previousTotalMinutes ||
-					(updatedGame.storageLastPlayedRaw ?? null) !== previousLastPlayed ||
-					(updatedGame.storageMinutesPlayedToday ?? 0) !== previousPlayedToday;
-
-				if (statsChanged || attempt === 4) {
-					return;
-				}
-
-				await wait(250);
+				attempt += 1;
+				await wait(attempt < 8 ? 300 : 1000);
 			}
+
+			set(await readBackendSnapshot());
 		},
 		toggleFavorite: (id: string) =>
 			update((items) =>
