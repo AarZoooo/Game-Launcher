@@ -223,11 +223,18 @@ fn monitor_game_process(
         }
     }
 
-    if let (Some(game_id), Some(session_id), Some(ended_at)) =
+    if let (Some(final_game_id), Some(session_id), Some(ended_at)) =
         (game_id.as_deref(), session_id.as_deref(), pending_session_end_at)
     {
-        match session_store::finish_session(&app, game_id, session_id, ended_at) {
+        match session_store::finish_session(&app, final_game_id, session_id, ended_at) {
             Ok(Some(summary)) => {
+                emit_game_process_state(
+                    &app,
+                    &game_id,
+                    &exe_path,
+                    "exited",
+                    Some("Finalized game session stats.".into()),
+                );
                 println!(
                     "[playtime]\n  game: {}\n  game_id: {}\n  total_playtime: {}\n  played_today: {}\n  last_played: {}\n",
                     summary.title,
@@ -241,7 +248,7 @@ fn monitor_game_process(
             Err(error) => {
                 println!(
                     "[launch_game] failed to persist finished session game_id={} session_id={} error={}",
-                    game_id, session_id, error
+                    final_game_id, session_id, error
                 );
             }
         }
