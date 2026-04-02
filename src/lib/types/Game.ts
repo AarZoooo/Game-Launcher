@@ -64,5 +64,6 @@ export interface Game {
 	storageDescription?: string;
 	storageGenres?: string[];
 	storageTotalPlaytimeMinutes?: number;
+	storageMinutesPlayedToday?: number;
 	storageLastPlayedRaw?: string | null;
 }

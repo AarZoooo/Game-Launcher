@@ -19,7 +19,12 @@ let heroElement: HTMLElement;
 $: showPlayButton = game.inLibrary !== false;
 $: accentPresentation = resolveAccentPresentation(game);
 $: detailMetrics = [
-	{ label: "Last Play", value: game.lastPlayed || "Never" },
+	{
+		label: "Played Today",
+		value:
+			game.metrics?.find((metric) => metric.label === "Played Today")?.value ||
+			"0m",
+	},
 	{ label: "Total Play", value: game.totalPlaytime || game.hours },
 	{ label: pageLabels.game.genres, value: game.genres },
 	{ label: pageLabels.game.rating, value: `${game.rating}/10` },

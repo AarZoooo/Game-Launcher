@@ -3,8 +3,10 @@ import { derived, get, writable } from "svelte/store";
 import { pageLabels } from "$lib/data/labels";
 import {
 	getGames as loadStoredGames,
+	getTodayPlaytime as loadTodayPlaytime,
 	type StoredGame,
 	saveGames as saveStoredGames,
+	type TodayPlaytimeEntry,
 } from "$lib/services/tauriService";
 import { uiStore } from "$lib/stores/uiStore";
 import type {
@@ -101,6 +103,7 @@ function buildImportedGame(input: ImportedGameResult): Game {
 		storageDescription: "",
 		storageGenres: ["Uncategorized"],
 		storageTotalPlaytimeMinutes: 0,
+		storageMinutesPlayedToday: 0,
 		storageLastPlayedRaw: null,
 	};
 }
@@ -667,6 +670,7 @@ function normalizeGame(game: Game, index: number): Game {
 		storageTotalPlaytimeMinutes:
 			game.storageTotalPlaytimeMinutes ??
 			parsePlaytimeToMinutes(game.totalPlaytime || game.hours),
+		storageMinutesPlayedToday: game.storageMinutesPlayedToday ?? 0,
 		storageLastPlayedRaw: game.storageLastPlayedRaw ?? null,
 	};
 }
@@ -786,7 +790,10 @@ function buildAccent(platformType: PlatformType): AccentTone {
 
 function toMetrics(game: Game): GameMetric[] {
 	return [
-		{ label: "Last Play", value: game.lastPlayed || "Never" },
+		{
+			label: "Played Today",
+			value: formatPlaytime(game.storageMinutesPlayedToday),
+		},
 		{ label: "Total Play", value: game.totalPlaytime || game.hours },
 		{ label: "Genres", value: game.genres },
 		{ label: "Path", value: game.path || "Unavailable" },
@@ -832,6 +839,7 @@ function mapStoredGame(game: StoredGame): Game {
 			storageDescription: game.description,
 			storageGenres: game.genres,
 			storageTotalPlaytimeMinutes: game.totalPlaytime,
+			storageMinutesPlayedToday: 0,
 			storageLastPlayedRaw: game.lastPlayed,
 		},
 		0,
@@ -867,8 +875,32 @@ function toStoredGame(game: Game): StoredGame {
 	};
 }
 
-function mergeStoredLibrary(storedGames: StoredGame[]) {
-	const libraryGames = storedGames.map(mapStoredGame).map((game) => ({
+function mergeTodayPlaytime(
+	items: Game[],
+	todayPlaytimeEntries: TodayPlaytimeEntry[],
+) {
+	const todayMinutesByGameId = new Map(
+		todayPlaytimeEntries.map((entry) => [
+			entry.gameId.toLowerCase(),
+			entry.minutesPlayedToday,
+		]),
+	);
+
+	return items.map((game) => ({
+		...game,
+		storageMinutesPlayedToday:
+			todayMinutesByGameId.get(game.id.toLowerCase()) || 0,
+	}));
+}
+
+function mergeStoredLibrary(
+	storedGames: StoredGame[],
+	todayPlaytimeEntries: TodayPlaytimeEntry[] = [],
+) {
+	const libraryGames = mergeTodayPlaytime(
+		storedGames.map(mapStoredGame),
+		todayPlaytimeEntries,
+	).map((game) => ({
 		...game,
 		metrics: toMetrics(game),
 	}));
@@ -932,8 +964,14 @@ function createGameStore() {
 		subscribe,
 		reset: () => set(fallbackGames),
 		async loadFromBackend() {
-			const storedGames = await loadStoredGames();
-			set(mergeStoredLibrary(storedGames));
+			const [storedGames, todayPlaytimeEntries] = await Promise.all([
+				loadStoredGames(),
+				loadTodayPlaytime().catch((error) => {
+					console.error("Failed to load today's playtime:", error);
+					return [];
+				}),
+			]);
+			set(mergeStoredLibrary(storedGames, todayPlaytimeEntries));
 		},
 		toggleFavorite: (id: string) =>
 			update((items) =>

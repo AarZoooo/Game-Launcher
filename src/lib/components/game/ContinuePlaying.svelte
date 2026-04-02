@@ -13,7 +13,12 @@ let heroElement: HTMLElement;
 
 $: accentPresentation = resolveAccentPresentation(game);
 $: heroMetrics = [
-	{ label: "Last Play", value: game.lastPlayed || "Never" },
+	{
+		label: "Played Today",
+		value:
+			game.metrics?.find((metric) => metric.label === "Played Today")?.value ||
+			"0m",
+	},
 	{ label: "Total Play", value: game.totalPlaytime || game.hours },
 	{ label: "Genres", value: game.genres },
 	{ label: "Rating", value: game.rating ? `${game.rating}/10` : "N/A" },
