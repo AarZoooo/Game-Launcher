@@ -12,6 +12,14 @@ export let game: Game;
 let heroElement: HTMLElement;
 
 $: accentPresentation = resolveAccentPresentation(game);
+$: heroMetrics = [
+	{ label: "Last Play", value: game.lastPlayed || "Never" },
+	{ label: "Total Play", value: game.totalPlaytime || game.hours },
+	{ label: "Genres", value: game.genres },
+	{ label: "Rating", value: game.rating ? `${game.rating}/10` : "N/A" },
+	{ label: "Co-Op Support", value: game.coop || "Unknown" },
+	{ label: "Completion Time", value: game.completion || "Unknown" },
+];
 
 $: if (heroElement) {
 	heroElement.style.setProperty("--hero-accent-rgb", accentPresentation.rgb);
@@ -43,7 +51,7 @@ function toggleFavorite() {
       <GamePlayButton {game} compact />
 
       <div class="meta">
-        {#each (game.metrics || []).filter((metric) => metric.label !== 'Cloud Sync') as metric}
+        {#each heroMetrics as metric}
           <div class="metric">
             <span>{metric.label}</span>
             <p>{metric.value}</p>

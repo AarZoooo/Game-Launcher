@@ -26,6 +26,9 @@ onMount(() => {
 
 		if (event.state === "exited") {
 			uiStore.finishGame(event.gameId);
+			void games.loadFromBackend().catch((error) => {
+				console.error("Failed to refresh library after game exit:", error);
+			});
 			return;
 		}
 

@@ -18,6 +18,14 @@ let launchError = "";
 let heroElement: HTMLElement;
 $: showPlayButton = game.inLibrary !== false;
 $: accentPresentation = resolveAccentPresentation(game);
+$: detailMetrics = [
+	{ label: "Last Play", value: game.lastPlayed || "Never" },
+	{ label: "Total Play", value: game.totalPlaytime || game.hours },
+	{ label: pageLabels.game.genres, value: game.genres },
+	{ label: pageLabels.game.rating, value: `${game.rating}/10` },
+	{ label: pageLabels.game.coopSupport, value: game.coop },
+	{ label: pageLabels.game.completionTime, value: game.completion },
+];
 
 $: if (heroElement) {
 	heroElement.style.setProperty("--details-accent-rgb", accentPresentation.rgb);
@@ -48,10 +56,12 @@ $: if (heroElement) {
         {/if}
 
         <div class="meta-row">
-          <div><span>{pageLabels.game.genres}</span><p>{game.genres}</p></div>
-          <div><span>{pageLabels.game.rating}</span><p>{game.rating}/10</p></div>
-          <div><span>{pageLabels.game.coopSupport}</span><p>{game.coop}</p></div>
-          <div><span>{pageLabels.game.completionTime}</span><p>{game.completion}</p></div>
+          {#each detailMetrics as item}
+            <div>
+              <span>{item.label}</span>
+              <p>{item.value}</p>
+            </div>
+          {/each}
         </div>
       </div>
 

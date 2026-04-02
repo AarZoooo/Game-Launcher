@@ -150,7 +150,11 @@ function sortGames(items: Game[]) {
 	}
 
 	if (sortBy === "hours") {
-		return [...items].sort((a, b) => parseInt(b.hours) - parseInt(a.hours));
+		return [...items].sort(
+			(a, b) =>
+				(b.storageTotalPlaytimeMinutes ?? 0) -
+				(a.storageTotalPlaytimeMinutes ?? 0),
+		);
 	}
 
 	if (sortBy === "rating") {
