@@ -129,7 +129,7 @@ $: if (featuredBannerElement && featuredAccentPresentation) {
   .featured-banner {
     position: relative;
     overflow: hidden;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-banner);
     border: 1px solid var(--surface-border);
     background: var(--surface-card);
     box-shadow: var(--shadow-inset);
@@ -239,7 +239,7 @@ $: if (featuredBannerElement && featuredAccentPresentation) {
     gap: var(--space-3);
     padding: var(--space-1);
     border: 1px solid var(--surface-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-panel);
     background: var(--surface-glass);
     box-shadow: var(--shadow-accent-outline-soft);
     backdrop-filter: blur(var(--blur-md));
@@ -257,7 +257,7 @@ $: if (featuredBannerElement && featuredAccentPresentation) {
   .prompt-box button {
     min-width: 3.1rem;
     border: 0;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-control-md);
     background: var(--interactive-primary-bg);
     color: var(--interactive-primary-text);
     font-weight: 700;

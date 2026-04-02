@@ -77,7 +77,7 @@ $: if (heroElement) {
   .hero {
     position: relative;
     min-height: 25rem;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-banner);
     overflow: hidden;
     box-shadow: var(--shadow-inset);
     transition: box-shadow var(--motion-base) ease;
@@ -123,7 +123,7 @@ $: if (heroElement) {
     background: var(--surface-glass);
     color: var(--text-primary);
     cursor: pointer;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control-sm);
     backdrop-filter: blur(var(--blur-md));
   }
 
@@ -135,7 +135,7 @@ $: if (heroElement) {
   .window-actions span {
     width: 0.65rem;
     height: 0.65rem;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-round);
     background: var(--text-secondary);
   }
 

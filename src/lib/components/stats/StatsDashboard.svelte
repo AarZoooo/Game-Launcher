@@ -153,7 +153,7 @@ $: if (heatmapCard) {
 
   .heatmap-card {
     padding: var(--space-4);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-panel);
     background: var(--surface-card);
     border: 1px solid var(--surface-border);
     box-shadow: var(--shadow-inset);
@@ -188,7 +188,7 @@ $: if (heatmapCard) {
     height: 0.82rem;
     padding: 0;
     border: 0;
-    border-radius: 0.18rem;
+    border-radius: var(--radius-heatmap-cell);
     background: var(--surface-border);
     transition:
       transform var(--motion-fast) ease,
@@ -236,7 +236,7 @@ $: if (heatmapCard) {
   .streak-card {
     min-width: 10rem;
     padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-panel-sm);
     background: var(--surface-glass);
     border: 1px solid var(--surface-border-soft);
     backdrop-filter: blur(var(--blur-md));
@@ -272,7 +272,7 @@ $: if (heatmapCard) {
 
   .metric {
     padding: var(--space-4);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-panel-sm);
     background: var(--surface-card);
     border: 1px solid var(--surface-border-soft);
   }
@@ -286,7 +286,7 @@ $: if (heatmapCard) {
   .ring {
     width: 3.1rem;
     height: 3.1rem;
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     background:
       radial-gradient(circle at center, var(--color-background-4) 46%, transparent 47%),
       conic-gradient(

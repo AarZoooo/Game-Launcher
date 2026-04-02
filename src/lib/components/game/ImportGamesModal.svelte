@@ -155,7 +155,7 @@ function truncate(path: string) {
   .row {
     align-items: start;
     padding: var(--space-3) var(--space-1);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-panel-sm);
     background: var(--surface-card);
     border: 1px solid var(--surface-border-soft);
   }

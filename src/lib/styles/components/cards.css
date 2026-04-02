@@ -11,7 +11,7 @@
 		linear-gradient(180deg, rgb(var(--card-accent-rgb) / 0.08), transparent 38%),
 		var(--surface-card);
 	border: 1px solid var(--surface-border-soft);
-	border-radius: var(--radius-lg);
+	border-radius: var(--radius-card);
 	box-shadow: var(--shadow-inset);
 	transition:
 		transform var(--motion-base) ease,
@@ -64,7 +64,7 @@
 	height: clamp(15rem, 30vw, 17.5rem);
 	object-fit: cover;
 	background-color: var(--color-background-4);
-	border-radius: calc(var(--radius-lg) - var(--space-1));
+	border-radius: var(--radius-card-inner);
 	border: 1px solid var(--surface-border-soft);
 	box-shadow: var(--shadow-card-image);
 }

@@ -58,7 +58,7 @@ function toggleFavorite() {
   .hero {
     position: relative;
     min-height: 25rem;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-banner);
     overflow: hidden;
     box-shadow: var(--shadow-inset);
     transition: transform var(--motion-base) ease, box-shadow var(--motion-base) ease;
@@ -108,7 +108,7 @@ function toggleFavorite() {
     width: 2.25rem;
     height: 2.25rem;
     border: 1px solid rgb(255 255 255 / 0.12);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-pill-ui);
     background: var(--surface-glass);
     color: var(--text-secondary);
     box-shadow: var(--shadow-outline);

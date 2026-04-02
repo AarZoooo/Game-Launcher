@@ -44,14 +44,14 @@
 }
 
 .app-modal-shell.normal {
-	border-radius: var(--radius-lg);
+	border-radius: var(--radius-modal);
 	padding: var(--space-5);
 	box-shadow: var(--shadow-md);
 	animation: modalIn 180ms ease;
 }
 
 .app-modal-shell.gaming {
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-modal-compact);
 	padding: var(--space-4);
 	background: var(--surface-glass-strong);
 	box-shadow: var(--shadow-sm);
