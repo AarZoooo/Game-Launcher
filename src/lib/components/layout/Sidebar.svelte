@@ -166,7 +166,7 @@ async function refreshInstalledMedia() {
     background: transparent;
     color: var(--text-secondary);
     font: inherit;
-    text-align: left;
+    text-align: center;
     padding: var(--space-4) calc(var(--space-6) + var(--space-1));
     cursor: pointer;
     transition:
@@ -178,7 +178,7 @@ async function refreshInstalledMedia() {
   nav button:hover {
     color: var(--text-primary);
     background: var(--surface-hover);
-    transform: translateX(var(--space-1));
+    transform: translateY(-1px);
   }
 
   nav button.active {
@@ -264,6 +264,7 @@ async function refreshInstalledMedia() {
     }
 
     nav button {
+      width: 100%;
       text-align: center;
       padding: var(--space-3) var(--space-2);
       border-radius: var(--radius-control-sm);

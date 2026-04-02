@@ -60,7 +60,7 @@ function pageToAccentSource(pathname: string, gameId?: string) {
 
 <style>
   .shell {
-    --shell-sidebar-width: 13.5rem;
+    --shell-sidebar-width: clamp(13.5rem, 9rem + 8vw, 18.9rem);
     display: grid;
     grid-template-columns: var(--shell-sidebar-width) minmax(0, 1fr);
     min-height: 100vh;
