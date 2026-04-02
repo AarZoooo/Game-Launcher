@@ -34,6 +34,7 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
   .sidebar {
     position: sticky;
     top: 0;
+    z-index: 8;
     height: 100vh;
     padding: var(--space-6) 0 var(--space-4);
     display: flex;
@@ -41,7 +42,10 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     justify-content: space-between;
     background: var(--app-sidebar);
     border-right: 1px solid var(--surface-border-soft);
-    backdrop-filter: blur(var(--blur-lg));
+    backdrop-filter: blur(calc(var(--blur-lg) * 1.15)) saturate(140%);
+    box-shadow:
+      inset -1px 0 0 rgb(255 255 255 / 0.05),
+      1rem 0 2.8rem rgb(0 0 0 / 0.18);
     overflow: hidden;
   }
 
@@ -53,6 +57,17 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
     background: radial-gradient(circle, var(--surface-hover) 0%, transparent 60%);
     filter: blur(var(--blur-xl));
     opacity: 0.65;
+    pointer-events: none;
+  }
+
+  .sidebar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent 24%),
+      linear-gradient(90deg, rgb(255 255 255 / 0.06), transparent 24%);
+    opacity: 0.55;
     pointer-events: none;
   }
 
@@ -109,7 +124,9 @@ import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
 
   nav button.active {
     color: var(--interactive-primary-text);
-    background: var(--interactive-primary-bg);
+    background:
+      linear-gradient(90deg, rgb(var(--accent-rgb) / 0.78), rgb(var(--accent-rgb) / 0.58)),
+      var(--surface-glass);
     font-weight: 700;
     box-shadow: var(--shadow-sm);
   }

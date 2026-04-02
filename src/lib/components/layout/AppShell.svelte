@@ -60,8 +60,9 @@ function pageToAccentSource(pathname: string, gameId?: string) {
 
 <style>
   .shell {
+    --shell-sidebar-width: 13.5rem;
     display: grid;
-    grid-template-columns: 13.5rem minmax(0, 1fr);
+    grid-template-columns: var(--shell-sidebar-width) minmax(0, 1fr);
     min-height: 100vh;
     background: transparent;
   }
@@ -78,6 +79,8 @@ function pageToAccentSource(pathname: string, gameId?: string) {
     flex-direction: column;
     min-width: 0;
     background: transparent;
+    position: relative;
+    z-index: 0;
   }
 
   main {
@@ -124,6 +127,7 @@ function pageToAccentSource(pathname: string, gameId?: string) {
 
   @media (max-width: 920px) {
     .shell {
+      --shell-sidebar-width: 0rem;
       grid-template-columns: 1fr;
     }
 

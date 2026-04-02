@@ -220,5 +220,54 @@ function toggleFavorite() {
       flex-basis: 100%;
     }
   }
+
+  @media (min-width: 921px) {
+    .hero {
+      margin-block-start: calc(var(--page-padding-y) * -1);
+      margin-inline-start: calc((var(--shell-sidebar-width, 0rem) + var(--page-padding-x)) * -1);
+      margin-inline-end: calc(var(--page-padding-x) * -1);
+      border-radius: 0 0 var(--radius-banner) 0;
+      min-height: clamp(26rem, 42vw, 32rem);
+    }
+
+    .veil {
+      background:
+        linear-gradient(
+          90deg,
+          rgb(8 10 14 / 0.8) 0%,
+          rgb(8 10 14 / 0.5) 26%,
+          rgb(8 10 14 / 0.18) 58%,
+          transparent 86%
+        ),
+        radial-gradient(circle at 50% 0%, rgb(var(--hero-accent-rgb) / 0.2) 0%, transparent 48%);
+    }
+
+    .content {
+      padding:
+        calc(var(--page-padding-y) + var(--space-10))
+        calc(var(--page-padding-x) + var(--space-8))
+        var(--space-8)
+        calc(var(--shell-sidebar-width, 0rem) + var(--page-padding-x) + var(--space-8));
+    }
+
+    .hero-favorite {
+      right: calc(var(--page-padding-x) + var(--space-6));
+      top: var(--space-6);
+    }
+
+    h1 {
+      max-width: 32rem;
+      font-size: clamp(2.4rem, 4vw, 4rem);
+    }
+
+    .actions {
+      align-items: end;
+      gap: var(--space-5);
+    }
+
+    .meta {
+      gap: var(--space-5);
+    }
+  }
 </style>
 
