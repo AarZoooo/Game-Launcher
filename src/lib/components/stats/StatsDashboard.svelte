@@ -409,25 +409,20 @@ $: if (heatmapCard) {
     width: 4.5rem;
     height: 4.5rem;
     flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-round);
+    background: rgb(255 255 255 / 0.05);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04);
   }
 
   .ring {
-    position: relative;
     width: 100%;
     height: 100%;
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     box-shadow: var(--shadow-soft-glow);
-  }
-
-  .ring::after {
-    content: '';
-    position: absolute;
-    inset: 0.5rem;
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.08), transparent 55%),
-      var(--surface-card);
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05);
+    -webkit-mask: radial-gradient(circle, transparent 0 58%, #000 60% 100%);
+    mask: radial-gradient(circle, transparent 0 58%, #000 60% 100%);
   }
 
   .legend p {
