@@ -122,6 +122,7 @@ pub fn search_games(title: &str) -> Result<Vec<IgdbSearchResult>, String> {
     let query = format!(
         "search \"{escaped_title}\"; fields name,slug,summary,genres.name,cover.image_id,screenshots.image_id; limit 5;"
     );
+    println!("[media] igdb api call: search title='{}'", trimmed_title);
 
     let response = client
         .post(IGDB_GAMES_URL)
@@ -136,12 +137,12 @@ pub fn search_games(title: &str) -> Result<Vec<IgdbSearchResult>, String> {
         return Err(format!("IGDB games search failed with {status}: {body}"));
     }
 
-    response
+    let results: Vec<IgdbSearchResult> = response
         .json::<Vec<IgdbGame>>()
         .map_err(|error| format!("Failed to parse IGDB games response: {error}"))?
         .into_iter()
         .map(|game| {
-            Ok(IgdbSearchResult {
+            IgdbSearchResult {
                 id: game.id,
                 name: game.name,
                 slug: game.slug,
@@ -159,15 +160,42 @@ pub fn search_games(title: &str) -> Result<Vec<IgdbSearchResult>, String> {
                     .map(|image| build_screenshot_url(&image.image_id))
                     .collect(),
                 summary: game.summary,
-            })
+            }
         })
-        .collect()
+        .collect();
+
+    if results.is_empty() {
+        println!("[media] igdb api result: 0 matches for '{}'", trimmed_title);
+    } else {
+        println!(
+            "[media] igdb api result: {} match(es) for '{}'",
+            results.len(),
+            trimmed_title
+        );
+        for (index, result) in results.iter().enumerate() {
+            println!(
+                "  [{}] id={} name='{}' slug={} genres={} cover={} screenshots={}",
+                index + 1,
+                result.id,
+                result.name,
+                result.slug.as_deref().unwrap_or("<none>"),
+                if result.genres.is_empty() {
+                    "<none>".to_string()
+                } else {
+                    result.genres.join(", ")
+                },
+                result.cover_url.as_deref().unwrap_or("<none>"),
+                result.screenshot_urls.len()
+            );
+        }
+    }
+
+    Ok(results)
 }
 
 pub fn search_best_match(title: &str) -> Result<Option<IgdbBestMatch>, String> {
     let results = search_games(title)?;
-
-    Ok(results
+    let best_match = results
         .into_iter()
         .map(|result| {
             let score = match_score(title, &result.name, result.slug.as_deref());
@@ -181,5 +209,19 @@ pub fn search_best_match(title: &str) -> Result<Option<IgdbBestMatch>, String> {
             }
         })
         .filter(|candidate| candidate.score >= 40)
-        .max_by_key(|candidate| candidate.score))
+        .max_by_key(|candidate| candidate.score);
+
+    match &best_match {
+        Some(candidate) => println!(
+            "[media] igdb best match: title='{}' matched='{}' score={} cover={} screenshots={}",
+            title,
+            candidate.name,
+            candidate.score,
+            candidate.cover_url.as_deref().unwrap_or("<none>"),
+            candidate.screenshot_urls.len()
+        ),
+        None => println!("[media] igdb best match: title='{}' matched=<none>", title),
+    }
+
+    Ok(best_match)
 }
