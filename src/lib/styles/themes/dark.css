@@ -33,9 +33,9 @@ body[data-theme="dark"] {
 	--interactive-secondary-text: var(--color-text-1);
 	--interactive-disabled-bg: rgba(186, 194, 207, 0.22);
 	--interactive-disabled-text: rgba(246, 247, 251, 0.6);
-	--sidebar-active-text: var(--text-primary);
-	--sidebar-active-bg-start: rgba(255, 255, 255, 0.72);
-	--sidebar-active-bg-end: rgba(255, 255, 255, 0.52);
+	--sidebar-active-text: var(--sidebar-active-contrast);
+	--sidebar-active-bg-start: rgb(var(--sidebar-active-rgb) / 0.92);
+	--sidebar-active-bg-end: rgb(var(--sidebar-active-rgb) / 0.7);
 	--ui-blur: var(--blur-md);
 	--motion-fast: 140ms;
 	--motion-base: 180ms;

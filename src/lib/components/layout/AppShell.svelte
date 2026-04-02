@@ -4,7 +4,7 @@ import { page } from "$app/stores";
 import Loader from "$lib/components/common/Loader.svelte";
 import Sidebar from "$lib/components/layout/Sidebar.svelte";
 import { footerColumns, routeAccents } from "$lib/data/navigation";
-import { getGameById } from "$lib/stores/libraryStore";
+import { continuePlayingGames, getGameById } from "$lib/stores/libraryStore";
 import {
 	effectiveUIMode,
 	libraryBusy,
@@ -15,6 +15,8 @@ import { resolveAccentPresentation } from "$lib/utils/accent";
 
 $: accentSource = pageToAccentSource($page.url.pathname, $page.params.id);
 $: accentPresentation = resolveAccentPresentation(accentSource);
+$: sidebarAccentSource = $continuePlayingGames[0] || accentSource;
+$: sidebarAccentPresentation = resolveAccentPresentation(sidebarAccentSource);
 $: activeTheme = $page.url.pathname.startsWith("/game/")
 	? "dynamic"
 	: $themeMode;
@@ -24,6 +26,14 @@ $: if (browser) {
 	document.body.classList.toggle("gaming-mode", $effectiveUIMode === "gaming");
 	document.body.style.setProperty("--accent-rgb", accentPresentation.rgb);
 	document.body.style.setProperty("--accent-contrast", accentPresentation.text);
+	document.body.style.setProperty(
+		"--sidebar-active-rgb",
+		sidebarAccentPresentation.rgb,
+	);
+	document.body.style.setProperty(
+		"--sidebar-active-contrast",
+		sidebarAccentPresentation.text,
+	);
 }
 
 function pageToAccentSource(pathname: string, gameId?: string) {

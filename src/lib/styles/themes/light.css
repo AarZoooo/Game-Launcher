@@ -28,9 +28,9 @@ body[data-theme="light"] {
 	--interactive-secondary-text: #111827;
 	--interactive-disabled-bg: rgba(17, 24, 39, 0.14);
 	--interactive-disabled-text: rgba(17, 24, 39, 0.48);
-	--sidebar-active-text: var(--text-primary);
-	--sidebar-active-bg-start: rgba(255, 255, 255, 0.82);
-	--sidebar-active-bg-end: rgba(255, 255, 255, 0.66);
+	--sidebar-active-text: var(--sidebar-active-contrast);
+	--sidebar-active-bg-start: rgb(var(--sidebar-active-rgb) / 0.9);
+	--sidebar-active-bg-end: rgb(var(--sidebar-active-rgb) / 0.68);
 	--ui-blur: var(--blur-sm);
 	--motion-fast: 140ms;
 	--motion-base: 180ms;
