@@ -3,6 +3,7 @@ mod db;
 mod launch;
 mod media;
 mod models;
+mod perf;
 mod tracking;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -14,6 +15,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             db::schema::init_database(app.handle())?;
+            #[cfg(debug_assertions)]
+            perf::monitor::start_dev_monitor();
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
