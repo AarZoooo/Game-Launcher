@@ -53,6 +53,12 @@ export interface GameProcessEvent {
 	message?: string;
 }
 
+export interface GameMediaResolutionEvent {
+	gameId: string;
+	exePath: string;
+	state: "started" | "finished";
+}
+
 export async function getGames(): Promise<StoredGame[]> {
 	return invoke<StoredGame[]>("read_games");
 }
@@ -121,6 +127,22 @@ export async function listenForGameProcessEvents(
 	callback: (event: GameProcessEvent) => void,
 ) {
 	return listen<GameProcessEvent>("game-process-state", (event) => {
+		callback(event.payload);
+	});
+}
+
+export async function listenForGameMediaUpdates(
+	callback: (game: StoredGame) => void,
+) {
+	return listen<StoredGame>("game-media-updated", (event) => {
+		callback(event.payload);
+	});
+}
+
+export async function listenForGameMediaResolutionEvents(
+	callback: (event: GameMediaResolutionEvent) => void,
+) {
+	return listen<GameMediaResolutionEvent>("game-media-resolution", (event) => {
 		callback(event.payload);
 	});
 }

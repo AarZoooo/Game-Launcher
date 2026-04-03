@@ -3,18 +3,71 @@ import { onMount } from "svelte";
 import "$lib/styles/index.css";
 import AppShell from "$lib/components/layout/AppShell.svelte";
 import { appBrand } from "$lib/data/navigation";
-import { listenForGameProcessEvents } from "$lib/services/tauriService";
+import {
+	listenForGameMediaResolutionEvents,
+	listenForGameMediaUpdates,
+	listenForGameProcessEvents,
+} from "$lib/services/tauriService";
 import { games } from "$lib/stores/libraryStore";
 import { uiStore } from "$lib/stores/uiStore";
 
 onMount(() => {
-	// TODO: Keep temporary frontend-only features until matching backend commands exist.
-	void games.loadFromBackend().catch((error) => {
-		console.error("Failed to load stored library:", error);
-	});
-
 	let disposed = false;
-	let stopListening = () => {};
+	let initialLoadStarted = false;
+	let stopProcessListening = () => {};
+	let stopMediaListening = () => {};
+	let stopMediaResolutionListening = () => {};
+
+	function startInitialLoad() {
+		if (disposed || initialLoadStarted) {
+			return;
+		}
+
+		initialLoadStarted = true;
+		void games.loadFromBackend().catch((error) => {
+			console.error("Failed to load stored library:", error);
+		});
+	}
+
+	void listenForGameMediaUpdates((game) => {
+		if (disposed) return;
+		games.applyBackendGameUpdate(game);
+	})
+		.then((unlisten) => {
+			if (disposed) {
+				unlisten();
+				return;
+			}
+
+			stopMediaListening = unlisten;
+			startInitialLoad();
+		})
+		.catch((error) => {
+			console.error("Failed to listen for game media updates:", error);
+			startInitialLoad();
+		});
+
+	void listenForGameMediaResolutionEvents((event) => {
+		if (disposed) return;
+		games.setMediaLoading(
+			{ gameId: event.gameId, exePath: event.exePath },
+			event.state === "started",
+		);
+	})
+		.then((unlisten) => {
+			if (disposed) {
+				unlisten();
+				return;
+			}
+
+			stopMediaResolutionListening = unlisten;
+		})
+		.catch((error) => {
+			console.error(
+				"Failed to listen for game media resolution events:",
+				error,
+			);
+		});
 
 	void listenForGameProcessEvents((event) => {
 		if (disposed) return;
@@ -40,7 +93,7 @@ onMount(() => {
 				return;
 			}
 
-			stopListening = unlisten;
+			stopProcessListening = unlisten;
 		})
 		.catch((error) => {
 			console.error("Failed to listen for game process events:", error);
@@ -48,7 +101,9 @@ onMount(() => {
 
 	return () => {
 		disposed = true;
-		stopListening();
+		stopProcessListening();
+		stopMediaListening();
+		stopMediaResolutionListening();
 	};
 });
 </script>

@@ -1,8 +1,13 @@
+use std::collections::HashSet;
+use std::sync::{Mutex, OnceLock};
+use std::thread;
+
 use tauri::AppHandle;
 
 use crate::db::{database, games as game_db};
 use crate::models::game::Game;
 
+use super::events::{emit_game_media_resolution_state, emit_game_media_updated};
 use super::fallbacks::local_files;
 use super::placeholders::{PlaceholderKind, placeholder_data_url};
 use super::providers::igdb;
@@ -16,6 +21,34 @@ struct ResolvedMedia {
     accent_color: Option<String>,
     genres: Vec<String>,
     description: Option<String>,
+}
+
+static MEDIA_RESOLUTION_TASKS: OnceLock<Mutex<HashSet<String>>> = OnceLock::new();
+
+fn media_resolution_tasks() -> &'static Mutex<HashSet<String>> {
+    MEDIA_RESOLUTION_TASKS.get_or_init(|| Mutex::new(HashSet::new()))
+}
+
+fn media_resolution_key(game_id: &str, force_refresh: bool) -> String {
+    format!("{game_id}:{force_refresh}")
+}
+
+fn claim_media_resolution(game_id: &str, force_refresh: bool) -> bool {
+    let key = media_resolution_key(game_id, force_refresh);
+    let mut tasks = media_resolution_tasks()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+
+    tasks.insert(key)
+}
+
+fn release_media_resolution(game_id: &str, force_refresh: bool) {
+    let key = media_resolution_key(game_id, force_refresh);
+    let mut tasks = media_resolution_tasks()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+
+    tasks.remove(&key);
 }
 
 fn accent_for_platform(platform: &str) -> Option<String> {
@@ -167,33 +200,63 @@ fn resolve_media(game: &Game, force_refresh: bool) -> Game {
     }
 }
 
-fn enrich_games_inner(app: &AppHandle, games: Vec<Game>, force_refresh: bool) -> Result<Vec<Game>, String> {
-    let connection = database::open_database(app)?;
-    let mut enriched = Vec::with_capacity(games.len());
+fn resolve_and_persist_media(
+    app: &AppHandle,
+    connection: &rusqlite::Connection,
+    game: Game,
+    force_refresh: bool,
+) -> Result<(), String> {
+    let updated_game = resolve_media(&game, force_refresh);
 
-    for game in games {
-        let needs_resolution = needs_media_resolution(&game, force_refresh);
-        let resolved = if needs_resolution {
-            let updated_game = resolve_media(&game, force_refresh);
-            if updated_game != game {
-                game_db::update_game_media(&connection, &updated_game)?;
-            }
-            updated_game
-        } else {
-            game
-        };
-        enriched.push(resolved);
+    if updated_game != game {
+        game_db::update_game_media(connection, &updated_game)?;
+        emit_game_media_updated(app, &updated_game);
     }
 
-    Ok(enriched)
+    Ok(())
 }
 
-pub fn enrich_games(app: &AppHandle, games: Vec<Game>) -> Result<Vec<Game>, String> {
-    enrich_games_inner(app, games, false)
-}
+pub fn queue_media_resolution(app: AppHandle, games: Vec<Game>, force_refresh: bool) {
+    let pending_games = games
+        .into_iter()
+        .filter(|game| needs_media_resolution(game, force_refresh))
+        .filter(|game| claim_media_resolution(&game.id, force_refresh))
+        .collect::<Vec<_>>();
 
-pub fn force_refresh_games(app: &AppHandle, games: Vec<Game>) -> Result<Vec<Game>, String> {
-    enrich_games_inner(app, games, true)
+    if pending_games.is_empty() {
+        return;
+    }
+
+    thread::spawn(move || {
+        for game in &pending_games {
+            emit_game_media_resolution_state(&app, &game.id, &game.exe_path, "started");
+        }
+
+        let connection = match database::open_database(&app) {
+            Ok(connection) => connection,
+            Err(error) => {
+                println!("[media] failed to start background resolution: {error}");
+                for game in pending_games {
+                    emit_game_media_resolution_state(&app, &game.id, &game.exe_path, "finished");
+                    release_media_resolution(&game.id, force_refresh);
+                }
+                return;
+            }
+        };
+
+        for game in pending_games {
+            if let Err(error) = resolve_and_persist_media(&app, &connection, game.clone(), force_refresh)
+            {
+                println!(
+                    "[media] background resolution failed game_id={} title='{}' error={}",
+                    game.id, game.title, error
+                );
+            }
+
+            emit_game_media_resolution_state(&app, &game.id, &game.exe_path, "finished");
+            release_media_resolution(&game.id, force_refresh);
+        }
+    });
 }
 
 #[cfg(test)]

@@ -26,6 +26,7 @@ export interface ImportedGameResult {
 export interface Game {
 	id: string;
 	title: string;
+	mediaLoading?: boolean;
 	coverVertical?: string;
 	coverHorizontal?: string;
 	banner?: string;

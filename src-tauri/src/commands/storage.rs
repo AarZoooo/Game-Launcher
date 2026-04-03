@@ -29,24 +29,26 @@ struct CandidateMatch {
 fn read_games_from_database(app: &AppHandle) -> Result<Vec<Game>, String> {
     let connection = database::open_database(app)?;
     let games = game_db::get_all_games(&connection)?;
-    resolver::enrich_games(app, games)
+    resolver::queue_media_resolution(app.clone(), games.clone(), false);
+    Ok(games)
 }
 
 fn refresh_games_media_from_database(app: &AppHandle) -> Result<Vec<Game>, String> {
     let connection = database::open_database(app)?;
     let games = game_db::get_all_games(&connection)?;
-    resolver::force_refresh_games(app, games)
+    resolver::queue_media_resolution(app.clone(), games.clone(), true);
+    Ok(games)
 }
 
 fn write_games_to_database(app: &AppHandle, games: &[Game]) -> Result<String, String> {
-    let enriched_games = resolver::enrich_games(app, games.to_vec())?;
     let mut connection = database::open_database(app)?;
-    game_db::sync_installed_games(&mut connection, &enriched_games)?;
+    game_db::sync_installed_games(&mut connection, games)?;
+    resolver::queue_media_resolution(app.clone(), games.to_vec(), false);
 
     let database_path = database::database_path(app)?;
     Ok(format!(
         "Saved {} game(s) to {}",
-        enriched_games.len(),
+        games.len(),
         database_path.display()
     ))
 }

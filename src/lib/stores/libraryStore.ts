@@ -83,6 +83,7 @@ function buildImportedGame(input: ImportedGameResult): Game {
 	return {
 		id: input.id || slugify(input.title),
 		title: input.title,
+		mediaLoading: false,
 		hours: "0h",
 		platform: platformLabel,
 		platformType: input.platform,
@@ -656,6 +657,7 @@ function normalizeGame(game: Game, index: number): Game {
 
 	return {
 		...game,
+		mediaLoading: game.mediaLoading ?? false,
 		platformType: game.platformType || inferPlatformType(game.platform),
 		accentHex: game.accentHex || getAccentHexByTone(game.accent),
 		accentColor:
@@ -855,6 +857,48 @@ function mapStoredGame(game: StoredGame): Game {
 		},
 		0,
 	);
+}
+
+function matchesStoredGameIdentity(current: Game, next: StoredGame) {
+	return (
+		current.id.toLowerCase() === next.id.toLowerCase() ||
+		((current.path || "").toLowerCase() !== "" &&
+			(current.path || "").toLowerCase() === next.exePath.toLowerCase())
+	);
+}
+
+function mergeStoredGameUpdate(
+	existing: Game | undefined,
+	storedGame: StoredGame,
+) {
+	const mapped = mapStoredGame(storedGame);
+
+	if (!existing) {
+		return {
+			...mapped,
+			metrics: toMetrics(mapped),
+		};
+	}
+
+	const merged: Game = {
+		...existing,
+		...mapped,
+		mediaLoading: false,
+		favorite: existing.favorite,
+		cloudSyncEnabled: existing.cloudSyncEnabled,
+		launchOptions: existing.launchOptions,
+		tags: existing.tags,
+		hiddenFromContinue: existing.hiddenFromContinue,
+		featured: existing.featured,
+		inRecommendations: existing.inRecommendations,
+		similarIds: existing.similarIds,
+		savePath: existing.savePath,
+	};
+
+	return {
+		...merged,
+		metrics: toMetrics(merged),
+	};
 }
 
 function toStoredGame(game: Game): StoredGame {
@@ -1068,6 +1112,57 @@ function createGameStore() {
 
 			set(await readBackendSnapshot());
 		},
+		applyBackendGameUpdate(storedGame: StoredGame) {
+			update((items) => {
+				let didMatch = false;
+				const nextItems = items.map((game) => {
+					if (!matchesStoredGameIdentity(game, storedGame)) {
+						return game;
+					}
+
+					didMatch = true;
+					return mergeStoredGameUpdate(game, storedGame);
+				});
+
+				if (didMatch) {
+					return nextItems;
+				}
+
+				const appendedGame = mergeStoredGameUpdate(undefined, storedGame);
+				const dedupedItems = nextItems.filter(
+					(game) => !matchesStoredGameIdentity(game, storedGame),
+				);
+
+				return [...dedupedItems, appendedGame];
+			});
+		},
+		setMediaLoading(
+			identity: { gameId?: string | null; exePath?: string | null },
+			loading: boolean,
+		) {
+			const normalizedGameId = identity.gameId?.toLowerCase() || "";
+			const normalizedExePath = identity.exePath?.toLowerCase() || "";
+
+			update((items) =>
+				items.map((game) => {
+					const matchesId =
+						normalizedGameId !== "" &&
+						game.id.toLowerCase() === normalizedGameId;
+					const matchesPath =
+						normalizedExePath !== "" &&
+						(game.path || "").toLowerCase() === normalizedExePath;
+
+					if (!matchesId && !matchesPath) {
+						return game;
+					}
+
+					return {
+						...game,
+						mediaLoading: loading,
+					};
+				}),
+			);
+		},
 		toggleFavorite: (id: string) =>
 			update((items) =>
 				items.map((game) =>
@@ -1217,9 +1312,7 @@ export const continuePlayingGames = derived(games, ($games) => {
 		(game) => (game.storageTotalPlaytimeMinutes ?? 0) > 0,
 	);
 
-	return (recentGames.length ? recentGames : installedVisibleGames)
-		.sort(sortByRecentActivity)
-		.slice(0, 5);
+	return recentGames.sort(sortByRecentActivity).slice(0, 5);
 });
 export const playingGames = derived(games, ($games) =>
 	$games.filter((game) => game.status === "playing"),
