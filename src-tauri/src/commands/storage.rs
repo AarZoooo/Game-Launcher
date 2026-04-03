@@ -26,6 +26,20 @@ struct CandidateMatch {
     score: i32,
 }
 
+fn normalized_identity(value: &str) -> String {
+    value.trim().replace('/', "\\").to_ascii_lowercase()
+}
+
+fn find_existing_game<'a>(existing_games: &'a [Game], game: &Game) -> Option<&'a Game> {
+    let normalized_id = normalized_identity(&game.id);
+    let normalized_path = normalized_identity(&game.exe_path);
+
+    existing_games.iter().find(|existing| {
+        normalized_identity(&existing.id) == normalized_id
+            || normalized_identity(&existing.exe_path) == normalized_path
+    })
+}
+
 fn read_games_from_database(app: &AppHandle) -> Result<Vec<Game>, String> {
     let connection = database::open_database(app)?;
     let games = game_db::get_all_games(&connection)?;
@@ -42,8 +56,36 @@ fn refresh_games_media_from_database(app: &AppHandle) -> Result<Vec<Game>, Strin
 
 fn write_games_to_database(app: &AppHandle, games: &[Game]) -> Result<String, String> {
     let mut connection = database::open_database(app)?;
+    let existing_games = game_db::get_all_games(&connection)?;
+    let force_refresh_games = games
+        .iter()
+        .filter(|game| {
+            find_existing_game(&existing_games, game)
+                .map(|existing| {
+                    normalized_identity(&existing.title) != normalized_identity(&game.title)
+                        || normalized_identity(&existing.exe_path)
+                            != normalized_identity(&game.exe_path)
+                })
+                .unwrap_or(false)
+        })
+        .cloned()
+        .collect::<Vec<_>>();
     game_db::sync_installed_games(&mut connection, games)?;
-    resolver::queue_media_resolution(app.clone(), games.to_vec(), false);
+
+    if !force_refresh_games.is_empty() {
+        resolver::queue_media_resolution(app.clone(), force_refresh_games.clone(), true);
+    }
+
+    let force_refresh_ids = force_refresh_games
+        .iter()
+        .map(|game| normalized_identity(&game.id))
+        .collect::<HashSet<_>>();
+    let remaining_games = games
+        .iter()
+        .filter(|game| !force_refresh_ids.contains(&normalized_identity(&game.id)))
+        .cloned()
+        .collect::<Vec<_>>();
+    resolver::queue_media_resolution(app.clone(), remaining_games, false);
 
     let database_path = database::database_path(app)?;
     Ok(format!(
