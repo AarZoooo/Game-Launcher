@@ -52,7 +52,7 @@ let launchError = "";
 
 <section bind:this={heroElement} class="hero" class:performance={$effectiveUIMode === 'gaming'}>
   <img class="hero-media" src={getGameImage(game, imageType)} alt="" loading="lazy" />
-  <div class="veil"></div>
+  <div class="veil fade-to-bg"></div>
 
   {#if showBackButton}
     <div class="hero-top">
@@ -115,10 +115,12 @@ let launchError = "";
   .hero {
     position: relative;
     min-height: 25rem;
-    border-radius: var(--radius-banner);
+    border-radius: 0;
     overflow: hidden;
     box-shadow: var(--shadow-inset);
     transition: transform var(--motion-base) ease, box-shadow var(--motion-base) ease;
+    margin-block-start: calc(var(--page-padding-y) * -1);
+    margin-inline: calc(var(--page-padding-x) * -1);
   }
 
   .hero-media {
@@ -132,10 +134,6 @@ let launchError = "";
   .veil {
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(180deg, transparent 8%, var(--surface-glass-strong) 100%),
-      radial-gradient(circle at 80% 12%, rgb(var(--hero-accent-rgb) / 0.18), transparent 34%);
-    backdrop-filter: blur(calc(var(--ui-blur) * 0.08));
   }
 
   .hero.performance,
@@ -171,7 +169,7 @@ let launchError = "";
     flex-direction: column;
     justify-content: flex-end;
     gap: var(--space-4);
-    padding: var(--space-9) var(--space-8) var(--space-6);
+    padding: var(--space-9) var(--page-padding-x) var(--space-6);
   }
 
   .eyebrow {
@@ -295,7 +293,7 @@ let launchError = "";
     }
 
     .content {
-      padding: var(--space-6);
+      padding: var(--space-6) var(--page-padding-x);
     }
 
     .meta {
@@ -312,24 +310,13 @@ let launchError = "";
       min-height: clamp(26rem, 42vw, 32rem);
     }
 
-    .veil {
-      background:
-        linear-gradient(
-          90deg,
-          rgb(8 10 14 / 0.8) 0%,
-          rgb(8 10 14 / 0.5) 26%,
-          rgb(8 10 14 / 0.18) 58%,
-          transparent 86%
-        ),
-        radial-gradient(circle at 50% 0%, rgb(var(--hero-accent-rgb) / 0.2) 0%, transparent 48%);
-    }
 
     .content {
       padding:
         calc(var(--page-padding-y) + var(--space-10))
-        calc(var(--page-padding-x) + var(--space-8))
+        calc(var(--page-padding-x))
         var(--space-6)
-        calc(var(--shell-sidebar-width, 0rem) + var(--page-padding-x) + var(--space-8));
+        calc(var(--shell-sidebar-width, 0rem) + var(--page-padding-x));
     }
 
     .hero-top {
