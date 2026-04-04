@@ -121,6 +121,12 @@ const seedGames: Game[] = [
 		coop: "No",
 		completion: "Single player",
 		cover: defaultGameCover,
+		coverVertical:
+			"https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmu.jpg",
+		coverHorizontal:
+			"https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc6mz0.jpg",
+		banner:
+			"https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc6mz1.jpg",
 		hero: defaultGameBanner,
 		accent: "gold",
 		featured: true,
