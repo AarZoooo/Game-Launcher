@@ -142,7 +142,7 @@ function pageToAccentSource(pathname: string, gameId?: string) {
     }
 
     main {
-      padding: var(--space-4);
+      padding: var(--page-padding-y) var(--page-padding-x) var(--space-4);
     }
 
     footer {
