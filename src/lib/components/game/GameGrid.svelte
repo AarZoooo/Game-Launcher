@@ -50,7 +50,7 @@ export let menuPlacement: MenuPlacement = "above-right";
     --card-info-height: var(--card-info-height-md);
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr));
-    gap: var(--space-6);
+    gap: var(--space-9) var(--space-6);
     align-items: start;
   }
 
