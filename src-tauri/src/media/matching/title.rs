@@ -82,11 +82,11 @@ pub fn match_score(query: &str, candidate_name: &str, candidate_slug: Option<&st
     }
 
     if normalized_query == normalized_name && !is_variant {
-        return 100;
+        return 1_000;
     }
 
     if !normalized_slug.is_empty() && normalized_query == normalized_slug && !is_variant {
-        return 95;
+        return 950;
     }
 
     let mut score = 0;
@@ -141,6 +141,48 @@ mod tests {
         assert!(
             match_score("Satisfactory", "Satisfactory", Some("satisfactory"))
                 > match_score("Satisfactory", "Satisfactory Update 8", Some("satisfactory-update-8"))
+        );
+    }
+
+    #[test]
+    fn exact_base_game_beats_variant_suffixes() {
+        assert!(
+            match_score("Rocket League", "Rocket League", Some("rocket-league"))
+                > match_score(
+                    "Rocket League",
+                    "Rocket League: Season 9",
+                    Some("rocket-league-season-9"),
+                )
+        );
+        assert!(
+            match_score(
+                "Human Fall Flat",
+                "Human: Fall Flat",
+                Some("human-fall-flat"),
+            ) > match_score(
+                "Human Fall Flat",
+                "Human Fall Flat VR",
+                Some("human-fall-flat-vr"),
+            )
+        );
+        assert!(
+            match_score(
+                "Golf With Your Friends",
+                "Golf With Your Friends",
+                Some("golf-with-your-friends"),
+            ) > match_score(
+                "Golf With Your Friends",
+                "Golf With Your Friends 2",
+                Some("golf-with-your-friends-2"),
+            )
+        );
+        assert!(
+            match_score("Trackmania", "Trackmania", Some("trackmania"))
+                > match_score(
+                    "Trackmania",
+                    "TrackMania United Forever",
+                    Some("trackmania-united-forever"),
+                )
         );
     }
 }

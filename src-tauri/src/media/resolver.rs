@@ -97,10 +97,21 @@ fn apply_provider_media(game: &Game, media: &mut ResolvedMedia) {
     if let Ok(Some(best_match)) = igdb::search_best_match(&game.title) {
         media.cover_vertical = best_match.cover_url.clone();
         media.cover_horizontal = best_match
+            .artwork_urls
+            .first()
+            .cloned()
+            .or_else(|| {
+                best_match
             .screenshot_urls
             .first()
             .cloned()
+            })
             .or_else(|| best_match.cover_url.clone());
+        media.banner = best_match
+            .artwork_urls
+            .first()
+            .cloned()
+            .or_else(|| media.cover_horizontal.clone());
         media.genres = best_match.genres.clone();
         media.description = best_match.summary.clone();
     }
