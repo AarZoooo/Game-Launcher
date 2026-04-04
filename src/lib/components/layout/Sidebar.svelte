@@ -3,6 +3,7 @@ import { goto } from "$app/navigation";
 import { page } from "$app/stores";
 import { appIcons } from "$lib/assets";
 import Icon from "$lib/components/common/Icon.svelte";
+import Tooltip from "$lib/components/common/Tooltip.svelte";
 import { pageLabels } from "$lib/data/labels";
 import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
 import { games } from "$lib/stores/libraryStore";
@@ -42,18 +43,19 @@ async function refreshInstalledMedia() {
       <strong>{sidebarProfile.name}</strong>
       <span><i></i>{sidebarProfile.status}</span>
     </div>
-    <button
-      type="button"
-      class="menu-trigger refresh-button"
-      aria-label={pageLabels.common.refreshInstalledMedia}
-      title={pageLabels.common.refreshInstalledMedia}
-      disabled={$libraryBusy}
-      on:click={refreshInstalledMedia}
-    >
-      <span class:spinning={$libraryBusy} class="refresh-icon-shell">
-        <Icon src={appIcons.ui.refresh} size="0.95rem" />
-      </span>
-    </button>
+    <Tooltip text="Sync now" position="top">
+      <button
+        type="button"
+        class="menu-trigger refresh-button"
+        aria-label={pageLabels.common.refreshInstalledMedia}
+        disabled={$libraryBusy}
+        on:click={refreshInstalledMedia}
+      >
+        <span class:spinning={$libraryBusy} class="refresh-icon-shell">
+          <Icon src={appIcons.ui.refresh} size="0.95rem" />
+        </span>
+      </button>
+    </Tooltip>
   </div>
 </aside>
 
@@ -137,6 +139,15 @@ async function refreshInstalledMedia() {
     opacity: 0.82;
     transform: scale(1);
     flex: 0 0 auto;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    border-radius: var(--radius-round);
+  }
+
+  .refresh-button:hover {
+    background: transparent;
+    box-shadow: none;
   }
 
   .refresh-button:disabled {
