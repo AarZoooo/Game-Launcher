@@ -2,12 +2,7 @@ body[data-theme="light"] {
 	color-scheme: light;
 	--app-background: linear-gradient(180deg, #f2f5fb, #e7ebf5);
 	--app-panel: rgba(255, 255, 255, 0.82);
-	--app-sidebar: linear-gradient(
-			180deg,
-			rgb(var(--accent-rgb) / 0.14),
-			rgba(255, 255, 255, 0.46)
-		),
-		rgba(255, 255, 255, 0.56);
+	--app-sidebar: rgba(255, 255, 255, 0.56);
 	--surface-glass: rgba(255, 255, 255, 0.72);
 	--surface-glass-strong: rgba(255, 255, 255, 0.9);
 	--surface-card: rgba(255, 255, 255, 0.68);
@@ -34,4 +29,5 @@ body[data-theme="light"] {
 	--ui-blur: var(--blur-sm);
 	--motion-fast: 140ms;
 	--motion-base: 180ms;
+	--motion-slow: 300ms;
 }

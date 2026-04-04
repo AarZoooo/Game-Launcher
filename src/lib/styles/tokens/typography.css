@@ -1,0 +1,22 @@
+:root {
+	/* Display / hero */
+	--font-size-display: 1.9rem;
+	--font-size-display-lg: 2.5rem;
+
+	/* Headings */
+	--font-size-heading: 1.6rem;
+	--font-size-subheading: 1.05rem;
+
+	/* Body */
+	--font-size-body: 1rem;
+	--font-size-body-sm: 0.88rem;
+
+	/* UI controls */
+	--font-size-control: 0.84rem;
+	--font-size-control-sm: 0.78rem;
+
+	/* Captions / labels */
+	--font-size-caption: 0.74rem;
+	--font-size-caption-sm: 0.72rem;
+	--font-size-icon-xs: 0.55rem;
+}

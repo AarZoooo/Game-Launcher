@@ -24,9 +24,12 @@ onMount(() => {
 		}
 
 		initialLoadStarted = true;
-		void games.loadFromBackend().catch((error) => {
-			console.error("Failed to load stored library:", error);
-		});
+		void games
+			.loadFromBackend()
+			.then(() => games.resolveIgdbCovers())
+			.catch((error) => {
+				console.error("Failed to load stored library:", error);
+			});
 	}
 
 	void listenForGameMediaUpdates((game) => {

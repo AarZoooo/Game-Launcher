@@ -47,12 +47,10 @@ async function handleClick() {
   {compact}
   {wide}
   quiet={quiet || playing}
-  iconFirst
   disabled={playing}
   ariaLabel={`${label} ${game.title}`}
   on:click={handleClick}
 >
-  <Icon src={appIcons.ui.play} size="0.95rem" />
   {#if showLabel}
     <span>{label}</span>
   {/if}

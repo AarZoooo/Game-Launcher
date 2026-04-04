@@ -7,12 +7,7 @@ body[data-theme="dark"] {
 		),
 		linear-gradient(180deg, var(--color-background-2), var(--color-background-1));
 	--app-panel: rgb(22 25 32 / 0.82);
-	--app-sidebar: linear-gradient(
-			180deg,
-			rgb(var(--accent-rgb) / 0.22),
-			rgba(255, 255, 255, 0.03)
-		),
-		rgba(13, 16, 23, 0.54);
+	--app-sidebar: rgba(13, 16, 23, 0.54);
 	--surface-glass: rgba(30, 30, 30, 0.6);
 	--surface-glass-strong: rgba(24, 24, 27, 0.82);
 	--surface-card: rgba(255, 255, 255, 0.04);
@@ -39,4 +34,5 @@ body[data-theme="dark"] {
 	--ui-blur: var(--blur-md);
 	--motion-fast: 140ms;
 	--motion-base: 180ms;
+	--motion-slow: 300ms;
 }

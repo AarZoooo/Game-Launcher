@@ -5,6 +5,7 @@ import { page } from "$app/stores";
 import Loader from "$lib/components/common/Loader.svelte";
 import GameMenu from "$lib/components/game/GameMenu.svelte";
 import { pageLabels } from "$lib/data/labels";
+import { games } from "$lib/stores/libraryStore";
 import type { Game } from "$lib/types/Game";
 import type { GameMenuContext, MenuPlacement } from "$lib/types/Menu";
 import { resolveAccentPresentation } from "$lib/utils/accent";
@@ -35,19 +36,6 @@ function openGame() {
 </script>
 
 <article bind:this={cardElement} class:compact class="game-card">
-  <div class="game-card-menu-shell">
-    {#if game.favorite}
-      <span class="game-card-favorite" aria-label={pageLabels.common.favorite}>★</span>
-    {/if}
-
-    <GameMenu
-      {game}
-      {context}
-      placement={menuPlacement}
-      on:action={(event) => dispatch('action', event.detail)}
-    />
-  </div>
-
   <button
     type="button"
     class="game-card-poster"
@@ -68,13 +56,30 @@ function openGame() {
     {/if}
   </button>
 
-  <div class="game-card-info">
+  <div class="game-card-overlay">
     <div class="game-card-title-row">
       <div class="game-card-copy">
         <h3 class="game-card-title">{game.title}</h3>
         <p class="game-card-meta">
           {compact ? compactMeta : `${game.hours} • ${game.platform}`}
         </p>
+      </div>
+      <div class="game-card-actions">
+        <button
+          type="button"
+          class="card-favorite"
+          class:active={game.favorite}
+          aria-label={game.favorite ? pageLabels.actions.removeFavorite : pageLabels.actions.addFavorite}
+          on:click={() => games.toggleFavorite(game.id)}
+        >
+          <span aria-hidden="true">{game.favorite ? "★" : "☆"}</span>
+        </button>
+        <GameMenu
+          {game}
+          {context}
+          placement={menuPlacement}
+          on:action={(event) => dispatch('action', event.detail)}
+        />
       </div>
     </div>
   </div>

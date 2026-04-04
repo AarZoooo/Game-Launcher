@@ -135,6 +135,14 @@ $: insightMetrics = [
 	{ label: pageLabels.stats.activeRightNow, value: `${playingCount} games` },
 	{ label: pageLabels.stats.favorites, value: `${favoriteCount} picks` },
 	{
+		label: pageLabels.stats.longestStreak,
+		value: `${calendar.longestStreak} days`,
+	},
+	{
+		label: pageLabels.stats.currentStreak,
+		value: `${calendar.currentStreak} days`,
+	},
+	{
 		label: pageLabels.stats.mostPlayed,
 		value: mostPlayed?.title || pageLabels.stats.noDataYet,
 	},
@@ -150,15 +158,43 @@ $: if (heatmapCard) {
 </script>
 
 <section class="stats">
-  <div class="heading">
-    <div>
-      <p class="eyebrow">{pageLabels.stats.yearlyActivity}</p>
-      <h2>{pageLabels.stats.playStreak}</h2>
+  <hr class="divider" />
+
+  <div class="summary">
+    <div class="summary-left">
+      <div class="metric-hero">
+        <strong>{calendar.totalHours}</strong>
+        <span>{pageLabels.stats.totalHours}</span>
+      </div>
+
+      <div class="metrics">
+        {#each insightMetrics as metric}
+          <div class="metric">
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+          </div>
+        {/each}
+      </div>
     </div>
 
-    <div class="hours-total">
-      <span>{pageLabels.stats.totalHours}</span>
-      <strong>{calendar.totalHours}</strong>
+    <div class="genre-block">
+      <div class="ring-shell">
+        <div class="ring" style={`background: ${genreDistribution.gradient};`}></div>
+      </div>
+      <div class="legend">
+        {#if genreDistribution.slices.length}
+          {#each genreDistribution.slices as item}
+            <p style={`--genre-color: ${item.color};`}>
+              <span>{item.label}</span>
+              <b>{item.value}</b>
+            </p>
+          {/each}
+        {:else}
+          <p class="empty-legend">
+            <span>{pageLabels.stats.noDataYet}</span>
+          </p>
+        {/if}
+      </div>
     </div>
   </div>
 
@@ -184,109 +220,52 @@ $: if (heatmapCard) {
       {/each}
     </div>
 
-    <div class="streak-summary">
-      <div class="streak-card">
-        <span>{pageLabels.stats.longestStreak}</span>
-        <strong>{calendar.longestStreak} days</strong>
-      </div>
-
-      <div class="streak-card">
-        <span>{pageLabels.stats.currentStreak}</span>
-        <strong>{calendar.currentStreak} days</strong>
-      </div>
-    </div>
-  </div>
-
-  <div class="summary">
-    <div class="metrics">
-      {#each insightMetrics as metric}
-        <div class="metric">
-          <span>{metric.label}</span>
-          <strong>{metric.value}</strong>
-        </div>
-      {/each}
-    </div>
-
-    <div class="genre-block">
-      <div class="ring-shell">
-        <div class="ring" style={`background: ${genreDistribution.gradient};`}></div>
-      </div>
-      <div class="legend">
-        {#if genreDistribution.slices.length}
-          {#each genreDistribution.slices as item}
-            <p style={`--genre-color: ${item.color};`}>
-              <span>{item.label}</span>
-              <b>{item.value}</b>
-            </p>
-          {/each}
-        {:else}
-          <p class="empty-legend">
-            <span>{pageLabels.stats.noDataYet}</span>
-          </p>
-        {/if}
-      </div>
-    </div>
   </div>
 </section>
 
 <style>
   .stats {
-    padding: 0.4rem 0 0;
+    padding: var(--space-1) 0 var(--space-8);
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: var(--space-8);
   }
 
-  .heading {
+  .divider {
+    border: 0;
+    border-top: 1px solid var(--surface-border-soft);
+    margin: 0;
+  }
+
+  .metric-hero {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 1rem;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
   }
 
-  .eyebrow,
-  .hours-total span {
-    margin: 0 0 0.25rem;
+  .metric-hero span {
     color: var(--text-muted);
-    font-size: 0.74rem;
+    font-size: var(--font-size-caption);
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
 
-  h2,
-  .hours-total strong {
-    margin: 0;
-  }
-
-  h2 {
-    font-size: 1.05rem;
-  }
-
-  .hours-total {
-    text-align: right;
-  }
-
-  .hours-total strong {
-    display: block;
-    font-size: 1.6rem;
+  .metric-hero strong {
+    font-size: var(--font-size-display);
+    font-family: var(--font-display);
     color: var(--text-primary);
   }
 
   .heatmap-card {
-    padding: var(--space-4);
-    border-radius: var(--radius-panel);
-    background: var(--surface-card);
-    border: 1px solid var(--surface-border);
-    box-shadow: var(--shadow-inset);
     overflow-x: auto;
   }
 
   .month-row,
   .heatmap-grid {
     display: grid;
-    grid-template-columns: repeat(var(--week-count), 0.82rem);
+    grid-template-columns: repeat(var(--week-count), 1fr);
     gap: var(--space-1);
-    min-width: max-content;
   }
 
   .month-row {
@@ -295,7 +274,7 @@ $: if (heatmapCard) {
 
   .month-row span {
     color: var(--text-muted);
-    font-size: 0.68rem;
+    font-size: var(--font-size-caption-sm);
     min-width: 0.82rem;
   }
 
@@ -319,19 +298,19 @@ $: if (heatmapCard) {
   }
 
   .cell.level-0 {
-    background: var(--surface-border);
+    background: rgb(255 255 255 / 0.04);
   }
 
   .cell.level-1 {
-    background: var(--color-secondary-1);
+    background: rgb(255 255 255 / 0.1);
   }
 
   .cell.level-2 {
-    background: var(--color-success-2);
+    background: rgb(255 255 255 / 0.2);
   }
 
   .cell.level-3 {
-    background: var(--color-secondary-3);
+    background: rgb(255 255 255 / 0.35);
   }
 
   button.cell:hover,
@@ -356,32 +335,35 @@ $: if (heatmapCard) {
 
   .streak-card {
     min-width: 10rem;
-    padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-panel-sm);
-    background: var(--surface-glass);
-    border: 1px solid var(--surface-border-soft);
-    backdrop-filter: blur(var(--blur-md));
   }
 
   .streak-card span,
   .metric span {
     display: block;
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: var(--font-size-caption);
   }
 
   .streak-card strong,
   .metric strong {
     display: block;
     margin-top: var(--space-1);
-    font-size: 0.88rem;
+    font-size: var(--font-size-body-sm);
     color: var(--text-primary);
   }
 
   .summary {
     display: flex;
+    align-items: flex-start;
     gap: var(--space-6);
     justify-content: space-between;
+  }
+
+  .summary-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
   }
 
   .metrics {
@@ -392,10 +374,6 @@ $: if (heatmapCard) {
   }
 
   .metric {
-    padding: var(--space-4);
-    border-radius: var(--radius-panel-sm);
-    background: var(--surface-card);
-    border: 1px solid var(--surface-border-soft);
   }
 
   .genre-block {
@@ -432,7 +410,7 @@ $: if (heatmapCard) {
     margin: 0 0 var(--space-1);
     min-width: 8.75rem;
     color: var(--text-secondary);
-    font-size: 0.76rem;
+    font-size: var(--font-size-control-sm);
   }
 
   .legend span {

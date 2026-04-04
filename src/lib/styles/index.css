@@ -4,6 +4,7 @@
 @import "./tokens/shadows.css";
 @import "./tokens/blur.css";
 @import "./tokens/zIndex.css";
+@import "./tokens/typography.css";
 @import "./themes/dark.css";
 @import "./themes/light.css";
 @import "./themes/dynamic.css";

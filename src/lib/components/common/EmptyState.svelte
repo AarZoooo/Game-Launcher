@@ -41,12 +41,12 @@ export let message = "";
 
 	h3 {
 		color: var(--text-primary);
-		font-size: 1rem;
+		font-size: var(--font-size-body);
 	}
 
 	p {
 		color: var(--text-secondary);
-		font-size: 0.84rem;
+		font-size: var(--font-size-control);
 		max-width: 30rem;
 	}
 </style>

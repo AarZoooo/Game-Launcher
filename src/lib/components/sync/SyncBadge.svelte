@@ -10,7 +10,7 @@ export let status = "Up to date";
     align-items: center;
     gap: var(--space-2);
     color: var(--color-success-1);
-    font-size: 0.72rem;
+    font-size: var(--font-size-caption);
     font-weight: 600;
   }
 

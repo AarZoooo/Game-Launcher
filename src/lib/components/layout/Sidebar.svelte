@@ -3,6 +3,7 @@ import { goto } from "$app/navigation";
 import { page } from "$app/stores";
 import { appIcons } from "$lib/assets";
 import Icon from "$lib/components/common/Icon.svelte";
+import Tooltip from "$lib/components/common/Tooltip.svelte";
 import { pageLabels } from "$lib/data/labels";
 import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
 import { games } from "$lib/stores/libraryStore";
@@ -23,19 +24,6 @@ async function refreshInstalledMedia() {
       <strong>{appBrand.name}</strong>
       <span>{appBrand.version}</span>
     </button>
-
-    <button
-      type="button"
-      class="menu-trigger refresh-button"
-      aria-label={pageLabels.common.refreshInstalledMedia}
-      title={pageLabels.common.refreshInstalledMedia}
-      disabled={$libraryBusy}
-      on:click={refreshInstalledMedia}
-    >
-      <span class:spinning={$libraryBusy} class="refresh-icon-shell">
-        <Icon src={appIcons.ui.refresh} size="0.95rem" />
-      </span>
-    </button>
   </div>
 
   <nav>
@@ -51,10 +39,23 @@ async function refreshInstalledMedia() {
 
   <div class="profile">
     <div class="avatar">{sidebarProfile.initial}</div>
-    <div>
+    <div class="profile-info">
       <strong>{sidebarProfile.name}</strong>
       <span><i></i>{sidebarProfile.status}</span>
     </div>
+    <Tooltip text="Sync now" position="top">
+      <button
+        type="button"
+        class="menu-trigger refresh-button"
+        aria-label={pageLabels.common.refreshInstalledMedia}
+        disabled={$libraryBusy}
+        on:click={refreshInstalledMedia}
+      >
+        <span class:spinning={$libraryBusy} class="refresh-icon-shell">
+          <Icon src={appIcons.ui.refresh} size="0.95rem" />
+        </span>
+      </button>
+    </Tooltip>
   </div>
 </aside>
 
@@ -75,6 +76,7 @@ async function refreshInstalledMedia() {
       inset -1px 0 0 rgb(255 255 255 / 0.05),
       1rem 0 2.8rem rgb(0 0 0 / 0.18);
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .sidebar::before {
@@ -125,19 +127,27 @@ async function refreshInstalledMedia() {
 
   .brand strong {
     display: block;
-    font: 700 2rem/1 var(--font-display);
+    font: 700 var(--font-size-display)/1 var(--font-display);
   }
 
   .brand span {
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: var(--font-size-caption);
   }
 
   .refresh-button {
-    margin-top: 0.1rem;
     opacity: 0.82;
     transform: scale(1);
     flex: 0 0 auto;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    border-radius: var(--radius-round);
+  }
+
+  .refresh-button:hover {
+    background: transparent;
+    box-shadow: none;
   }
 
   .refresh-button:disabled {
@@ -166,8 +176,8 @@ async function refreshInstalledMedia() {
     background: transparent;
     color: var(--text-secondary);
     font: inherit;
-    text-align: center;
-    padding: var(--space-4) calc(var(--space-6) + var(--space-1));
+    text-align: left;
+    padding: var(--space-4) var(--space-6) var(--space-4) var(--space-9);
     cursor: pointer;
     transition:
       background-color var(--motion-fast) ease,
@@ -197,6 +207,11 @@ async function refreshInstalledMedia() {
     padding: 0 var(--space-6);
   }
 
+  .profile-info {
+    flex: 1;
+    min-width: 0;
+  }
+
   .avatar {
     display: grid;
     place-items: center;
@@ -209,20 +224,20 @@ async function refreshInstalledMedia() {
       rgb(var(--accent-rgb) / 0.52)
     );
     color: var(--accent-contrast);
-    font-size: 0.85rem;
+    font-size: var(--font-size-body-sm);
     font-weight: 800;
   }
 
   .profile strong {
     display: block;
-    font-size: 0.95rem;
+    font-size: var(--font-size-body);
   }
 
   .profile span {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: 0.72rem;
+    font-size: var(--font-size-caption);
     color: var(--text-secondary);
   }
 

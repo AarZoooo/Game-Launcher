@@ -320,10 +320,6 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    padding: var(--space-5);
-    border-radius: var(--radius-panel);
-    background: var(--surface-card);
-    border: 1px solid var(--surface-border);
   }
 
   .header {
@@ -335,7 +331,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
 
   h1 {
     margin: 0;
-    font-size: 1.9rem;
+    font-size: var(--font-size-display);
     font-family: var(--font-display);
   }
 
@@ -354,7 +350,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   .section-header p,
   .section-header span {
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: var(--font-size-control);
   }
 
   .status-copy {
@@ -380,7 +376,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     align-items: center;
     gap: var(--space-2);
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: var(--font-size-control);
   }
 
   .controls > button {
@@ -431,7 +427,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
 
   .debug-result strong {
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: var(--font-size-body);
   }
 
   .debug-result span,
@@ -439,7 +435,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
   .debug-placeholder,
   .debug-error {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: var(--font-size-control);
   }
 
   .debug-result p {

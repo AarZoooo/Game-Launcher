@@ -60,13 +60,13 @@
 
 .app-modal-title {
 	margin: 0 0 0.55rem;
-	font-size: 1.06rem;
+	font-size: var(--font-size-subheading);
 }
 
 .app-modal-message,
 .app-modal-content {
 	color: var(--text-secondary);
-	font-size: 0.86rem;
+	font-size: var(--font-size-body-sm);
 	line-height: 1.5;
 }
 

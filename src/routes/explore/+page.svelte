@@ -135,7 +135,7 @@ onMount(() => {
   h2,
   h3 {
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
   }
 
   .ai-sparkle {
@@ -158,7 +158,7 @@ onMount(() => {
   span,
   p {
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: var(--font-size-control-sm);
   }
 
   .actions {
