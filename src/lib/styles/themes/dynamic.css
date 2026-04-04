@@ -7,12 +7,7 @@ body[data-theme="dynamic"] {
 		),
 		linear-gradient(180deg, #13161d, #0d0f14);
 	--app-panel: rgb(18 21 28 / 0.84);
-	--app-sidebar: linear-gradient(
-			180deg,
-			rgb(var(--accent-rgb) / 0.28),
-			rgba(255, 255, 255, 0.03)
-		),
-		rgba(11, 14, 20, 0.56);
+	--app-sidebar: rgba(11, 14, 20, 0.56);
 	--surface-glass: rgb(23 26 33 / 0.64);
 	--surface-glass-strong: rgb(18 21 28 / 0.86);
 	--surface-card: rgb(var(--accent-rgb) / 0.08);

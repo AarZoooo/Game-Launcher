@@ -166,7 +166,7 @@ async function refreshInstalledMedia() {
     color: var(--text-secondary);
     font: inherit;
     text-align: left;
-    padding: var(--space-4) var(--space-6) var(--space-4) var(--space-8);
+    padding: var(--space-4) var(--space-6) var(--space-4) var(--space-9);
     cursor: pointer;
     transition:
       background-color var(--motion-fast) ease,
