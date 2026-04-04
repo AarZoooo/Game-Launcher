@@ -56,8 +56,8 @@ let launchError = "";
 
   {#if showBackButton}
     <div class="hero-top">
-      <button class="back" aria-label={pageLabels.common.goBack} on:click={() => goto(backHref)}>
-        <Icon src={appIcons.ui.back} size="1rem" />
+      <button class="back glass-surface" aria-label={pageLabels.common.goBack} on:click={() => goto(backHref)}>
+        <Icon src={appIcons.ui.back} size="1.1rem" />
       </button>
     </div>
   {/if}
@@ -146,21 +146,21 @@ let launchError = "";
 
   .hero-top {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: flex;
     justify-content: space-between;
     padding: var(--space-4);
   }
 
   .back {
-    width: 1.9rem;
-    height: 1.9rem;
-    border: 0;
-    background: var(--surface-glass);
-    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    padding: 0;
     cursor: pointer;
     border-radius: var(--radius-control-sm);
-    backdrop-filter: blur(var(--blur-md));
   }
 
   .content {

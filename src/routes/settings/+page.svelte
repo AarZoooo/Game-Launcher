@@ -45,10 +45,6 @@ function toOptions(options: string[] = []): SelectOption[] {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    padding: var(--space-5);
-    border-radius: var(--radius-panel);
-    background: var(--surface-card);
-    border: 1px solid var(--surface-border);
   }
 
   h1,

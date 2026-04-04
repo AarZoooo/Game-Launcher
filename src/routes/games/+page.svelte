@@ -320,10 +320,6 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    padding: var(--space-5);
-    border-radius: var(--radius-panel);
-    background: var(--surface-card);
-    border: 1px solid var(--surface-border);
   }
 
   .header {
