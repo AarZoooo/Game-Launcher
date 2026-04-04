@@ -42,6 +42,9 @@
 - [x] **Process Tracking Sophistication** — Short session detection, reappearance windows, launcher activity differentiation
 - [x] **Resource Monitor** — Dev-only CPU/memory tracking for launcher process group
 - [x] **Biome Linter** — Code formatting/linting with husky pre-commit hooks
+- [x] **UI Polish Pass** — Play button restyle, HeroBanner shared component, game card redesign (image fade mask, bottom overlay), sidebar cleanup, stats dashboard reorganization
+- [x] **Design System Centralization** — Typography tokens, spacing half-steps, motion-slow timing, fade-to-bg utility, control-height-xs, glass-surface utility class
+- [x] **Reusable Components** — Tooltip component, HeroBanner (shared between home + game page)
 
 ---
 
@@ -55,6 +58,9 @@
 - [ ] **Blocking HTTP in async context** — `reqwest::blocking` used in some Tauri commands instead of async reqwest
 - [ ] **Error handling** — `Result<T, String>` everywhere; should use typed errors
 - [ ] **CI/CD** — Consider GitHub Actions (free for public repos, 2000 min/month free for private). Pre-commit hooks already cover Biome linting; could add `cargo check` and `svelte-check` to hooks as an alternative
+- [ ] **Toast/notification system** — Build toast component + store, rework sync button to async with toast feedback, remove blocking overlay
+- [ ] **Game card menu portal** — Render dropdown at body level so it's never clipped by card/grid bounds
+- [ ] **IGDB image caching** — Download covers to local cache folder instead of loading from CDN URLs every time
 
 ---
 

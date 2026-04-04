@@ -63,6 +63,16 @@ Entry point: `main.rs` → `lib.rs` (registers all commands and sets up app stat
 - `tauriService.ts` is the only file that calls `invoke()`
 - CSS is component-scoped (Svelte `<style>` blocks)
 
+### Design System (`src/lib/styles/`)
+
+- **Never hardcode values.** All sizes, colors, spacing, typography, motion, and radii must use centralized tokens.
+- **Tokens:** `tokens/spacing.css` (space-0.5 to space-14), `tokens/typography.css` (display to caption-sm), `tokens/colors.css`, `tokens/radius.css`, `tokens/shadows.css`, `tokens/blur.css`
+- **Motion:** `--motion-fast` (140ms), `--motion-base` (180ms), `--motion-slow` (300ms) — defined per theme
+- **Utility classes:** `glass-surface` (blur + glass bg), `fade-to-bg` (bottom fade gradient) — reuse these instead of inlining
+- **Control heights:** `--control-height-md` (2.5rem), `--control-height-sm` (2.2rem), `--control-height-xs` (1.15rem)
+- **Sections are invisible containers** — no background, border, shadow, or padding. Visual hierarchy comes from headings and spacing, not card-styled wrappers.
+- **Game cards use image fade mask** — the image fades to transparent at 50% via CSS mask, with text overlay at the bottom.
+
 ### Database
 
 - SQLite file at Tauri app data dir
