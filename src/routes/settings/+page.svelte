@@ -53,11 +53,11 @@ function toOptions(options: string[] = []): SelectOption[] {
   }
 
   h1 {
-    font: 700 1.9rem/1 var(--font-display);
+    font: 700 var(--font-size-display)/1 var(--font-display);
   }
 
   h2 {
-    font-size: 1rem;
+    font-size: var(--font-size-body);
   }
 
   .fields {
@@ -74,7 +74,7 @@ function toOptions(options: string[] = []): SelectOption[] {
 
   .label {
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: var(--font-size-control);
   }
 
   .radio-line {

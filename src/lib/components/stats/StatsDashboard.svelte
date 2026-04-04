@@ -248,7 +248,7 @@ $: if (heatmapCard) {
   .hours-total span {
     margin: 0 0 0.25rem;
     color: var(--text-muted);
-    font-size: 0.74rem;
+    font-size: var(--font-size-caption);
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
@@ -259,7 +259,7 @@ $: if (heatmapCard) {
   }
 
   h2 {
-    font-size: 1.05rem;
+    font-size: var(--font-size-subheading);
   }
 
   .hours-total {
@@ -268,7 +268,7 @@ $: if (heatmapCard) {
 
   .hours-total strong {
     display: block;
-    font-size: 1.6rem;
+    font-size: var(--font-size-heading);
     color: var(--text-primary);
   }
 
@@ -295,7 +295,7 @@ $: if (heatmapCard) {
 
   .month-row span {
     color: var(--text-muted);
-    font-size: 0.68rem;
+    font-size: var(--font-size-caption-sm);
     min-width: 0.82rem;
   }
 
@@ -367,14 +367,14 @@ $: if (heatmapCard) {
   .metric span {
     display: block;
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: var(--font-size-caption);
   }
 
   .streak-card strong,
   .metric strong {
     display: block;
     margin-top: var(--space-1);
-    font-size: 0.88rem;
+    font-size: var(--font-size-body-sm);
     color: var(--text-primary);
   }
 
@@ -432,7 +432,7 @@ $: if (heatmapCard) {
     margin: 0 0 var(--space-1);
     min-width: 8.75rem;
     color: var(--text-secondary);
-    font-size: 0.76rem;
+    font-size: var(--font-size-control-sm);
   }
 
   .legend span {

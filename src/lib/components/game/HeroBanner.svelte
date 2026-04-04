@@ -177,13 +177,13 @@ let launchError = "";
   .eyebrow {
     margin: 0;
     color: var(--text-secondary);
-    font-size: 0.78rem;
+    font-size: var(--font-size-control-sm);
     font-weight: 600;
   }
 
   h1 {
     margin: 0;
-    font: 700 var(--font-size-hero) / 1.15 var(--font-display);
+    font: 700 var(--font-size-display) / 1.15 var(--font-display);
     color: var(--text-primary);
   }
 
@@ -229,7 +229,7 @@ let launchError = "";
   }
 
   .hero-favorite span {
-    font-size: 1.1rem;
+    font-size: var(--font-size-subheading);
     line-height: 1;
   }
 
@@ -273,20 +273,20 @@ let launchError = "";
     display: block;
     margin-bottom: var(--space-1);
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: var(--font-size-caption);
   }
 
   .metric p {
     margin: 0;
     color: var(--text-primary);
-    font-size: 0.74rem;
+    font-size: var(--font-size-caption);
     font-weight: 600;
   }
 
   .error {
     margin: 0;
     color: var(--color-danger-1);
-    font-size: 0.78rem;
+    font-size: var(--font-size-control-sm);
   }
 
   @media (max-width: 900px) {
@@ -341,7 +341,7 @@ let launchError = "";
     }
 
     h1 {
-      font-size: var(--font-size-hero-desktop);
+      font-size: var(--font-size-display-lg);
     }
 
     .actions {

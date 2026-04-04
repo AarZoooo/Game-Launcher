@@ -97,7 +97,7 @@ function close() {
 
   h2 {
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
   }
 
   .section {
@@ -110,7 +110,7 @@ function close() {
   .section p,
   label {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
   }
 
   .apply {

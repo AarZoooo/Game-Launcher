@@ -106,7 +106,7 @@ function pageToAccentSource(pathname: string, gameId?: string) {
     padding: var(--space-4) var(--page-padding-x) var(--space-6);
     border-top: 1px solid var(--surface-border-soft);
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: var(--font-size-caption);
   }
 
   .column {

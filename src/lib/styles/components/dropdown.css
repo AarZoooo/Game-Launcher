@@ -103,7 +103,7 @@
 
 .menu-item {
 	padding: var(--space-2) var(--space-3);
-	font-size: 0.72rem;
+	font-size: var(--font-size-caption);
 	line-height: 1.2;
 	cursor: pointer;
 }
@@ -185,7 +185,7 @@
 
 .select-option {
 	padding: var(--space-2) var(--space-3);
-	font-size: 0.78rem;
+	font-size: var(--font-size-control-sm);
 	cursor: pointer;
 }
 
@@ -198,7 +198,7 @@
 
 .selection-check-label {
 	color: var(--text-primary);
-	font-size: 0.8rem;
+	font-size: var(--font-size-control);
 	font-weight: 600;
 }
 
@@ -250,12 +250,12 @@
 
 .selection-copy-title {
 	display: block;
-	font-size: 0.88rem;
+	font-size: var(--font-size-body-sm);
 }
 
 .selection-copy-meta {
 	display: block;
 	margin-top: var(--space-1);
 	color: var(--text-secondary);
-	font-size: 0.75rem;
+	font-size: var(--font-size-control-sm);
 }

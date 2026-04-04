@@ -125,12 +125,12 @@ async function refreshInstalledMedia() {
 
   .brand strong {
     display: block;
-    font: 700 2rem/1 var(--font-display);
+    font: 700 var(--font-size-display)/1 var(--font-display);
   }
 
   .brand span {
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: var(--font-size-caption);
   }
 
   .refresh-button {
@@ -213,20 +213,20 @@ async function refreshInstalledMedia() {
       rgb(var(--accent-rgb) / 0.52)
     );
     color: var(--accent-contrast);
-    font-size: 0.85rem;
+    font-size: var(--font-size-body-sm);
     font-weight: 800;
   }
 
   .profile strong {
     display: block;
-    font-size: 0.95rem;
+    font-size: var(--font-size-body);
   }
 
   .profile span {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: 0.72rem;
+    font-size: var(--font-size-caption);
     color: var(--text-secondary);
   }
 

@@ -101,7 +101,7 @@
 
 .game-card-title {
 	margin: 0;
-	font-size: 0.95rem;
+	font-size: var(--font-size-body);
 	font-weight: 650;
 	color: var(--text-primary);
 	line-height: 1.2;
@@ -117,7 +117,7 @@
 .game-card-meta {
 	margin: 0;
 	color: var(--text-secondary);
-	font-size: 0.76rem;
+	font-size: var(--font-size-control-sm);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -127,7 +127,7 @@
 
 .game-card-favorite {
 	color: rgb(var(--card-accent-rgb));
-	font-size: 1.05rem;
+	font-size: var(--font-size-subheading);
 	line-height: 1;
 	text-shadow: 0 0 0.35rem rgb(var(--card-accent-rgb) / 0.35);
 	flex: 0 0 auto;

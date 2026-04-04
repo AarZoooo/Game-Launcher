@@ -133,7 +133,7 @@ $: mode = resolveVariant(variant, $isGameRunning, $performanceMode);
 
   .loader-shell p {
     margin: 0;
-    font-size: 0.82rem;
+    font-size: var(--font-size-control);
     color: var(--text-secondary);
     letter-spacing: 0.01em;
   }

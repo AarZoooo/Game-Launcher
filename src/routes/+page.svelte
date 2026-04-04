@@ -85,12 +85,12 @@ $: featuredGame =
 
   h2 {
     margin: 0;
-    font-size: 0.98rem;
+    font-size: var(--font-size-body);
   }
 
   span {
     color: var(--text-muted);
-    font-size: 0.74rem;
+    font-size: var(--font-size-caption);
     cursor: pointer;
   }
 </style>
