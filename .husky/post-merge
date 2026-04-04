@@ -1,8 +1,2 @@
-echo "Checking for dependency changes..."
-
-if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "package-lock.json"; then
-  echo "Dependencies changed. Running npm install..."
-  npm install
-else
-  echo "No dependency changes. Skipping npm install."
-fi
+echo "Running npm install..."
+npm install
