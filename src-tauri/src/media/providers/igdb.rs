@@ -86,11 +86,11 @@ fn twitch_access_token(client: &Client, client_id: &str, client_secret: &str) ->
 }
 
 fn build_cover_url(image_id: &str) -> String {
-    format!("https://images.igdb.com/igdb/image/upload/t_cover_big/{image_id}.png")
+    format!("https://images.igdb.com/igdb/image/upload/t_cover_big_2x/{image_id}.png")
 }
 
 fn build_screenshot_url(image_id: &str) -> String {
-    format!("https://images.igdb.com/igdb/image/upload/t_screenshot_big/{image_id}.png")
+    format!("https://images.igdb.com/igdb/image/upload/t_1080p/{image_id}.png")
 }
 
 fn build_artwork_url(image_id: &str) -> String {

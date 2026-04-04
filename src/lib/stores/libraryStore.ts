@@ -532,20 +532,18 @@ function createGameStore() {
 						if (!results.length) return;
 
 						const best = results[0];
+						const horizontalImage =
+							best.artworkUrls?.[0] ||
+							best.screenshotUrls?.[0] ||
+							best.coverUrl;
 						update((current) =>
 							current.map((item) =>
 								item.id === game.id
 									? {
 											...item,
 											coverVertical: best.coverUrl || item.coverVertical,
-											coverHorizontal:
-												best.screenshotUrls?.[0] ||
-												best.coverUrl ||
-												item.coverHorizontal,
-											banner:
-												best.screenshotUrls?.[0] ||
-												best.coverUrl ||
-												item.banner,
+											coverHorizontal: horizontalImage || item.coverHorizontal,
+											banner: horizontalImage || item.banner,
 											storageDescription:
 												item.storageDescription || best.summary || "",
 											storageGenres: best.genres.length

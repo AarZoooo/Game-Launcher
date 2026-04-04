@@ -33,6 +33,7 @@ export interface IgdbSearchResult {
 	slug?: string;
 	genres: string[];
 	coverUrl?: string;
+	artworkUrls: string[];
 	screenshotUrls: string[];
 	summary?: string;
 }
