@@ -8,7 +8,7 @@
 - [x] **M1.4 Game Launching** — Launch exe via Tauri, process detection with launcher/updater awareness
 - [x] **M1.5 Playtime Tracking** — Session recording (start/end/duration), total + daily playtime, last played date
 - [x] **M1.6 Game Auto-Detection** — Directory scanning with depth limits, exe scoring, duplicate detection, platform identification
-- [x] **M1.7 Cover Art** — IGDB fetch with Twitch OAuth, local file fallback, placeholder generation
+- [x] **M1.7 Cover Art** — IGDB fetch with Twitch OAuth (2x covers, 1080p artworks), local file fallback, placeholder generation
   - [ ] Custom cover art upload from UI (file picker not implemented)
 
 ## Phase 2 — Game Tracker
@@ -38,13 +38,15 @@
 
 ## Extra Work (not in original roadmap)
 
-- [x] **IGDB API Integration** — Full provider with Twitch OAuth, title matching, caching, multi-image support
+- [x] **IGDB API Integration** — Full provider with Twitch OAuth, title matching, caching, multi-image support. Covers at `t_cover_big_2x`, artworks/screenshots at `t_1080p`. Artworks preferred over screenshots.
 - [x] **Process Tracking Sophistication** — Short session detection, reappearance windows, launcher activity differentiation
 - [x] **Resource Monitor** — Dev-only CPU/memory tracking for launcher process group
 - [x] **Biome Linter** — Code formatting/linting with husky pre-commit hooks
-- [x] **UI Polish Pass** — Play button restyle, HeroBanner shared component, game card redesign (image fade mask, bottom overlay), sidebar cleanup, stats dashboard reorganization
-- [x] **Design System Centralization** — Typography tokens, spacing half-steps, motion-slow timing, fade-to-bg utility, control-height-xs, glass-surface utility class
-- [x] **Reusable Components** — Tooltip component, HeroBanner (shared between home + game page)
+- [x] **UI Polish Pass** — Play button restyle (no icon, larger padding), HeroBanner shared component, game card redesign (CSS mask image fade, bottom text overlay, circular fav/menu buttons, slow zoom hover), sidebar cleanup (sync moved to profile, no accent tint, left-aligned nav), stats dashboard reorganization (total hours hero, subtle heatmap, merged streaks)
+- [x] **Design System Centralization** — Typography tokens (display through icon-xs), spacing half-steps (0.5, 1.5), motion-slow (300ms), control-height-xs, glass-surface utility, fade-to-bg utility. All hardcoded font-sizes replaced across codebase.
+- [x] **Reusable Components** — Tooltip (glass-surface, 4 positions), HeroBanner (shared between home + game page, CSS mask fade)
+- [x] **Dev Seed Data** — 20 curated real games in `src/lib/data/seedGames.ts` with varied statuses/playtimes. IGDB covers resolved in parallel on startup via `resolveIgdbCovers()`.
+- [x] **IGDB Image Quality** — Upgraded to 2x covers (528px) and 1080p artworks/screenshots. Frontend prefers artworks over screenshots for horizontal images.
 
 ---
 
@@ -55,12 +57,13 @@
 - [ ] **Windows-only** — Hardcoded Windows paths, `.exe` assumptions, no OS detection
 - [ ] **No cross-platform process tracking** — `sysinfo` is cross-platform but path logic is Windows-specific
 - [ ] **CSP disabled** — `tauri.conf.json` has `"csp": null`
-- [ ] **Blocking HTTP in async context** — `reqwest::blocking` used in some Tauri commands instead of async reqwest
+- [ ] **Blocking HTTP in async context** — `reqwest::blocking` used in some Tauri commands instead of async reqwest. Backend `read_games` triggers `queue_media_resolution` which makes blocking HTTP calls and can slow app startup.
 - [ ] **Error handling** — `Result<T, String>` everywhere; should use typed errors
-- [ ] **CI/CD** — Consider GitHub Actions (free for public repos, 2000 min/month free for private). Pre-commit hooks already cover Biome linting; could add `cargo check` and `svelte-check` to hooks as an alternative
-- [ ] **Toast/notification system** — Build toast component + store, rework sync button to async with toast feedback, remove blocking overlay
+- [ ] **CI/CD** — Consider GitHub Actions (free for public repos, 2000 min/month free for private). Pre-commit hooks already cover Biome linting; could add `cargo check` and `svelte-check` to hooks
+- [ ] **Toast/notification system** — Build toast component + store, rework sync button to async with toast feedback, remove blocking full-screen overlay for sync
 - [ ] **Game card menu portal** — Render dropdown at body level so it's never clipped by card/grid bounds
 - [ ] **Local media cache layer** — Download IGDB images to local disk cache, extract dominant colors from landscape covers (for accent theming), serve cached assets to frontend. Needed for: offline mode, faster startup, bandwidth savings, accurate accent colors. Currently images load from CDN every time and accent colors fall back to hardcoded tones (gold/silver) instead of actual cover colors.
+- [ ] **Accent color extraction** — Depends on media cache layer. Currently `accent` field in seed data is hardcoded (gold/silver). Should extract dominant color from landscape cover image and use for sidebar active state, hero tinting, etc.
 
 ---
 

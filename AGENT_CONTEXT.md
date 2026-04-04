@@ -7,11 +7,13 @@
 
 Desktop game library manager built with Tauri v2 (Rust) + SvelteKit (TypeScript) + SQLite. Aggregates games from Steam, Epic, GOG, and local installs into a unified launcher with playtime tracking and metadata from IGDB.
 
+**Current state:** Phase 1 (Core Launcher) is ~95% complete, Phase 2 (Game Tracker) ~75%. Phases 3-4 (Cloud Saves, AI) not started. A major UI polish pass has been done. See `DEV.md` for full progress.
+
 ## Tech Stack
 
 - **Backend:** Tauri v2, Rust (2021 edition), rusqlite (bundled SQLite), sysinfo, reqwest, image
 - **Frontend:** SvelteKit, Svelte 5, TypeScript, Vite
-- **Metadata:** IGDB API via Twitch OAuth (`dotenvy` for env loading)
+- **Metadata:** IGDB API via Twitch OAuth (`dotenvy` for env loading). Covers at `t_cover_big_2x` (528px), artworks/screenshots at `t_1080p` (1920px). Artworks preferred over screenshots for horizontal images.
 - **Linting:** Biome (formatting + linting), husky pre-commit hooks
 
 ## Architecture
@@ -34,18 +36,37 @@ Entry point: `main.rs` → `lib.rs` (registers all commands and sets up app stat
 
 | Directory | Purpose |
 |-----------|---------|
-| `routes/` | SvelteKit pages (games, explore, settings) |
-| `lib/components/` | UI components (game cards, panels, modals, side panels) |
+| `routes/` | SvelteKit pages (home, games, explore, settings, game/[id]) |
+| `lib/components/common/` | Reusable: Button, Icon, Loader, Tooltip, EmptyState |
+| `lib/components/game/` | HeroBanner (shared hero), GameCard, GameGrid, GameMenu, GamePlayButton, FilterPanel, ContinuePlaying, GameDetails |
+| `lib/components/layout/` | AppShell (grid shell + sidebar), Sidebar |
+| `lib/components/stats/` | StatsDashboard (playtime stats, heatmap, genre chart) |
+| `lib/data/` | Seed games, UI labels, navigation config |
 | `lib/stores/` | Svelte stores — single source of truth for UI state |
 | `lib/services/tauriService.ts` | Wrapper around `@tauri-apps/api` invoke calls |
+| `lib/styles/` | Design system (tokens, themes, component styles, utilities) |
 | `lib/types/` | TypeScript interfaces and type definitions |
-| `lib/utilities/` | Formatting, color extraction, helpers |
+| `lib/utils/` | Helpers (accent color, media resolution, formatting) |
+
+### Key Components
+
+- **HeroBanner** (`components/game/HeroBanner.svelte`) — Shared horizontal cover component used by both home page (ContinuePlaying) and game detail page (GameDetails). Props control: back button, favourite button, eyebrow text, play button visibility. Uses CSS `mask-image` for bottom fade.
+- **GameCard** (`components/game/GameCard.svelte`) — Card with portrait image (CSS mask fade at 50%), text overlay at bottom, circular favourite + menu buttons. Hover: slow scale zoom.
+- **Sidebar** (`components/layout/Sidebar.svelte`) — Sticky sidebar with brand, left-aligned nav, profile section with sync button + tooltip. No accent tint.
+- **Tooltip** (`components/common/Tooltip.svelte`) — Reusable tooltip with glass-surface style, 4 positions (top/bottom/left/right).
 
 ### Communication Pattern
 
 - Frontend calls backend via `invoke()` (Tauri commands)
 - Backend emits events to frontend via `app.emit()` for async updates (media resolution, process state)
 - Stores subscribe to Tauri events in `+layout.svelte` on app init
+- On startup: `loadFromBackend()` → `resolveIgdbCovers()` (parallel, fills seed games with IGDB covers)
+
+### Dev Seed Data
+
+- `src/lib/data/seedGames.ts` — ~20 curated real games with varied statuses, playtimes, favourites
+- No hardcoded image URLs — IGDB resolver fetches covers at runtime via `resolveIgdbCovers()`
+- Seed games are fallback data when no backend DB games exist
 
 ## Conventions
 
@@ -66,12 +87,14 @@ Entry point: `main.rs` → `lib.rs` (registers all commands and sets up app stat
 ### Design System (`src/lib/styles/`)
 
 - **Never hardcode values.** All sizes, colors, spacing, typography, motion, and radii must use centralized tokens.
-- **Tokens:** `tokens/spacing.css` (space-0.5 to space-14), `tokens/typography.css` (display to caption-sm), `tokens/colors.css`, `tokens/radius.css`, `tokens/shadows.css`, `tokens/blur.css`
-- **Motion:** `--motion-fast` (140ms), `--motion-base` (180ms), `--motion-slow` (300ms) — defined per theme
-- **Utility classes:** `glass-surface` (blur + glass bg), `fade-to-bg` (bottom fade gradient) — reuse these instead of inlining
+- **Tokens:** `tokens/spacing.css` (space-0.5 through space-14), `tokens/typography.css` (display through caption-sm + icon-xs), `tokens/colors.css`, `tokens/radius.css`, `tokens/shadows.css`, `tokens/blur.css`
+- **Motion:** `--motion-fast` (140ms), `--motion-base` (180ms), `--motion-slow` (300ms) — defined per theme (dark, light, dynamic)
+- **Utility classes:** `glass-surface` (blur + glass bg + border), `fade-to-bg` (bottom fade gradient) — reuse instead of inlining
 - **Control heights:** `--control-height-md` (2.5rem), `--control-height-sm` (2.2rem), `--control-height-xs` (1.15rem)
 - **Sections are invisible containers** — no background, border, shadow, or padding. Visual hierarchy comes from headings and spacing, not card-styled wrappers.
-- **Game cards use image fade mask** — the image fades to transparent at 50% via CSS mask, with text overlay at the bottom.
+- **Game cards use CSS mask-image** — image fades to transparent at 50% height. No color overlay needed.
+- **Hero banners use CSS mask-image** — same approach as cards, works regardless of background.
+- **Images from IGDB:** Covers use `t_cover_big_2x`, artworks/screenshots use `t_1080p`. Artworks preferred over screenshots for horizontal images.
 
 ### Database
 
@@ -101,11 +124,15 @@ npm run check           # Svelte type checking
 
 5. **Use proper abstractions.** The project scope is large with many phases ahead. Keep code modular, reusable, and expandable. Use traits for platform-specific implementations, separate concerns into modules, and design interfaces that can grow.
 
-6. **Platform awareness.** Code is currently Windows-only. When adding OS-specific logic, use `cfg(target_os)` in Rust or runtime detection in TypeScript. Don't hardcode Windows paths in new code.
+6. **Platform awareness.** Code is currently Windows-centric. When adding OS-specific logic, use `cfg(target_os)` in Rust or runtime detection in TypeScript. Don't hardcode Windows paths in new code.
 
-7. **Check DEV.md** for current progress, known issues, and what's been implemented.
+7. **Design system first.** Never hardcode font sizes, spacing, colors, or timing values. Always use or create tokens. Check `src/lib/styles/tokens/` before adding new values.
 
-8. **Keep documentation current.** When completing work, update:
+8. **Check DEV.md** for current progress, known issues, and what's been implemented.
+
+9. **Keep documentation current.** When completing work, update:
    - `DEV.md` — check off completed items, add new tasks discovered during work
    - `AGENT_CONTEXT.md` — update architecture/conventions sections if patterns change
    - Code comments for non-obvious logic
+
+10. **Commit granularly.** One logical change per commit, one-liner messages, no co-authored-by sections.
