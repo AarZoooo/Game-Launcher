@@ -38,22 +38,22 @@ function toggleFavorite() {
 <section bind:this={heroElement} class="hero" class:performance={$effectiveUIMode === 'gaming'}>
   <img class="hero-media" src={getGameImage(game, 'horizontal')} alt="" loading="lazy" />
   <div class="veil"></div>
-  <button
-    type="button"
-    class:active={game.favorite}
-    class="hero-favorite"
-    aria-label={game.favorite ? pageLabels.actions.removeFavorite : pageLabels.actions.addFavorite}
-    aria-pressed={game.favorite}
-    on:click={toggleFavorite}
-  >
-    <span aria-hidden="true">{game.favorite ? "★" : "☆"}</span>
-  </button>
   <div class="content">
     <p class="eyebrow">{pageLabels.continuePlaying.eyebrow}</p>
     <h1>{game.title}</h1>
 
     <div class="actions">
       <GamePlayButton {game} compact />
+      <button
+        type="button"
+        class:active={game.favorite}
+        class="hero-favorite"
+        aria-label={game.favorite ? pageLabels.actions.removeFavorite : pageLabels.actions.addFavorite}
+        aria-pressed={game.favorite}
+        on:click={toggleFavorite}
+      >
+        <span aria-hidden="true">{game.favorite ? "★" : "☆"}</span>
+      </button>
 
       <div class="meta">
         {#each heroMetrics as metric}
@@ -108,18 +108,17 @@ function toggleFavorite() {
     flex-direction: column;
     justify-content: flex-end;
     gap: var(--space-4);
-    padding: var(--space-9) var(--space-8) var(--space-7);
+    padding: var(--space-9) var(--space-8) var(--space-6);
   }
 
   .hero-favorite {
-    position: absolute;
-    right: var(--space-6);
-    top: var(--space-6);
-    z-index: var(--z-menu);
-    display: inline-grid;
-    place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    margin-inline: var(--space-2);
     border: 1px solid rgb(255 255 255 / 0.12);
     border-radius: var(--radius-pill-ui);
     background: var(--surface-glass);
@@ -141,15 +140,14 @@ function toggleFavorite() {
   }
 
   .hero-favorite.active {
-    color: rgb(var(--hero-accent-rgb));
-    border-color: rgb(var(--hero-accent-rgb) / 0.28);
-    box-shadow:
-      var(--shadow-outline),
-      0 0 1rem rgb(var(--hero-accent-rgb) / 0.18);
+    background: rgb(var(--hero-accent-rgb));
+    border-color: rgb(var(--hero-accent-rgb));
+    color: var(--button-accent-text, #fff);
+    box-shadow: var(--shadow-sm);
   }
 
   .hero-favorite span {
-    font-size: 1rem;
+    font-size: 1.1rem;
     line-height: 1;
   }
 
@@ -183,11 +181,26 @@ function toggleFavorite() {
     flex: 1 1 0;
     align-items: center;
     justify-content: space-between;
-    padding-inline: var(--space-8);
+    gap: var(--space-6);
+    padding-inline: var(--space-6);
     min-width: 0;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black var(--space-6),
+      black calc(100% - var(--space-6)),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black var(--space-6),
+      black calc(100% - var(--space-6)),
+      transparent 100%
+    );
   }
 
   .meta::-webkit-scrollbar {
@@ -252,13 +265,8 @@ function toggleFavorite() {
       padding:
         calc(var(--page-padding-y) + var(--space-10))
         calc(var(--page-padding-x) + var(--space-8))
-        var(--space-8)
+        var(--space-6)
         calc(var(--shell-sidebar-width, 0rem) + var(--page-padding-x) + var(--space-8));
-    }
-
-    .hero-favorite {
-      right: calc(var(--page-padding-x) + var(--space-6));
-      top: var(--space-6);
     }
 
     h1 {
