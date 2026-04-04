@@ -52,7 +52,6 @@ let launchError = "";
 
 <section bind:this={heroElement} class="hero" class:performance={$effectiveUIMode === 'gaming'}>
   <img class="hero-media" src={getGameImage(game, imageType)} alt="" loading="lazy" />
-  <div class="veil fade-to-bg"></div>
 
   {#if showBackButton}
     <div class="hero-top">
@@ -129,17 +128,12 @@ let launchError = "";
     width: 100%;
     height: 100%;
     object-fit: cover;
+    mask-image: linear-gradient(180deg, black 50%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, black 50%, transparent 100%);
   }
 
-  .veil {
-    position: absolute;
-    inset: 0;
-  }
-
-  .hero.performance,
-  .hero.performance .veil {
+  .hero.performance {
     transition: none;
-    backdrop-filter: none;
   }
 
   .hero-top {
