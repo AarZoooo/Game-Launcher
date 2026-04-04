@@ -525,40 +525,44 @@ function createGameStore() {
 
 			if (!needsCovers.length) return;
 
-			for (const game of needsCovers) {
-				try {
-					const results = await searchIgdbGame(game.title);
-					if (!results.length) continue;
+			await Promise.allSettled(
+				needsCovers.map(async (game) => {
+					try {
+						const results = await searchIgdbGame(game.title);
+						if (!results.length) return;
 
-					const best = results[0];
-					update((current) =>
-						current.map((item) =>
-							item.id === game.id
-								? {
-										...item,
-										coverVertical: best.coverUrl || item.coverVertical,
-										coverHorizontal:
-											best.screenshotUrls?.[0] ||
-											best.coverUrl ||
-											item.coverHorizontal,
-										banner:
-											best.screenshotUrls?.[0] || best.coverUrl || item.banner,
-										storageDescription:
-											item.storageDescription || best.summary || "",
-										storageGenres: best.genres.length
-											? best.genres
-											: item.storageGenres,
-									}
-								: item,
-						),
-					);
-				} catch (error) {
-					console.warn(
-						`[igdb] Failed to resolve cover for "${game.title}":`,
-						error,
-					);
-				}
-			}
+						const best = results[0];
+						update((current) =>
+							current.map((item) =>
+								item.id === game.id
+									? {
+											...item,
+											coverVertical: best.coverUrl || item.coverVertical,
+											coverHorizontal:
+												best.screenshotUrls?.[0] ||
+												best.coverUrl ||
+												item.coverHorizontal,
+											banner:
+												best.screenshotUrls?.[0] ||
+												best.coverUrl ||
+												item.banner,
+											storageDescription:
+												item.storageDescription || best.summary || "",
+											storageGenres: best.genres.length
+												? best.genres
+												: item.storageGenres,
+										}
+									: item,
+							),
+						);
+					} catch (error) {
+						console.warn(
+							`[igdb] Failed to resolve cover for "${game.title}":`,
+							error,
+						);
+					}
+				}),
+			);
 		},
 		async refreshInstalledGameMedia() {
 			uiStore.setLibraryBusy(true, "Refreshing installed game media...");
