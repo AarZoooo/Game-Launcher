@@ -23,19 +23,6 @@ async function refreshInstalledMedia() {
       <strong>{appBrand.name}</strong>
       <span>{appBrand.version}</span>
     </button>
-
-    <button
-      type="button"
-      class="menu-trigger refresh-button"
-      aria-label={pageLabels.common.refreshInstalledMedia}
-      title={pageLabels.common.refreshInstalledMedia}
-      disabled={$libraryBusy}
-      on:click={refreshInstalledMedia}
-    >
-      <span class:spinning={$libraryBusy} class="refresh-icon-shell">
-        <Icon src={appIcons.ui.refresh} size="0.95rem" />
-      </span>
-    </button>
   </div>
 
   <nav>
@@ -51,10 +38,22 @@ async function refreshInstalledMedia() {
 
   <div class="profile">
     <div class="avatar">{sidebarProfile.initial}</div>
-    <div>
+    <div class="profile-info">
       <strong>{sidebarProfile.name}</strong>
       <span><i></i>{sidebarProfile.status}</span>
     </div>
+    <button
+      type="button"
+      class="menu-trigger refresh-button"
+      aria-label={pageLabels.common.refreshInstalledMedia}
+      title={pageLabels.common.refreshInstalledMedia}
+      disabled={$libraryBusy}
+      on:click={refreshInstalledMedia}
+    >
+      <span class:spinning={$libraryBusy} class="refresh-icon-shell">
+        <Icon src={appIcons.ui.refresh} size="0.95rem" />
+      </span>
+    </button>
   </div>
 </aside>
 
@@ -75,6 +74,7 @@ async function refreshInstalledMedia() {
       inset -1px 0 0 rgb(255 255 255 / 0.05),
       1rem 0 2.8rem rgb(0 0 0 / 0.18);
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .sidebar::before {
@@ -134,7 +134,6 @@ async function refreshInstalledMedia() {
   }
 
   .refresh-button {
-    margin-top: 0.1rem;
     opacity: 0.82;
     transform: scale(1);
     flex: 0 0 auto;
@@ -166,8 +165,8 @@ async function refreshInstalledMedia() {
     background: transparent;
     color: var(--text-secondary);
     font: inherit;
-    text-align: center;
-    padding: var(--space-4) calc(var(--space-6) + var(--space-1));
+    text-align: left;
+    padding: var(--space-4) var(--space-6) var(--space-4) var(--space-8);
     cursor: pointer;
     transition:
       background-color var(--motion-fast) ease,
@@ -195,6 +194,11 @@ async function refreshInstalledMedia() {
     align-items: center;
     gap: var(--space-3);
     padding: 0 var(--space-6);
+  }
+
+  .profile-info {
+    flex: 1;
+    min-width: 0;
   }
 
   .avatar {
