@@ -29,4 +29,5 @@ body[data-theme="light"] {
 	--ui-blur: var(--blur-sm);
 	--motion-fast: 140ms;
 	--motion-base: 180ms;
+	--motion-slow: 300ms;
 }

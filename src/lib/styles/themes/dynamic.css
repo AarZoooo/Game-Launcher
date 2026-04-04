@@ -34,4 +34,5 @@ body[data-theme="dynamic"] {
 	--ui-blur: var(--blur-md);
 	--motion-fast: 140ms;
 	--motion-base: 180ms;
+	--motion-slow: 300ms;
 }
