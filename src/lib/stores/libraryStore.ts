@@ -8,6 +8,7 @@ import {
 	refreshInstalledGameMedia as refreshStoredInstalledGameMedia,
 	type StoredGame,
 	saveGames as saveStoredGames,
+	searchIgdbGame,
 	type TodayPlaytimeEntry,
 } from "$lib/services/tauriService";
 import { uiStore } from "$lib/stores/uiStore";
@@ -515,6 +516,49 @@ function createGameStore() {
 		reset: () => set(fallbackGames),
 		async loadFromBackend() {
 			set(await readBackendSnapshot());
+		},
+		async resolveIgdbCovers() {
+			const items = get(games);
+			const needsCovers = items.filter(
+				(game) => !game.coverVertical && !game.coverHorizontal && game.title,
+			);
+
+			if (!needsCovers.length) return;
+
+			for (const game of needsCovers) {
+				try {
+					const results = await searchIgdbGame(game.title);
+					if (!results.length) continue;
+
+					const best = results[0];
+					update((current) =>
+						current.map((item) =>
+							item.id === game.id
+								? {
+										...item,
+										coverVertical: best.coverUrl || item.coverVertical,
+										coverHorizontal:
+											best.screenshotUrls?.[0] ||
+											best.coverUrl ||
+											item.coverHorizontal,
+										banner:
+											best.screenshotUrls?.[0] || best.coverUrl || item.banner,
+										storageDescription:
+											item.storageDescription || best.summary || "",
+										storageGenres: best.genres.length
+											? best.genres
+											: item.storageGenres,
+									}
+								: item,
+						),
+					);
+				} catch (error) {
+					console.warn(
+						`[igdb] Failed to resolve cover for "${game.title}":`,
+						error,
+					);
+				}
+			}
 		},
 		async refreshInstalledGameMedia() {
 			uiStore.setLibraryBusy(true, "Refreshing installed game media...");
