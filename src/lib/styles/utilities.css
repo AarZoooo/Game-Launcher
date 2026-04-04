@@ -1,6 +1,7 @@
 :root {
 	--control-height-md: 2.5rem;
 	--control-height-sm: 2.2rem;
+	--control-height-xs: 1.15rem;
 }
 
 .glass-surface {
@@ -44,6 +45,17 @@
 	border-color: var(--surface-border);
 	background: var(--field-background-strong);
 	box-shadow: var(--shadow-md);
+}
+
+.fade-to-bg {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		180deg,
+		transparent 50%,
+		rgb(var(--color-background-1-rgb)) 100%
+	);
+	pointer-events: none;
 }
 
 .section-card {
