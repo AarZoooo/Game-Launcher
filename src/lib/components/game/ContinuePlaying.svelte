@@ -175,22 +175,28 @@ function toggleFavorite() {
   .actions {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-3);
+    gap: 0;
   }
 
   .meta {
     display: flex;
-    flex: 1 1 24rem;
-    flex-wrap: wrap;
+    flex: 1 1 0;
     align-items: center;
-    gap: var(--space-3);
+    justify-content: space-between;
+    padding-inline: var(--space-8);
     min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .meta::-webkit-scrollbar {
+    display: none;
   }
 
   .metric {
     min-width: 0;
-    flex: 1 1 9rem;
+    flex: 0 0 auto;
   }
 
   .metric span {
@@ -217,7 +223,7 @@ function toggleFavorite() {
     }
 
     .meta {
-      flex-basis: 100%;
+      flex: 1 1 0;
     }
   }
 
@@ -261,7 +267,7 @@ function toggleFavorite() {
     }
 
     .actions {
-      align-items: end;
+      align-items: center;
       gap: var(--space-5);
     }
 
