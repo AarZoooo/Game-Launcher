@@ -60,7 +60,7 @@
 - [ ] **CI/CD** — Consider GitHub Actions (free for public repos, 2000 min/month free for private). Pre-commit hooks already cover Biome linting; could add `cargo check` and `svelte-check` to hooks as an alternative
 - [ ] **Toast/notification system** — Build toast component + store, rework sync button to async with toast feedback, remove blocking overlay
 - [ ] **Game card menu portal** — Render dropdown at body level so it's never clipped by card/grid bounds
-- [ ] **IGDB image caching** — Download covers to local cache folder instead of loading from CDN URLs every time
+- [ ] **Local media cache layer** — Download IGDB images to local disk cache, extract dominant colors from landscape covers (for accent theming), serve cached assets to frontend. Needed for: offline mode, faster startup, bandwidth savings, accurate accent colors. Currently images load from CDN every time and accent colors fall back to hardcoded tones (gold/silver) instead of actual cover colors.
 
 ---
 
