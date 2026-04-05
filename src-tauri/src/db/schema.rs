@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS games (
   status TEXT,
   genres TEXT NOT NULL DEFAULT '[]',
   description TEXT,
+  media_query_signature TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -33,6 +34,13 @@ CREATE TABLE IF NOT EXISTS play_sessions (
   ended_at TEXT,
   duration_seconds INTEGER,
   FOREIGN KEY (game_id) REFERENCES games(id)
+);
+
+CREATE TABLE IF NOT EXISTS igdb_search_cache (
+  title_key TEXT PRIMARY KEY,
+  title_query TEXT NOT NULL,
+  results_json TEXT NOT NULL,
+  cached_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 "#;
 
@@ -74,6 +82,7 @@ fn ensure_games_columns(connection: &Connection) -> Result<(), String> {
         ("banner", "TEXT"),
         ("icon", "TEXT"),
         ("accent_color", "TEXT"),
+        ("media_query_signature", "TEXT"),
     ] {
         if !existing.iter().any(|existing_column| existing_column == column) {
             connection

@@ -1,13 +1,16 @@
 use reqwest::blocking::Client;
 use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 use crate::media::matching::title::{match_score, normalize_title};
 
 const TWITCH_TOKEN_URL: &str = "https://id.twitch.tv/oauth2/token";
 const IGDB_GAMES_URL: &str = "https://api.igdb.com/v4/games";
+const IGDB_CONNECT_TIMEOUT: Duration = Duration::from_secs(3);
+const IGDB_REQUEST_TIMEOUT: Duration = Duration::from_secs(8);
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IgdbSearchResult {
     pub id: i64,
@@ -247,6 +250,8 @@ fn search_games_with_variant(title: &str) -> Result<(Vec<IgdbSearchResult>, Stri
     let client_id = required_env("TWITCH_CLIENT_ID")?;
     let client_secret = required_env("TWITCH_CLIENT_SECRET")?;
     let client = Client::builder()
+        .connect_timeout(IGDB_CONNECT_TIMEOUT)
+        .timeout(IGDB_REQUEST_TIMEOUT)
         .build()
         .map_err(|error| format!("Failed to build IGDB HTTP client: {error}"))?;
     let access_token = twitch_access_token(&client, &client_id, &client_secret)?;

@@ -14,7 +14,7 @@ pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
     let mut statement = connection
         .prepare(
             "SELECT id, title, exe_path, cover_art, cover_vertical, cover_horizontal, banner, icon, accent_color,
-                    platform, total_playtime, last_played, status, genres, description
+                    platform, total_playtime, last_played, status, genres, description, media_query_signature
              FROM games
              WHERE installed = 1
              ORDER BY title COLLATE NOCASE ASC",
@@ -46,6 +46,7 @@ pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
                 status: row.get(12)?,
                 genres,
                 description: row.get(14)?,
+                media_query_signature: row.get(15)?,
             })
         })
         .map_err(|error| format!("Failed to query games: {error}"))?;
@@ -108,8 +109,9 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
                          status = ?11,
                          genres = ?12,
                          description = ?13,
+                         media_query_signature = COALESCE(?14, media_query_signature),
                          installed = 1
-                     WHERE id = ?14",
+                     WHERE id = ?15",
                     params![
                         game.id,
                         game.title,
@@ -124,6 +126,7 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
                         game.status,
                         genres_json,
                         game.description,
+                        game.media_query_signature,
                         existing_id
                     ],
                 )
@@ -133,8 +136,8 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
                 .execute(
                     "INSERT INTO games (
                         id, title, exe_path, installed, cover_art, cover_vertical, cover_horizontal, banner, icon,
-                        accent_color, platform, total_playtime, last_played, status, genres, description, created_at
-                     ) VALUES (?1, ?2, ?3, 1, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, CURRENT_TIMESTAMP)",
+                        accent_color, platform, total_playtime, last_played, status, genres, description, media_query_signature, created_at
+                     ) VALUES (?1, ?2, ?3, 1, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, CURRENT_TIMESTAMP)",
                     params![
                         game.id,
                         game.title,
@@ -150,7 +153,8 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
                         game.last_played,
                         game.status,
                         genres_json,
-                        game.description
+                        game.description,
+                        game.media_query_signature
                     ],
                 )
                 .map_err(|error| format!("Failed to insert game '{}': {error}", game.title))?;
@@ -218,7 +222,8 @@ pub fn update_game_media(connection: &Connection, game: &Game) -> Result<(), Str
                  icon = ?6,
                  accent_color = ?7,
                  genres = ?8,
-                 description = ?9
+                 description = ?9,
+                 media_query_signature = ?10
              WHERE id = ?1",
             params![
                 game.id,
@@ -231,6 +236,7 @@ pub fn update_game_media(connection: &Connection, game: &Game) -> Result<(), Str
                 serde_json::to_string(&game.genres)
                     .map_err(|error| format!("Failed to serialize updated game genres: {error}"))?,
                 game.description,
+                game.media_query_signature,
             ],
         )
         .map_err(|error| format!("Failed to update media for game '{}': {error}", game.title))?;

@@ -29,6 +29,8 @@ pub struct Game {
     pub genres: Vec<String>,
     #[serde(default)]
     pub description: String,
+    #[serde(default)]
+    pub media_query_signature: Option<String>,
 }
 
 fn default_status() -> String {

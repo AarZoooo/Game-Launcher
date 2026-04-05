@@ -9,6 +9,7 @@ use crate::models::game::Game;
 
 use super::events::{emit_game_media_resolution_state, emit_game_media_updated};
 use super::fallbacks::local_files;
+use super::matching::title::normalize_title;
 use super::placeholders::{PlaceholderKind, placeholder_data_url};
 use super::providers::igdb;
 
@@ -89,8 +90,18 @@ fn has_resolved_media(game: &Game) -> bool {
         && !should_replace_media(game.cover_horizontal.as_ref())
 }
 
+fn media_query_signature(game: &Game) -> String {
+    format!(
+        "{}|{}",
+        normalize_title(&game.title),
+        game.exe_path.trim().replace('/', "\\").to_ascii_lowercase()
+    )
+}
+
 fn needs_media_resolution(game: &Game, force_refresh: bool) -> bool {
-    force_refresh || !has_resolved_media(game)
+    force_refresh
+        || (!has_resolved_media(game)
+            && game.media_query_signature.as_deref() != Some(media_query_signature(game).as_str()))
 }
 
 fn apply_provider_media(game: &Game, media: &mut ResolvedMedia) {
@@ -204,11 +215,13 @@ fn resolve_media(game: &Game, force_refresh: bool) -> Game {
 
     media.accent_color = accent_for_platform(&game.platform);
 
-    if force_refresh {
+    let mut resolved = if force_refresh {
         overwrite_media(game.clone(), media)
     } else {
         merge_media(game.clone(), media)
-    }
+    };
+    resolved.media_query_signature = Some(media_query_signature(&resolved));
+    resolved
 }
 
 fn resolve_and_persist_media(
@@ -292,6 +305,7 @@ mod tests {
             status: "installed".into(),
             genres: Vec::new(),
             description: String::new(),
+            media_query_signature: None,
         }
     }
 
