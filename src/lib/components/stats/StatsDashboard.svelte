@@ -1,8 +1,11 @@
 <script lang="ts">
+import { onDestroy, tick } from "svelte";
+import { fade } from "svelte/transition";
 import { pageLabels } from "$lib/data/labels";
 import { games } from "$lib/stores/libraryStore";
 import { activeGameId, isGameRunning } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
+import { portal } from "$lib/utils/portal";
 import {
 	buildActivityCalendar,
 	calculateActiveNow,
@@ -12,6 +15,10 @@ import {
 	generateActivityByDate,
 	getInstalledGames,
 } from "$lib/utils/stats/analytics";
+import {
+	type DailyBreakdownEntry,
+	getDailyBreakdown,
+} from "$lib/utils/stats/getDailyBreakdown";
 
 type GenreSlice = {
 	label: string;
@@ -127,6 +134,17 @@ function buildGenreDistribution(items: Game[]) {
 }
 
 let heatmapCard: HTMLDivElement;
+let tooltipPanel: HTMLDivElement;
+let tooltipStyle = "";
+let tooltipPortalTarget = "#portal-root";
+let tooltipListeners: Array<() => void> = [];
+let hoveredCell: HTMLButtonElement | null = null;
+let hoverSequence = 0;
+let hoveredDay: {
+	label: string;
+	breakdown: DailyBreakdownEntry[];
+	totalMinutes: number;
+} | null = null;
 
 $: installedAnalyticsGames = getInstalledGames($games);
 $: totalPlaytimeMinutes = installedAnalyticsGames.reduce(
@@ -186,6 +204,154 @@ $: if (heatmapCard) {
 		String(calendar.monthHeaders.length),
 	);
 }
+
+function resolveLengthToken(tokenName: string, fallbackPx: number) {
+	if (typeof window === "undefined") {
+		return fallbackPx;
+	}
+
+	const rawValue = getComputedStyle(document.documentElement)
+		.getPropertyValue(tokenName)
+		.trim();
+
+	if (!rawValue) {
+		return fallbackPx;
+	}
+
+	if (rawValue.endsWith("px")) {
+		const parsed = parseFloat(rawValue);
+		return Number.isFinite(parsed) ? parsed : fallbackPx;
+	}
+
+	if (rawValue.endsWith("rem")) {
+		const parsed = parseFloat(rawValue);
+		if (!Number.isFinite(parsed)) {
+			return fallbackPx;
+		}
+
+		const rootFontSize = parseFloat(
+			getComputedStyle(document.documentElement).fontSize,
+		);
+		return parsed * (Number.isFinite(rootFontSize) ? rootFontSize : 16);
+	}
+
+	const parsed = parseFloat(rawValue);
+	return Number.isFinite(parsed) ? parsed : fallbackPx;
+}
+
+function formatDetailedDate(date: Date) {
+	return date.toLocaleDateString("en-US", {
+		month: "long",
+		day: "numeric",
+		year: "numeric",
+	});
+}
+
+function formatDuration(minutes: number) {
+	if (!minutes) return "0m";
+
+	const hours = Math.floor(minutes / 60);
+	const remainingMinutes = minutes % 60;
+
+	if (!hours) return `${remainingMinutes}m`;
+	if (!remainingMinutes) return `${hours}h`;
+	return `${hours}h ${remainingMinutes}m`;
+}
+
+function teardownTooltipListeners() {
+	for (const dispose of tooltipListeners) {
+		dispose();
+	}
+
+	tooltipListeners = [];
+}
+
+function updateTooltipPosition() {
+	if (!hoveredCell || !tooltipPanel || typeof window === "undefined") {
+		return;
+	}
+
+	const cellRect = hoveredCell.getBoundingClientRect();
+	const panelRect = tooltipPanel.getBoundingClientRect();
+	const gap = resolveLengthToken("--space-2", 8);
+	const viewportPadding = resolveLengthToken("--space-3", 12);
+
+	let top = cellRect.top - panelRect.height - gap;
+	let left = cellRect.left + cellRect.width / 2 - panelRect.width / 2;
+
+	if (top < viewportPadding) {
+		top = cellRect.bottom + gap;
+	}
+
+	const maxTop = Math.max(
+		viewportPadding,
+		window.innerHeight - panelRect.height - viewportPadding,
+	);
+	const maxLeft = Math.max(
+		viewportPadding,
+		window.innerWidth - panelRect.width - viewportPadding,
+	);
+
+	top = Math.min(Math.max(viewportPadding, top), maxTop);
+	left = Math.min(Math.max(viewportPadding, left), maxLeft);
+
+	tooltipStyle = `top: ${top}px; left: ${left}px;`;
+}
+
+async function showTooltip(
+	cell: {
+		date: Date;
+	},
+	element: HTMLButtonElement,
+) {
+	const breakdown = getDailyBreakdown(cell.date, installedAnalyticsGames);
+	const totalMinutes = breakdown.reduce(
+		(sum, entry) => sum + entry.duration,
+		0,
+	);
+	const sequence = ++hoverSequence;
+
+	hoveredCell = element;
+	hoveredDay = {
+		label: formatDetailedDate(cell.date),
+		breakdown,
+		totalMinutes,
+	};
+
+	await tick();
+
+	if (sequence !== hoverSequence || !hoveredDay) {
+		return;
+	}
+
+	updateTooltipPosition();
+	teardownTooltipListeners();
+
+	if (typeof window !== "undefined") {
+		const handleViewportChange = () => {
+			updateTooltipPosition();
+		};
+
+		window.addEventListener("resize", handleViewportChange);
+		window.addEventListener("scroll", handleViewportChange, true);
+		tooltipListeners = [
+			() => window.removeEventListener("resize", handleViewportChange),
+			() => window.removeEventListener("scroll", handleViewportChange, true),
+		];
+	}
+}
+
+function hideTooltip() {
+	hoverSequence += 1;
+	hoveredCell = null;
+	hoveredDay = null;
+	tooltipStyle = "";
+	teardownTooltipListeners();
+}
+
+onDestroy(() => {
+	teardownTooltipListeners();
+});
 </script>
 
 <section class="stats">
@@ -242,8 +408,11 @@ $: if (heatmapCard) {
           <button
             type="button"
             class={`cell level-${cell.level}`}
-            title={`${formatActivityDate(cell.date)} - ${cell.hours} hour${cell.hours === 1 ? '' : 's'}`}
             aria-label={`${formatActivityDate(cell.date)}: ${cell.hours} hour${cell.hours === 1 ? '' : 's'} played`}
+            on:mouseenter={(event) => showTooltip(cell, event.currentTarget as HTMLButtonElement)}
+            on:focus={(event) => showTooltip(cell, event.currentTarget as HTMLButtonElement)}
+            on:mouseleave={hideTooltip}
+            on:blur={hideTooltip}
           ></button>
         {:else}
           <span class="cell empty" aria-hidden="true"></span>
@@ -252,6 +421,37 @@ $: if (heatmapCard) {
     </div>
 
   </div>
+
+  {#if hoveredDay}
+    <div
+      bind:this={tooltipPanel}
+      use:portal={tooltipPortalTarget}
+      class="menu-panel menu-panel-floating tooltip-popup"
+      role="tooltip"
+      style={tooltipStyle}
+      transition:fade={{ duration: 140 }}
+    >
+      <p class="tooltip-date">{hoveredDay.label}</p>
+
+      {#if hoveredDay.breakdown.length}
+        <div class="tooltip-list">
+          {#each hoveredDay.breakdown as entry}
+            <p class="tooltip-row">
+              <span>{entry.game}</span>
+              <b>{formatDuration(entry.duration)}</b>
+            </p>
+          {/each}
+        </div>
+
+        <div class="tooltip-total">
+          <span>Total</span>
+          <strong>{formatDuration(hoveredDay.totalMinutes)}</strong>
+        </div>
+      {:else}
+        <p class="tooltip-empty">No activity</p>
+      {/if}
+    </div>
+  {/if}
 </section>
 
 <style>
@@ -357,6 +557,64 @@ $: if (heatmapCard) {
     pointer-events: none;
   }
 
+  .tooltip-popup {
+    position: fixed;
+    z-index: var(--z-floating-menu);
+    min-width: 13rem;
+    max-width: min(18rem, calc(100vw - (var(--space-3) * 2)));
+    padding: var(--space-3);
+    border-radius: var(--radius-panel);
+    pointer-events: none;
+  }
+
+  .tooltip-date {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--font-size-caption);
+    font-weight: 600;
+  }
+
+  .tooltip-list {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+
+  .tooltip-row,
+  .tooltip-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  .tooltip-row span,
+  .tooltip-total span {
+    color: var(--text-secondary);
+    font-size: var(--font-size-control-sm);
+  }
+
+  .tooltip-row b,
+  .tooltip-total strong {
+    color: var(--text-primary);
+    font-size: var(--font-size-control-sm);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .tooltip-total {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--surface-border-soft);
+  }
+
+  .tooltip-empty {
+    margin: var(--space-3) 0 0;
+    color: var(--text-secondary);
+    font-size: var(--font-size-control-sm);
+  }
+
   .streak-summary {
     display: flex;
     gap: var(--space-3);
@@ -368,14 +626,12 @@ $: if (heatmapCard) {
     min-width: 10rem;
   }
 
-  .streak-card span,
   .metric span {
     display: block;
     color: var(--text-muted);
     font-size: var(--font-size-caption);
   }
 
-  .streak-card strong,
   .metric strong {
     display: block;
     margin-top: var(--space-1);
@@ -402,9 +658,6 @@ $: if (heatmapCard) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-4) var(--space-5);
     flex: 1;
-  }
-
-  .metric {
   }
 
   .genre-block {
