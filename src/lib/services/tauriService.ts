@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { uiStore } from "$lib/stores/uiStore";
-import type { ImportedGameResult } from "$lib/types/Game";
+import type { GameSession, ImportedGameResult } from "$lib/types/Game";
 
 export interface StoredGame {
 	id: string;
@@ -20,6 +20,7 @@ export interface StoredGame {
 	status: string;
 	genres: string[];
 	description: string;
+	sessions?: GameSession[];
 }
 
 export interface TodayPlaytimeEntry {

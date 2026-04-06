@@ -1,12 +1,17 @@
 <script lang="ts">
 import { pageLabels } from "$lib/data/labels";
 import { games } from "$lib/stores/libraryStore";
+import { activeGameId, isGameRunning } from "$lib/stores/uiStore";
 import type { Game } from "$lib/types/Game";
 import {
 	buildActivityCalendar,
+	calculateActiveNow,
+	calculateGamesPlayed,
+	calculateMostPlayed,
 	formatActivityDate,
-	mockPlayActivityHours,
-} from "$lib/utils/playActivity";
+	generateActivityByDate,
+	getInstalledGames,
+} from "$lib/utils/stats/analytics";
 
 type GenreSlice = {
 	label: string;
@@ -123,16 +128,26 @@ function buildGenreDistribution(items: Game[]) {
 
 let heatmapCard: HTMLDivElement;
 
-$: calendar = buildActivityCalendar(mockPlayActivityHours);
-$: playedCount = $games.filter((game) => game.status === "played").length;
-$: playingCount = $games.filter((game) => game.status === "playing").length;
-$: favoriteCount = $games.filter((game) => game.favorite).length;
-$: mostPlayed = [...$games].sort(
-	(left, right) => parseHours(right.hours) - parseHours(left.hours),
-)[0];
+$: installedAnalyticsGames = getInstalledGames($games);
+$: totalPlaytimeMinutes = installedAnalyticsGames.reduce(
+	(sum, game) => sum + (game.storageTotalPlaytimeMinutes ?? 0),
+	0,
+);
+$: activityByDate = generateActivityByDate(installedAnalyticsGames);
+$: calendar = buildActivityCalendar(activityByDate, totalPlaytimeMinutes);
+$: playedCount = calculateGamesPlayed(installedAnalyticsGames);
+$: activeNowCount = calculateActiveNow(
+	installedAnalyticsGames,
+	$isGameRunning,
+	$activeGameId,
+);
+$: favoriteCount = installedAnalyticsGames.filter(
+	(game) => game.favorite,
+).length;
+$: mostPlayed = calculateMostPlayed(installedAnalyticsGames);
 $: insightMetrics = [
 	{ label: pageLabels.stats.gamesPlayed, value: String(playedCount) },
-	{ label: pageLabels.stats.activeRightNow, value: `${playingCount} games` },
+	{ label: pageLabels.stats.activeRightNow, value: `${activeNowCount} games` },
 	{ label: pageLabels.stats.favorites, value: `${favoriteCount} picks` },
 	{
 		label: pageLabels.stats.longestStreak,
@@ -147,7 +162,23 @@ $: insightMetrics = [
 		value: mostPlayed?.title || pageLabels.stats.noDataYet,
 	},
 ];
-$: genreDistribution = buildGenreDistribution($games);
+$: genreDistribution = buildGenreDistribution(installedAnalyticsGames);
+
+$: console.log("Stats Source:", {
+	installedGames: installedAnalyticsGames.map((game) => ({
+		id: game.id,
+		title: game.title,
+		inLibrary: game.inLibrary,
+		favorite: game.favorite,
+		totalPlaytimeMinutes: game.storageTotalPlaytimeMinutes ?? 0,
+		sessionCount: game.storageSessions?.length ?? 0,
+	})),
+	totalPlaytimeMinutes,
+	favoriteCount,
+	playedCount,
+	activeNowCount,
+	mostPlayed: mostPlayed?.title ?? null,
+});
 
 $: if (heatmapCard) {
 	heatmapCard.style.setProperty(

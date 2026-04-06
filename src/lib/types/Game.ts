@@ -16,6 +16,12 @@ export interface GameMetric {
 	value: string;
 }
 
+export interface GameSession {
+	startTime: number;
+	endTime: number | null;
+	duration: number;
+}
+
 export interface ImportedGameResult {
 	id: string;
 	title: string;
@@ -67,4 +73,5 @@ export interface Game {
 	storageTotalPlaytimeMinutes?: number;
 	storageMinutesPlayedToday?: number;
 	storageLastPlayedRaw?: string | null;
+	storageSessions?: GameSession[];
 }

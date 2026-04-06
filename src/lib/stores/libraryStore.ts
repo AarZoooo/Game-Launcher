@@ -16,6 +16,7 @@ import type {
 	AccentTone,
 	Game,
 	GameMetric,
+	GameSession,
 	GameStatus,
 	ImportedGameResult,
 	PlatformType,
@@ -27,6 +28,7 @@ export type {
 	AccentTone,
 	Game,
 	GameMetric,
+	GameSession,
 	GameStatus,
 	ImportedGameResult,
 	PlatformType,
@@ -108,6 +110,7 @@ function buildImportedGame(input: ImportedGameResult): Game {
 		storageTotalPlaytimeMinutes: 0,
 		storageMinutesPlayedToday: 0,
 		storageLastPlayedRaw: null,
+		storageSessions: [],
 	};
 }
 
@@ -149,6 +152,7 @@ function normalizeGame(game: Game, index: number): Game {
 			parsePlaytimeToMinutes(game.totalPlaytime || game.hours),
 		storageMinutesPlayedToday: game.storageMinutesPlayedToday ?? 0,
 		storageLastPlayedRaw: game.storageLastPlayedRaw ?? null,
+		storageSessions: game.storageSessions ?? [],
 	};
 }
 
@@ -323,6 +327,7 @@ function mapStoredGame(game: StoredGame, existing?: Game): Game {
 			storageTotalPlaytimeMinutes: game.totalPlaytime,
 			storageMinutesPlayedToday: 0,
 			storageLastPlayedRaw: game.lastPlayed,
+			storageSessions: game.sessions ?? existing?.storageSessions ?? [],
 		},
 		0,
 	);
@@ -396,6 +401,7 @@ function toStoredGame(game: Game): StoredGame {
 			? game.storageGenres
 			: splitGenres(game.genres),
 		description: game.storageDescription ?? game.blurb ?? "",
+		sessions: game.storageSessions,
 	};
 }
 
@@ -470,6 +476,7 @@ function applyStoredGameStats(
 			storageTotalPlaytimeMinutes: storedGame.totalPlaytime,
 			storageMinutesPlayedToday: todayMinutes,
 			storageLastPlayedRaw: storedGame.lastPlayed,
+			storageSessions: storedGame.sessions ?? merged.storageSessions ?? [],
 		};
 
 		return {
