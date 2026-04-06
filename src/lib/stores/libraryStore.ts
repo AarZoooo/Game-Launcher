@@ -283,7 +283,7 @@ function toMetrics(game: Game): GameMetric[] {
 	];
 }
 
-function mapStoredGame(game: StoredGame): Game {
+function mapStoredGame(game: StoredGame, existing?: Game): Game {
 	const platformType = inferPlatformType(game.platform);
 	const accent = buildAccent(platformType);
 	const genres = game.genres.length ? game.genres.join(" / ") : "Uncategorized";
@@ -296,9 +296,9 @@ function mapStoredGame(game: StoredGame): Game {
 			platform: formatPlatformLabel(game.platform),
 			platformType,
 			genres,
-			rating: "0.0",
-			coop: "Unknown",
-			completion: "Unknown",
+			rating: existing?.rating || "0.0",
+			coop: existing?.coop || "Unknown",
+			completion: existing?.completion || "Unknown",
 			coverVertical: game.coverVertical || game.coverArt,
 			coverHorizontal: game.coverHorizontal,
 			banner: game.banner,
@@ -340,7 +340,7 @@ function mergeStoredGameUpdate(
 	existing: Game | undefined,
 	storedGame: StoredGame,
 ) {
-	const mapped = mapStoredGame(storedGame);
+	const mapped = mapStoredGame(storedGame, existing);
 
 	if (!existing) {
 		return {
@@ -420,9 +420,15 @@ function mergeTodayPlaytime(
 function mergeStoredLibrary(
 	storedGames: StoredGame[],
 	todayPlaytimeEntries: TodayPlaytimeEntry[] = [],
+	existingItems: Game[] = fallbackGames,
 ) {
 	const libraryGames = mergeTodayPlaytime(
-		storedGames.map(mapStoredGame),
+		storedGames.map((storedGame) => {
+			const existing = existingItems.find((game) =>
+				matchesStoredGameIdentity(game, storedGame),
+			);
+			return mapStoredGame(storedGame, existing);
+		}),
 		todayPlaytimeEntries,
 	).map((game) => ({
 		...game,
@@ -455,6 +461,7 @@ function createGameStore() {
 	const { subscribe, update, set } = writable<Game[]>(fallbackGames);
 
 	async function readBackendSnapshot() {
+		const currentItems = get(games);
 		const [storedGames, todayPlaytimeEntries] = await Promise.all([
 			loadStoredGames(),
 			loadTodayPlaytime().catch((error) => {
@@ -463,7 +470,11 @@ function createGameStore() {
 			}),
 		]);
 
-		return mergeStoredLibrary(storedGames, todayPlaytimeEntries);
+		return mergeStoredLibrary(
+			storedGames,
+			todayPlaytimeEntries,
+			currentItems.length ? currentItems : fallbackGames,
+		);
 	}
 
 	async function persistLibrary(items: Game[]) {
@@ -575,7 +586,13 @@ function createGameStore() {
 					}),
 				]);
 
-				set(mergeStoredLibrary(storedGames, todayPlaytimeEntries));
+				set(
+					mergeStoredLibrary(
+						storedGames,
+						todayPlaytimeEntries,
+						get(games).length ? get(games) : fallbackGames,
+					),
+				);
 
 				const elapsed = Date.now() - startedAt;
 				if (elapsed < 450) {
