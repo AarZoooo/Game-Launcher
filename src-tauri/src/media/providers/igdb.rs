@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 use crate::media::matching::title::{match_score, normalize_title};
+use crate::models::game::{default_completion, default_coop, default_rating};
 
 const TWITCH_TOKEN_URL: &str = "https://id.twitch.tv/oauth2/token";
 const IGDB_GAMES_URL: &str = "https://api.igdb.com/v4/games";
@@ -31,6 +32,9 @@ pub struct IgdbBestMatch {
     pub artwork_urls: Vec<String>,
     pub screenshot_urls: Vec<String>,
     pub summary: Option<String>,
+    pub rating: String,
+    pub coop: String,
+    pub completion: String,
     pub score: i32,
 }
 
@@ -49,16 +53,56 @@ struct IgdbGenre {
     name: String,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+struct IgdbGameMode {
+    name: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct IgdbMultiplayerMode {
+    campaigncoop: Option<bool>,
+    dropin: Option<bool>,
+    lancoop: Option<bool>,
+    offlinecoop: Option<bool>,
+    offlinecoopmax: Option<i64>,
+    onlinecoop: Option<bool>,
+    onlinecoopmax: Option<i64>,
+    splitscreen: Option<bool>,
+    splitscreenonline: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct IgdbGameTimeToBeat {
+    hastily: Option<i64>,
+    normally: Option<i64>,
+    completely: Option<i64>,
+}
+
 #[derive(Debug, Deserialize)]
 struct IgdbGame {
     id: i64,
     name: String,
     slug: Option<String>,
     summary: Option<String>,
+    aggregated_rating: Option<f64>,
     cover: Option<IgdbImage>,
     artworks: Option<Vec<IgdbImage>>,
-    screenshots: Option<Vec<IgdbImage>>,
+    game_modes: Option<Vec<IgdbGameMode>>,
     genres: Option<Vec<IgdbGenre>>,
+    multiplayer_modes: Option<Vec<IgdbMultiplayerMode>>,
+    rating: Option<f64>,
+    screenshots: Option<Vec<IgdbImage>>,
+    total_rating: Option<f64>,
+}
+
+#[derive(Debug, Clone)]
+struct IgdbSearchCandidate {
+    result: IgdbSearchResult,
+    aggregated_rating: Option<f64>,
+    game_modes: Vec<String>,
+    multiplayer_modes: Vec<IgdbMultiplayerMode>,
+    rating: Option<f64>,
+    total_rating: Option<f64>,
 }
 
 fn required_env(name: &str) -> Result<String, String> {
@@ -156,14 +200,172 @@ fn search_variants(title: &str) -> Vec<String> {
     variants
 }
 
+fn build_client_and_headers() -> Result<(Client, HeaderMap), String> {
+    let client_id = required_env("TWITCH_CLIENT_ID")?;
+    let client_secret = required_env("TWITCH_CLIENT_SECRET")?;
+    let client = Client::builder()
+        .connect_timeout(IGDB_CONNECT_TIMEOUT)
+        .timeout(IGDB_REQUEST_TIMEOUT)
+        .build()
+        .map_err(|error| format!("Failed to build IGDB HTTP client: {error}"))?;
+    let access_token = twitch_access_token(&client, &client_id, &client_secret)?;
+    let headers = games_headers(&client_id, &access_token)?;
+    Ok((client, headers))
+}
+
+fn boolish(value: Option<bool>) -> bool {
+    value.unwrap_or(false)
+}
+
+fn has_local_coop(modes: &[IgdbMultiplayerMode]) -> bool {
+    modes.iter().any(|mode| {
+        boolish(mode.offlinecoop)
+            || boolish(mode.campaigncoop)
+            || boolish(mode.lancoop)
+            || boolish(mode.splitscreen)
+            || boolish(mode.splitscreenonline)
+            || mode.offlinecoopmax.unwrap_or_default() > 1
+    })
+}
+
+fn has_online_coop(modes: &[IgdbMultiplayerMode]) -> bool {
+    modes.iter().any(|mode| {
+        boolish(mode.onlinecoop)
+            || boolish(mode.dropin)
+            || mode.onlinecoopmax.unwrap_or_default() > 1
+    })
+}
+
+fn has_mode(game_modes: &[String], needle: &str) -> bool {
+    game_modes
+        .iter()
+        .any(|mode| mode.eq_ignore_ascii_case(needle))
+}
+
+fn format_rating(total_rating: Option<f64>, aggregated_rating: Option<f64>, rating: Option<f64>) -> String {
+    let raw_score = total_rating.or(aggregated_rating).or(rating);
+    raw_score
+        .map(|score| (score / 10.0).clamp(0.0, 10.0))
+        .map(|score| format!("{score:.1}"))
+        .unwrap_or_else(default_rating)
+}
+
+fn derive_coop(game_modes: &[String], multiplayer_modes: &[IgdbMultiplayerMode]) -> String {
+    let local_coop = has_local_coop(multiplayer_modes);
+    let online_coop = has_online_coop(multiplayer_modes);
+
+    if local_coop && online_coop {
+        "Online & Local Co-op".to_string()
+    } else if online_coop {
+        "Online Co-op".to_string()
+    } else if local_coop {
+        "Local Co-op".to_string()
+    } else if has_mode(game_modes, "Co-operative") {
+        "Yes".to_string()
+    } else if has_mode(game_modes, "Single player") || has_mode(game_modes, "Multiplayer") {
+        "No".to_string()
+    } else {
+        default_coop()
+    }
+}
+
+fn format_hours(seconds: i64) -> String {
+    let hours = ((seconds as f64) / 3600.0).max(0.5);
+    if hours >= 10.0 {
+        format!("{hours:.0}h")
+    } else {
+        format!("{hours:.1}h")
+    }
+}
+
+fn derive_completion(
+    game_modes: &[String],
+    genres: &[String],
+    time_to_beat: Option<&IgdbGameTimeToBeat>,
+    coop: &str,
+) -> String {
+    if let Some(time_to_beat) = time_to_beat {
+        if let Some(seconds) = time_to_beat.normally.filter(|value| *value > 0) {
+            return format!("{} main", format_hours(seconds));
+        }
+        if let Some(seconds) = time_to_beat.completely.filter(|value| *value > 0) {
+            return format!("{} 100%", format_hours(seconds));
+        }
+        if let Some(seconds) = time_to_beat.hastily.filter(|value| *value > 0) {
+            return format!("{} rush", format_hours(seconds));
+        }
+    }
+
+    if game_modes
+        .iter()
+        .any(|mode| mode.eq_ignore_ascii_case("Battle Royale") || mode.eq_ignore_ascii_case("Massively Multiplayer Online (MMO)"))
+    {
+        return "Persistent".to_string();
+    }
+
+    if genres
+        .iter()
+        .any(|genre| genre.eq_ignore_ascii_case("Simulator") || genre.eq_ignore_ascii_case("Strategy"))
+    {
+        return "Sandbox".to_string();
+    }
+
+    if has_mode(game_modes, "Single player") {
+        if genres
+            .iter()
+            .any(|genre| genre.eq_ignore_ascii_case("Adventure") || genre.eq_ignore_ascii_case("Role-playing (RPG)"))
+        {
+            return "Story".to_string();
+        }
+        return "Single player".to_string();
+    }
+
+    if has_mode(game_modes, "Multiplayer")
+        || has_mode(game_modes, "Co-operative")
+        || !coop.eq_ignore_ascii_case("No")
+    {
+        return "Multiplayer".to_string();
+    }
+
+    default_completion()
+}
+
+fn query_time_to_beat(
+    client: &Client,
+    headers: &HeaderMap,
+    game_id: i64,
+) -> Result<Option<IgdbGameTimeToBeat>, String> {
+    let query = format!(
+        "fields game_id,hastily,normally,completely; where game_id = {game_id}; limit 1;"
+    );
+
+    let response = client
+        .post("https://api.igdb.com/v4/game_time_to_beats")
+        .headers(headers.clone())
+        .body(query)
+        .send()
+        .map_err(|error| format!("Failed to query IGDB time-to-beat endpoint: {error}"))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().unwrap_or_default();
+        return Err(format!("IGDB time-to-beat lookup failed with {status}: {body}"));
+    }
+
+    response
+        .json::<Vec<IgdbGameTimeToBeat>>()
+        .map_err(|error| format!("Failed to parse IGDB time-to-beat response: {error}"))
+        .map(|mut items| items.pop())
+}
+
 fn query_games(
     client: &Client,
     headers: &HeaderMap,
     search_title: &str,
-) -> Result<Vec<IgdbSearchResult>, String> {
+) -> Result<Vec<IgdbSearchCandidate>, String> {
     let escaped_title = search_title.replace('\\', "\\\\").replace('"', "\\\"");
     let query = format!(
-        "search \"{escaped_title}\"; fields name,slug,summary,genres.name,cover.image_id,artworks.image_id,screenshots.image_id; limit 5;"
+        "search \"{escaped_title}\"; fields name,slug,summary,genres.name,game_modes.name,multiplayer_modes.campaigncoop,multiplayer_modes.dropin,multiplayer_modes.lancoop,multiplayer_modes.offlinecoop,multiplayer_modes.offlinecoopmax,multiplayer_modes.onlinecoop,multiplayer_modes.onlinecoopmax,multiplayer_modes.splitscreen,multiplayer_modes.splitscreenonline,cover.image_id,artworks.image_id,screenshots.image_id,total_rating,aggregated_rating,rating; limit 5;"
     );
     println!("[media] igdb api call: search title='{}'", search_title);
 
@@ -180,34 +382,50 @@ fn query_games(
         return Err(format!("IGDB games search failed with {status}: {body}"));
     }
 
-    let results: Vec<IgdbSearchResult> = response
+    let results: Vec<IgdbSearchCandidate> = response
         .json::<Vec<IgdbGame>>()
         .map_err(|error| format!("Failed to parse IGDB games response: {error}"))?
         .into_iter()
-        .map(|game| IgdbSearchResult {
-            id: game.id,
-            name: game.name,
-            slug: game.slug,
-            genres: game
+        .map(|game| {
+            let genres = game
                 .genres
                 .unwrap_or_default()
                 .into_iter()
                 .map(|genre| genre.name)
-                .collect(),
-            cover_url: game.cover.map(|cover| build_cover_url(&cover.image_id)),
-            artwork_urls: game
-                .artworks
-                .unwrap_or_default()
-                .into_iter()
-                .map(|image| build_artwork_url(&image.image_id))
-                .collect(),
-            screenshot_urls: game
-                .screenshots
-                .unwrap_or_default()
-                .into_iter()
-                .map(|image| build_screenshot_url(&image.image_id))
-                .collect(),
-            summary: game.summary,
+                .collect::<Vec<_>>();
+
+            IgdbSearchCandidate {
+                result: IgdbSearchResult {
+                    id: game.id,
+                    name: game.name,
+                    slug: game.slug,
+                    genres: genres.clone(),
+                    cover_url: game.cover.map(|cover| build_cover_url(&cover.image_id)),
+                    artwork_urls: game
+                        .artworks
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|image| build_artwork_url(&image.image_id))
+                        .collect(),
+                    screenshot_urls: game
+                        .screenshots
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|image| build_screenshot_url(&image.image_id))
+                        .collect(),
+                    summary: game.summary,
+                },
+                aggregated_rating: game.aggregated_rating,
+                game_modes: game
+                    .game_modes
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|mode| mode.name)
+                    .collect(),
+                multiplayer_modes: game.multiplayer_modes.unwrap_or_default(),
+                rating: game.rating,
+                total_rating: game.total_rating,
+            }
         })
         .collect();
 
@@ -219,7 +437,8 @@ fn query_games(
             results.len(),
             search_title
         );
-        for (index, result) in results.iter().enumerate() {
+        for (index, candidate) in results.iter().enumerate() {
+            let result = &candidate.result;
             println!(
                 "  [{}] id={} name='{}' slug={} genres={} cover={} artworks={} screenshots={}",
                 index + 1,
@@ -247,15 +466,7 @@ fn search_games_with_variant(title: &str) -> Result<(Vec<IgdbSearchResult>, Stri
         return Err("Search title cannot be empty.".into());
     }
 
-    let client_id = required_env("TWITCH_CLIENT_ID")?;
-    let client_secret = required_env("TWITCH_CLIENT_SECRET")?;
-    let client = Client::builder()
-        .connect_timeout(IGDB_CONNECT_TIMEOUT)
-        .timeout(IGDB_REQUEST_TIMEOUT)
-        .build()
-        .map_err(|error| format!("Failed to build IGDB HTTP client: {error}"))?;
-    let access_token = twitch_access_token(&client, &client_id, &client_secret)?;
-    let headers = games_headers(&client_id, &access_token)?;
+    let (client, headers) = build_client_and_headers()?;
     let variants = search_variants(trimmed_title);
 
     for (index, variant) in variants.iter().enumerate() {
@@ -267,7 +478,10 @@ fn search_games_with_variant(title: &str) -> Result<(Vec<IgdbSearchResult>, Stri
                     trimmed_title, variant
                 );
             }
-            return Ok((results, variant.clone()));
+            return Ok((
+                results.into_iter().map(|candidate| candidate.result).collect(),
+                variant.clone(),
+            ));
         }
         if index + 1 < variants.len() {
             println!(
@@ -286,24 +500,66 @@ pub fn search_games(title: &str) -> Result<Vec<IgdbSearchResult>, String> {
 }
 
 pub fn search_best_match(title: &str) -> Result<Option<IgdbBestMatch>, String> {
-    let (results, matched_query) = search_games_with_variant(title)?;
+    let trimmed_title = title.trim();
+    if trimmed_title.is_empty() {
+        return Err("Search title cannot be empty.".into());
+    }
+
+    let (client, headers) = build_client_and_headers()?;
+    let variants = search_variants(trimmed_title);
+    let mut results = Vec::new();
+    let mut matched_query = trimmed_title.to_string();
+
+    for (index, variant) in variants.iter().enumerate() {
+        let attempted = query_games(&client, &headers, variant)?;
+        if !attempted.is_empty() {
+            if index > 0 {
+                println!(
+                    "[media] igdb fallback search succeeded: original='{}' variant='{}'",
+                    trimmed_title, variant
+                );
+            }
+            results = attempted;
+            matched_query = variant.clone();
+            break;
+        }
+        if index + 1 < variants.len() {
+            println!(
+                "[media] igdb fallback search retry: original='{}' next_variant='{}'",
+                trimmed_title,
+                variants[index + 1]
+            );
+        }
+    }
+
     let best_match = results
         .into_iter()
         .enumerate()
         .map(|result| {
-            let (index, result) = result;
-            let score = match_score(&matched_query, &result.name, result.slug.as_deref())
-                .max(match_score(title, &result.name, result.slug.as_deref()));
+            let (index, candidate) = result;
+            let score = match_score(&matched_query, &candidate.result.name, candidate.result.slug.as_deref())
+                .max(match_score(title, &candidate.result.name, candidate.result.slug.as_deref()));
+            let coop = derive_coop(&candidate.game_modes, &candidate.multiplayer_modes);
+            let time_to_beat = query_time_to_beat(&client, &headers, candidate.result.id).ok().flatten();
+            let completion =
+                derive_completion(&candidate.game_modes, &candidate.result.genres, time_to_beat.as_ref(), &coop);
             (
                 score,
                 index,
                 IgdbBestMatch {
-                    name: result.name,
-                    genres: result.genres,
-                    cover_url: result.cover_url,
-                    artwork_urls: result.artwork_urls,
-                    screenshot_urls: result.screenshot_urls,
-                    summary: result.summary,
+                    name: candidate.result.name,
+                    genres: candidate.result.genres,
+                    cover_url: candidate.result.cover_url,
+                    artwork_urls: candidate.result.artwork_urls,
+                    screenshot_urls: candidate.result.screenshot_urls,
+                    summary: candidate.result.summary,
+                    rating: format_rating(
+                        candidate.total_rating,
+                        candidate.aggregated_rating,
+                        candidate.rating,
+                    ),
+                    coop,
+                    completion,
                     score,
                 },
             )
@@ -314,10 +570,13 @@ pub fn search_best_match(title: &str) -> Result<Option<IgdbBestMatch>, String> {
 
     match &best_match {
         Some(candidate) => println!(
-            "[media] igdb best match: title='{}' matched='{}' score={} cover={} screenshots={}",
+            "[media] igdb best match: title='{}' matched='{}' score={} rating={} coop='{}' completion='{}' cover={} screenshots={}",
             title,
             candidate.name,
             candidate.score,
+            candidate.rating,
+            candidate.coop,
+            candidate.completion,
             candidate.cover_url.as_deref().unwrap_or("<none>"),
             candidate.screenshot_urls.len()
         ),
@@ -325,4 +584,95 @@ pub fn search_best_match(title: &str) -> Result<Option<IgdbBestMatch>, String> {
     }
 
     Ok(best_match)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        IgdbGameTimeToBeat, IgdbMultiplayerMode, default_completion, default_coop, default_rating,
+        derive_completion, derive_coop, format_rating,
+    };
+
+    #[test]
+    fn formats_rating_into_ten_point_scale() {
+        assert_eq!(format_rating(Some(87.3), None, None), "8.7");
+        assert_eq!(format_rating(None, None, None), default_rating());
+    }
+
+    #[test]
+    fn derives_specific_coop_labels() {
+        let online = vec![IgdbMultiplayerMode {
+            campaigncoop: None,
+            dropin: None,
+            lancoop: None,
+            offlinecoop: None,
+            offlinecoopmax: None,
+            onlinecoop: Some(true),
+            onlinecoopmax: Some(4),
+            splitscreen: None,
+            splitscreenonline: None,
+        }];
+        let local = vec![IgdbMultiplayerMode {
+            campaigncoop: Some(true),
+            dropin: None,
+            lancoop: None,
+            offlinecoop: Some(true),
+            offlinecoopmax: Some(2),
+            onlinecoop: None,
+            onlinecoopmax: None,
+            splitscreen: Some(true),
+            splitscreenonline: None,
+        }];
+
+        assert_eq!(derive_coop(&[], &online), "Online Co-op");
+        assert_eq!(derive_coop(&[], &local), "Local Co-op");
+        assert_eq!(derive_coop(&["Single player".into()], &[]), "No");
+        assert_eq!(derive_coop(&[], &[]), default_coop());
+    }
+
+    #[test]
+    fn prefers_time_to_beat_for_completion() {
+        let time_to_beat = IgdbGameTimeToBeat {
+            hastily: None,
+            normally: Some(18 * 3600),
+            completely: Some(32 * 3600),
+        };
+
+        assert_eq!(
+            derive_completion(
+                &["Single player".into()],
+                &["Adventure".into()],
+                Some(&time_to_beat),
+                "No",
+            ),
+            "18h main"
+        );
+    }
+
+    #[test]
+    fn falls_back_to_mode_or_genre_completion_labels() {
+        assert_eq!(
+            derive_completion(
+                &["Single player".into()],
+                &["Role-playing (RPG)".into()],
+                None,
+                "No",
+            ),
+            "Story"
+        );
+        assert_eq!(
+            derive_completion(
+                &["Multiplayer".into()],
+                &["Racing".into()],
+                None,
+                "Online Co-op",
+            ),
+            "Multiplayer"
+        );
+        assert_eq!(
+            derive_completion(&[], &["Strategy".into()], None, "Unknown"),
+            "Sandbox"
+        );
+        assert_eq!(derive_completion(&[], &[], None, "No"), default_completion());
+    }
 }

@@ -29,10 +29,28 @@ pub struct Game {
     pub genres: Vec<String>,
     #[serde(default)]
     pub description: String,
+    #[serde(default = "default_rating")]
+    pub rating: String,
+    #[serde(default = "default_coop")]
+    pub coop: String,
+    #[serde(default = "default_completion")]
+    pub completion: String,
     #[serde(default)]
     pub media_query_signature: Option<String>,
 }
 
 fn default_status() -> String {
     "installed".to_string()
+}
+
+pub fn default_rating() -> String {
+    "0.0".to_string()
+}
+
+pub fn default_coop() -> String {
+    "Unknown".to_string()
+}
+
+pub fn default_completion() -> String {
+    "Unknown".to_string()
 }
