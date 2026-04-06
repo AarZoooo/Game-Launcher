@@ -8,6 +8,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use sysinfo::{Process, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, UpdateKind};
 use tauri::AppHandle;
 
+use crate::media::events::emit_game_media_updated;
+
 use super::events::emit_game_process_state;
 use super::registry::{replace_tracker, tracker_key, unregister_tracker};
 use super::session_store;
@@ -228,6 +230,7 @@ fn monitor_game_process(
     {
         match session_store::finish_session(&app, final_game_id, session_id, ended_at) {
             Ok(Some(summary)) => {
+                emit_game_media_updated(&app, &summary.game);
                 emit_game_process_state(
                     &app,
                     &game_id,
@@ -286,10 +289,23 @@ pub fn start_tracking(app: AppHandle, exe_path: String, game_id: Option<String>)
     let cancel_token = replace_tracker(&key);
     let session_id = game_id
         .as_deref()
-        .and_then(|id| session_store::start_session(&app, id).map_err(|error| {
-            println!("[launch_game] failed to start play session game_id={} error={}", id, error);
-            error
-        }).ok());
+        .and_then(|id| {
+            session_store::start_session(&app, id)
+                .map(|(session_id, game)| {
+                    if let Some(game) = game {
+                        emit_game_media_updated(&app, &game);
+                    }
+                    session_id
+                })
+                .map_err(|error| {
+                    println!(
+                        "[launch_game] failed to start play session game_id={} error={}",
+                        id, error
+                    );
+                    error
+                })
+                .ok()
+        });
 
     println!("[launch_game] registered tracker key={key}");
 

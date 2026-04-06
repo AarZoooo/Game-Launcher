@@ -352,6 +352,7 @@ mod tests {
             rating: default_rating(),
             coop: default_coop(),
             completion: default_completion(),
+            sessions: Vec::new(),
             media_query_signature: None,
         }
     }

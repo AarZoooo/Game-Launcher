@@ -1,8 +1,11 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use std::collections::HashMap;
+
 use rusqlite::{params, Connection};
 
 use crate::commands::stats::TodayPlaytime;
+use crate::models::game::GameSession;
 
 fn now_epoch_seconds() -> Result<i64, String> {
     SystemTime::now()
@@ -128,4 +131,52 @@ pub fn get_game_today_playtime_minutes(
             |row| row.get::<_, i64>(0),
         )
         .map_err(|error| format!("Failed to read today's playtime for game: {error}"))
+}
+
+pub fn get_sessions_by_game_ids(
+    connection: &Connection,
+    game_ids: &[String],
+) -> Result<HashMap<String, Vec<GameSession>>, String> {
+    let mut sessions_by_game = HashMap::new();
+
+    for game_id in game_ids {
+        let mut statement = connection
+            .prepare(
+                "SELECT
+                    CAST(strftime('%s', started_at) AS INTEGER) * 1000,
+                    CASE
+                        WHEN ended_at IS NULL THEN NULL
+                        ELSE CAST(strftime('%s', ended_at) AS INTEGER) * 1000
+                    END,
+                    CASE
+                        WHEN ended_at IS NULL THEN 0
+                        ELSE COALESCE(duration_seconds, 0) * 1000
+                    END
+                 FROM play_sessions
+                 WHERE game_id = ?1
+                 ORDER BY started_at DESC",
+            )
+            .map_err(|error| format!("Failed to prepare session history query: {error}"))?;
+
+        let rows = statement
+            .query_map(params![game_id], |row| {
+                Ok(GameSession {
+                    start_time: row.get(0)?,
+                    end_time: row.get(1)?,
+                    duration: row.get(2)?,
+                })
+            })
+            .map_err(|error| format!("Failed to query session history: {error}"))?;
+
+        let mut sessions = Vec::new();
+        for row in rows {
+            sessions.push(
+                row.map_err(|error| format!("Failed to read session history row: {error}"))?,
+            );
+        }
+
+        sessions_by_game.insert(game_id.clone(), sessions);
+    }
+
+    Ok(sessions_by_game)
 }

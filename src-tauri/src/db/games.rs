@@ -1,5 +1,6 @@
 use rusqlite::{params, Connection, OptionalExtension};
 
+use crate::db::sessions;
 use crate::models::game::Game;
 use crate::models::game::{default_completion, default_coop, default_rating};
 
@@ -14,10 +15,34 @@ pub struct GameStatsSnapshot {
 pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
     let mut statement = connection
         .prepare(
-            "SELECT id, title, exe_path, cover_art, cover_vertical, cover_horizontal, banner, icon, accent_color,
-                    platform, total_playtime, last_played, status, genres, description, rating, coop, completion,
-                    media_query_signature
+            "SELECT games.id, games.title, games.exe_path, games.cover_art, games.cover_vertical, games.cover_horizontal,
+                    games.banner, games.icon, games.accent_color, games.platform,
+                    COALESCE(session_stats.total_playtime_minutes, games.total_playtime) AS synced_total_playtime,
+                    COALESCE(session_stats.last_played, games.last_played) AS synced_last_played,
+                    games.status, games.genres, games.description, games.rating, games.coop, games.completion,
+                    games.media_query_signature
              FROM games
+             LEFT JOIN (
+                 SELECT
+                     game_id,
+                     SUM(
+                         CASE
+                             WHEN ended_at IS NULL THEN
+                                 MAX(
+                                     0,
+                                     CAST(
+                                         (
+                                             strftime('%s', 'now') - CAST(strftime('%s', started_at) AS INTEGER) + 30
+                                         ) / 60 AS INTEGER
+                                     )
+                                 )
+                             ELSE MAX(0, COALESCE(duration_seconds, 0) + 30) / 60
+                         END
+                     ) AS total_playtime_minutes,
+                     MAX(COALESCE(ended_at, started_at)) AS last_played
+                 FROM play_sessions
+                 GROUP BY game_id
+             ) session_stats ON session_stats.game_id = games.id
              WHERE installed = 1
              ORDER BY title COLLATE NOCASE ASC",
         )
@@ -51,6 +76,7 @@ pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
                 rating: row.get(15)?,
                 coop: row.get(16)?,
                 completion: row.get(17)?,
+                sessions: Vec::new(),
                 media_query_signature: row.get(18)?,
             })
         })
@@ -61,7 +87,23 @@ pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
         games.push(row.map_err(|error| format!("Failed to read game row: {error}"))?);
     }
 
+    let game_ids = games.iter().map(|game| game.id.clone()).collect::<Vec<_>>();
+    let sessions_by_game = sessions::get_sessions_by_game_ids(connection, &game_ids)?;
+
+    for game in &mut games {
+        game.sessions = sessions_by_game
+            .get(&game.id)
+            .cloned()
+            .unwrap_or_default();
+    }
+
     Ok(games)
+}
+
+pub fn get_game_by_id(connection: &Connection, game_id: &str) -> Result<Option<Game>, String> {
+    Ok(get_all_games(connection)?
+        .into_iter()
+        .find(|game| game.id.eq_ignore_ascii_case(game_id)))
 }
 
 fn rounded_minutes(duration_seconds: i64) -> i64 {
@@ -299,4 +341,48 @@ pub fn update_game_media(connection: &Connection, game: &Game) -> Result<(), Str
         .map_err(|error| format!("Failed to update media for game '{}': {error}", game.title))?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use rusqlite::Connection;
+
+    use crate::db::schema;
+
+    use super::get_all_games;
+
+    #[test]
+    fn returns_games_with_session_history() {
+        let connection = Connection::open_in_memory().expect("in-memory db");
+        connection
+            .execute_batch(schema::INITIAL_SCHEMA)
+            .expect("schema");
+
+        connection
+            .execute(
+                "INSERT INTO games (
+                    id, title, exe_path, installed, cover_art, platform, total_playtime, last_played, status, genres, description, rating, coop, completion
+                 ) VALUES (?1, ?2, ?3, 1, '', 'local', 0, NULL, 'installed', '[]', '', '0.0', 'Unknown', 'Unknown')",
+                rusqlite::params!["game-1", "Game One", "D:\\Games\\GameOne\\game.exe"],
+            )
+            .expect("game insert");
+
+        connection
+            .execute(
+                "INSERT INTO play_sessions (id, game_id, started_at, ended_at, duration_seconds)
+                 VALUES (?1, ?2, '2026-04-05T10:00:00Z', '2026-04-05T11:00:00Z', 3600)",
+                rusqlite::params!["session-1", "game-1"],
+            )
+            .expect("session insert");
+
+        let games = get_all_games(&connection).expect("games query");
+        assert_eq!(games.len(), 1);
+        assert_eq!(games[0].sessions.len(), 1);
+        assert_eq!(games[0].total_playtime, 60);
+        assert_eq!(games[0].sessions[0].duration, 3_600_000);
+        assert_eq!(
+            games[0].last_played.as_deref(),
+            Some("2026-04-05T11:00:00Z")
+        );
+    }
 }

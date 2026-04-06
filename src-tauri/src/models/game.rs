@@ -1,5 +1,13 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct GameSession {
+    pub start_time: i64,
+    pub end_time: Option<i64>,
+    pub duration: i64,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Game {
@@ -35,6 +43,8 @@ pub struct Game {
     pub coop: String,
     #[serde(default = "default_completion")]
     pub completion: String,
+    #[serde(default)]
+    pub sessions: Vec<GameSession>,
     #[serde(default)]
     pub media_query_signature: Option<String>,
 }

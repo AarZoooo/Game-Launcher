@@ -3,7 +3,7 @@ use tauri::AppHandle;
 
 use super::database::open_database;
 
-const INITIAL_SCHEMA: &str = r#"
+pub(crate) const INITIAL_SCHEMA: &str = r#"
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS games (
