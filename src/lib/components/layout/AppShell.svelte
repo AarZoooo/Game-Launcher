@@ -66,6 +66,8 @@ function pageToAccentSource(pathname: string, gameId?: string) {
   </div>
 </div>
 
+<div id="portal-root"></div>
+
 <Loader loading={$libraryBusy} message={$libraryBusyMessage} size="lg" />
 
 <style>
@@ -107,6 +109,17 @@ function pageToAccentSource(pathname: string, gameId?: string) {
     border-top: 1px solid var(--surface-border-soft);
     color: var(--text-muted);
     font-size: var(--font-size-caption);
+  }
+
+  #portal-root {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: var(--z-floating-menu);
+  }
+
+  #portal-root :global(*) {
+    pointer-events: auto;
   }
 
   .column {

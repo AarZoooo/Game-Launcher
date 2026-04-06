@@ -61,24 +61,13 @@
 
 .menu-panel {
 	position: absolute;
-	right: 0;
-	top: calc(100% + 0.45rem);
 	min-width: 10.5rem;
 	max-width: 11.5rem;
 }
 
-.menu-panel.side-right {
-	top: auto;
-	bottom: 0;
-	right: auto;
-	left: calc(100% + 0.55rem);
-}
-
-.menu-panel.above-right {
-	top: auto;
-	bottom: calc(100% + 0.45rem);
-	right: 0;
-	left: auto;
+.menu-panel-floating {
+	position: fixed;
+	z-index: var(--z-floating-menu);
 }
 
 .menu-group {
