@@ -12,6 +12,7 @@ use super::fallbacks::local_files;
 use super::matching::title::normalize_title;
 use super::placeholders::{PlaceholderKind, placeholder_data_url};
 use super::providers::igdb;
+use crate::models::game::{default_completion, default_coop, default_rating};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 struct ResolvedMedia {
@@ -22,6 +23,9 @@ struct ResolvedMedia {
     accent_color: Option<String>,
     genres: Vec<String>,
     description: Option<String>,
+    rating: Option<String>,
+    coop: Option<String>,
+    completion: Option<String>,
 }
 
 static MEDIA_RESOLUTION_TASKS: OnceLock<Mutex<HashSet<String>>> = OnceLock::new();
@@ -90,6 +94,21 @@ fn has_resolved_media(game: &Game) -> bool {
         && !should_replace_media(game.cover_horizontal.as_ref())
 }
 
+fn has_default_rating(rating: &str) -> bool {
+    let trimmed = rating.trim();
+    trimmed.is_empty() || trimmed == default_rating()
+}
+
+fn has_default_coop(coop: &str) -> bool {
+    let trimmed = coop.trim();
+    trimmed.is_empty() || trimmed.eq_ignore_ascii_case(&default_coop())
+}
+
+fn has_default_completion(completion: &str) -> bool {
+    let trimmed = completion.trim();
+    trimmed.is_empty() || trimmed.eq_ignore_ascii_case(&default_completion())
+}
+
 fn media_query_signature(game: &Game) -> String {
     format!(
         "{}|{}",
@@ -125,6 +144,9 @@ fn apply_provider_media(game: &Game, media: &mut ResolvedMedia) {
             .or_else(|| media.cover_horizontal.clone());
         media.genres = best_match.genres.clone();
         media.description = best_match.summary.clone();
+        media.rating = Some(best_match.rating.clone());
+        media.coop = Some(best_match.coop.clone());
+        media.completion = Some(best_match.completion.clone());
     }
 }
 
@@ -141,6 +163,15 @@ fn finalize_media(game: &mut Game) {
     }
     if game.accent_color.as_deref().map(str::is_empty).unwrap_or(true) {
         game.accent_color = accent_for_platform(&game.platform);
+    }
+    if has_default_rating(&game.rating) {
+        game.rating = default_rating();
+    }
+    if has_default_coop(&game.coop) {
+        game.coop = default_coop();
+    }
+    if has_default_completion(&game.completion) {
+        game.completion = default_completion();
     }
 }
 
@@ -166,6 +197,15 @@ fn merge_media(mut game: Game, media: ResolvedMedia) -> Game {
     if game.description.trim().is_empty() {
         game.description = media.description.unwrap_or_default();
     }
+    if has_default_rating(&game.rating) {
+        game.rating = media.rating.unwrap_or_else(default_rating);
+    }
+    if has_default_coop(&game.coop) {
+        game.coop = media.coop.unwrap_or_else(default_coop);
+    }
+    if has_default_completion(&game.completion) {
+        game.completion = media.completion.unwrap_or_else(default_completion);
+    }
 
     finalize_media(&mut game);
     game
@@ -185,6 +225,9 @@ fn overwrite_media(mut game: Game, media: ResolvedMedia) -> Game {
             game.description = description;
         }
     }
+    game.rating = media.rating.unwrap_or_else(default_rating);
+    game.coop = media.coop.unwrap_or_else(default_coop);
+    game.completion = media.completion.unwrap_or_else(default_completion);
 
     finalize_media(&mut game);
     game
@@ -286,6 +329,7 @@ pub fn queue_media_resolution(app: AppHandle, games: Vec<Game>, force_refresh: b
 #[cfg(test)]
 mod tests {
     use super::{ResolvedMedia, merge_media, needs_media_resolution};
+    use crate::models::game::{default_completion, default_coop, default_rating};
     use crate::models::game::Game;
 
     fn empty_game() -> Game {
@@ -305,6 +349,9 @@ mod tests {
             status: "installed".into(),
             genres: Vec::new(),
             description: String::new(),
+            rating: default_rating(),
+            coop: default_coop(),
+            completion: default_completion(),
             media_query_signature: None,
         }
     }

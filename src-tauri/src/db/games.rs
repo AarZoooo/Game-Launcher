@@ -1,6 +1,7 @@
 use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::models::game::Game;
+use crate::models::game::{default_completion, default_coop, default_rating};
 
 #[derive(Debug, Clone)]
 pub struct GameStatsSnapshot {
@@ -14,7 +15,8 @@ pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
     let mut statement = connection
         .prepare(
             "SELECT id, title, exe_path, cover_art, cover_vertical, cover_horizontal, banner, icon, accent_color,
-                    platform, total_playtime, last_played, status, genres, description, media_query_signature
+                    platform, total_playtime, last_played, status, genres, description, rating, coop, completion,
+                    media_query_signature
              FROM games
              WHERE installed = 1
              ORDER BY title COLLATE NOCASE ASC",
@@ -46,7 +48,10 @@ pub fn get_all_games(connection: &Connection) -> Result<Vec<Game>, String> {
                 status: row.get(12)?,
                 genres,
                 description: row.get(14)?,
-                media_query_signature: row.get(15)?,
+                rating: row.get(15)?,
+                coop: row.get(16)?,
+                completion: row.get(17)?,
+                media_query_signature: row.get(18)?,
             })
         })
         .map_err(|error| format!("Failed to query games: {error}"))?;
@@ -76,6 +81,33 @@ fn existing_identity(connection: &Connection, game: &Game) -> Result<Option<Stri
         )
         .optional()
         .map_err(|error| format!("Failed to look up existing game identity: {error}"))
+}
+
+fn sanitized_rating(value: &str) -> String {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        default_rating()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn sanitized_coop(value: &str) -> String {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        default_coop()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn sanitized_completion(value: &str) -> String {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        default_completion()
+    } else {
+        trimmed.to_string()
+    }
 }
 
 pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Result<(), String> {
@@ -109,9 +141,21 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
                          status = ?11,
                          genres = ?12,
                          description = ?13,
-                         media_query_signature = COALESCE(?14, media_query_signature),
+                         rating = CASE
+                             WHEN trim(?14) = '' OR ?14 = '0.0' THEN COALESCE(NULLIF(rating, ''), '0.0')
+                             ELSE ?14
+                         END,
+                         coop = CASE
+                             WHEN trim(?15) = '' OR lower(?15) = 'unknown' THEN COALESCE(NULLIF(coop, ''), 'Unknown')
+                             ELSE ?15
+                         END,
+                         completion = CASE
+                             WHEN trim(?16) = '' OR lower(?16) = 'unknown' THEN COALESCE(NULLIF(completion, ''), 'Unknown')
+                             ELSE ?16
+                         END,
+                         media_query_signature = COALESCE(?17, media_query_signature),
                          installed = 1
-                     WHERE id = ?15",
+                     WHERE id = ?18",
                     params![
                         game.id,
                         game.title,
@@ -126,6 +170,9 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
                         game.status,
                         genres_json,
                         game.description,
+                        sanitized_rating(&game.rating),
+                        sanitized_coop(&game.coop),
+                        sanitized_completion(&game.completion),
                         game.media_query_signature,
                         existing_id
                     ],
@@ -136,8 +183,9 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
                 .execute(
                     "INSERT INTO games (
                         id, title, exe_path, installed, cover_art, cover_vertical, cover_horizontal, banner, icon,
-                        accent_color, platform, total_playtime, last_played, status, genres, description, media_query_signature, created_at
-                     ) VALUES (?1, ?2, ?3, 1, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, CURRENT_TIMESTAMP)",
+                        accent_color, platform, total_playtime, last_played, status, genres, description, rating,
+                        coop, completion, media_query_signature, created_at
+                     ) VALUES (?1, ?2, ?3, 1, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, CURRENT_TIMESTAMP)",
                     params![
                         game.id,
                         game.title,
@@ -154,6 +202,9 @@ pub fn sync_installed_games(connection: &mut Connection, games: &[Game]) -> Resu
                         game.status,
                         genres_json,
                         game.description,
+                        sanitized_rating(&game.rating),
+                        sanitized_coop(&game.coop),
+                        sanitized_completion(&game.completion),
                         game.media_query_signature
                     ],
                 )
@@ -223,7 +274,10 @@ pub fn update_game_media(connection: &Connection, game: &Game) -> Result<(), Str
                  accent_color = ?7,
                  genres = ?8,
                  description = ?9,
-                 media_query_signature = ?10
+                 rating = ?10,
+                 coop = ?11,
+                 completion = ?12,
+                 media_query_signature = ?13
              WHERE id = ?1",
             params![
                 game.id,
@@ -236,6 +290,9 @@ pub fn update_game_media(connection: &Connection, game: &Game) -> Result<(), Str
                 serde_json::to_string(&game.genres)
                     .map_err(|error| format!("Failed to serialize updated game genres: {error}"))?,
                 game.description,
+                sanitized_rating(&game.rating),
+                sanitized_coop(&game.coop),
+                sanitized_completion(&game.completion),
                 game.media_query_signature,
             ],
         )

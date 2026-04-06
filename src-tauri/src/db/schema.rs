@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS games (
   status TEXT,
   genres TEXT NOT NULL DEFAULT '[]',
   description TEXT,
+  rating TEXT NOT NULL DEFAULT '0.0',
+  coop TEXT NOT NULL DEFAULT 'Unknown',
+  completion TEXT NOT NULL DEFAULT 'Unknown',
   media_query_signature TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -82,6 +85,9 @@ fn ensure_games_columns(connection: &Connection) -> Result<(), String> {
         ("banner", "TEXT"),
         ("icon", "TEXT"),
         ("accent_color", "TEXT"),
+        ("rating", "TEXT NOT NULL DEFAULT '0.0'"),
+        ("coop", "TEXT NOT NULL DEFAULT 'Unknown'"),
+        ("completion", "TEXT NOT NULL DEFAULT 'Unknown'"),
         ("media_query_signature", "TEXT"),
     ] {
         if !existing.iter().any(|existing_column| existing_column == column) {
