@@ -27,7 +27,8 @@ pub fn run() {
             commands::manual_add::pick_game_executable,
             commands::launch_game::launch_game,
             commands::stats::get_today_playtime,
-            commands::igdb::search_igdb_game
+            commands::igdb::search_igdb_game,
+            commands::version::get_app_version
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
