@@ -86,7 +86,7 @@ function buildImportedGame(input: ImportedGameResult): Game {
 	return {
 		id: input.id || slugify(input.title),
 		title: input.title,
-		mediaLoading: false,
+		mediaLoading: true,
 		hours: "0h",
 		platform: platformLabel,
 		platformType: input.platform,
@@ -357,7 +357,14 @@ function mergeStoredGameUpdate(
 	const merged: Game = {
 		...existing,
 		...mapped,
-		mediaLoading: false,
+		mediaLoading:
+			existing.mediaLoading &&
+			!(
+				storedGame.coverVertical ||
+				storedGame.coverHorizontal ||
+				storedGame.banner ||
+				storedGame.icon
+			),
 		favorite: existing.favorite,
 		cloudSyncEnabled: existing.cloudSyncEnabled,
 		launchOptions: existing.launchOptions,
@@ -372,6 +379,31 @@ function mergeStoredGameUpdate(
 	return {
 		...merged,
 		metrics: toMetrics(merged),
+	};
+}
+
+function mergeMediaEventGameUpdate(existing: Game, storedGame: StoredGame) {
+	const effectiveStoredGame: StoredGame = {
+		...storedGame,
+		totalPlaytime:
+			storedGame.totalPlaytime > 0
+				? storedGame.totalPlaytime
+				: (existing.storageTotalPlaytimeMinutes ?? 0),
+		lastPlayed: storedGame.lastPlayed ?? existing.storageLastPlayedRaw ?? null,
+		sessions:
+			storedGame.sessions && storedGame.sessions.length > 0
+				? storedGame.sessions
+				: existing.storageSessions,
+	};
+	const merged = mergeStoredGameUpdate(existing, effectiveStoredGame);
+	const preservedStats: Game = {
+		...merged,
+		storageMinutesPlayedToday: existing.storageMinutesPlayedToday ?? 0,
+	};
+
+	return {
+		...preservedStats,
+		metrics: toMetrics(preservedStats),
 	};
 }
 
@@ -436,7 +468,7 @@ function mergeStoredLibrary(
 			const existing = existingItems.find((game) =>
 				matchesStoredGameIdentity(game, storedGame),
 			);
-			return mapStoredGame(storedGame, existing);
+			return mergeStoredGameUpdate(existing, storedGame);
 		}),
 		todayPlaytimeEntries,
 	).map((game) => ({
@@ -542,6 +574,8 @@ function createGameStore() {
 
 		try {
 			await persistLibrary(nextItems);
+			set(await readBackendSnapshot());
+
 			const elapsed = Date.now() - startedAt;
 			if (elapsed < 450) {
 				await wait(450 - elapsed);
@@ -703,7 +737,7 @@ function createGameStore() {
 					}
 
 					didMatch = true;
-					return mergeStoredGameUpdate(game, storedGame);
+					return mergeMediaEventGameUpdate(game, storedGame);
 				});
 
 				if (didMatch) {
