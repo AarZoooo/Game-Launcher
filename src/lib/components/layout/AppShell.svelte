@@ -4,7 +4,7 @@ import { page } from "$app/stores";
 import Loader from "$lib/components/common/Loader.svelte";
 import Sidebar from "$lib/components/layout/Sidebar.svelte";
 import { footerColumns, routeAccents } from "$lib/data/navigation";
-import { continuePlayingGames, getGameById } from "$lib/stores/libraryStore";
+import { continuePlayingGames, games } from "$lib/stores/libraryStore";
 import {
 	effectiveUIMode,
 	libraryBusy,
@@ -38,7 +38,11 @@ $: if (browser) {
 
 function pageToAccentSource(pathname: string, gameId?: string) {
 	if (pathname.startsWith("/game/") && gameId) {
-		return getGameById(gameId) || { accent: "silver" as const };
+		return (
+			$games.find((game) => game.id === gameId) || {
+				accent: "silver" as const,
+			}
+		);
 	}
 
 	return { accent: routeAccents[pathname] || "silver" };

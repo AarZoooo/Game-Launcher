@@ -442,19 +442,41 @@ function mergeStoredLibrary(
 	];
 }
 
-function buildInstalledStatsSignature(items: Game[]) {
-	return items
-		.filter((game) => game.inLibrary === true)
-		.map((game) =>
-			[
-				game.id,
-				game.storageTotalPlaytimeMinutes ?? 0,
-				game.storageMinutesPlayedToday ?? 0,
-				game.storageLastPlayedRaw ?? "",
-			].join(":"),
-		)
-		.sort()
-		.join("|");
+function buildTodayPlaytimeMap(todayPlaytimeEntries: TodayPlaytimeEntry[]) {
+	return new Map(
+		todayPlaytimeEntries.map((entry) => [
+			entry.gameId.toLowerCase(),
+			entry.minutesPlayedToday,
+		]),
+	);
+}
+
+function applyStoredGameStats(
+	items: Game[],
+	storedGame: StoredGame,
+	todayMinutes: number,
+) {
+	return items.map((game) => {
+		if (!matchesStoredGameIdentity(game, storedGame)) {
+			return game;
+		}
+
+		const merged = mergeStoredGameUpdate(game, storedGame);
+		const withStats: Game = {
+			...merged,
+			hours: formatHours(storedGame.totalPlaytime),
+			totalPlaytime: formatPlaytime(storedGame.totalPlaytime),
+			lastPlayed: formatLastPlayed(storedGame.lastPlayed),
+			storageTotalPlaytimeMinutes: storedGame.totalPlaytime,
+			storageMinutesPlayedToday: todayMinutes,
+			storageLastPlayedRaw: storedGame.lastPlayed,
+		};
+
+		return {
+			...withStats,
+			metrics: toMetrics(withStats),
+		};
+	});
 }
 
 function createGameStore() {
@@ -603,37 +625,56 @@ function createGameStore() {
 			}
 		},
 		async refreshAfterGameExit(gameId?: string | null) {
+			if (!gameId) {
+				set(await readBackendSnapshot());
+				return;
+			}
+
 			const currentItems = get(games);
-			const currentGame = gameId
-				? currentItems.find((game) => game.id === gameId)
-				: null;
+			const currentGame = currentItems.find((game) => game.id === gameId);
 			const previousTotalMinutes =
 				currentGame?.storageTotalPlaytimeMinutes ?? 0;
 			const previousLastPlayed = currentGame?.storageLastPlayedRaw ?? null;
 			const previousPlayedToday = currentGame?.storageMinutesPlayedToday ?? 0;
-			const previousInstalledSignature =
-				buildInstalledStatsSignature(currentItems);
 			const deadline = Date.now() + 35000;
 			let attempt = 0;
 
 			while (Date.now() < deadline) {
-				const nextItems = await readBackendSnapshot();
-				set(nextItems);
-				const installedSignatureChanged =
-					buildInstalledStatsSignature(nextItems) !==
-					previousInstalledSignature;
+				const [storedGames, todayPlaytimeEntries] = await Promise.all([
+					loadStoredGames(),
+					loadTodayPlaytime().catch((error) => {
+						console.error("Failed to load today's playtime:", error);
+						return [];
+					}),
+				]);
+				const matchingStoredGame = storedGames.find(
+					(storedGame) => storedGame.id.toLowerCase() === gameId.toLowerCase(),
+				);
 
-				const updatedGame = gameId
-					? nextItems.find((game) => game.id === gameId)
-					: null;
-				const targetGameChanged = updatedGame
-					? (updatedGame.storageTotalPlaytimeMinutes ?? 0) !==
-							previousTotalMinutes ||
-						(updatedGame.storageLastPlayedRaw ?? null) !== previousLastPlayed ||
-						(updatedGame.storageMinutesPlayedToday ?? 0) !== previousPlayedToday
-					: false;
+				if (!matchingStoredGame) {
+					set(
+						mergeStoredLibrary(
+							storedGames,
+							todayPlaytimeEntries,
+							get(games).length ? get(games) : fallbackGames,
+						),
+					);
+					return;
+				}
 
-				if (targetGameChanged || installedSignatureChanged) {
+				const todayMinutes =
+					buildTodayPlaytimeMap(todayPlaytimeEntries).get(
+						gameId.toLowerCase(),
+					) || 0;
+				const targetGameChanged =
+					matchingStoredGame.totalPlaytime !== previousTotalMinutes ||
+					(matchingStoredGame.lastPlayed ?? null) !== previousLastPlayed ||
+					todayMinutes !== previousPlayedToday;
+
+				if (targetGameChanged) {
+					update((items) =>
+						applyStoredGameStats(items, matchingStoredGame, todayMinutes),
+					);
 					return;
 				}
 

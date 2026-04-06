@@ -6,16 +6,14 @@ import { pageLabels } from "$lib/data/labels";
 import { performGameAction } from "$lib/services/gameService";
 import {
 	continuePlayingGames,
-	getAllGames,
-	getGameById,
-	getGamesByIds,
+	games,
 	homeExploreIds,
 } from "$lib/stores/libraryStore";
 import type { Game } from "$lib/types/Game";
 import type { GameMenuActionId } from "$lib/types/Menu";
 
-let featuredGame = getGameById("sekiro");
-const suggestedGames = getGamesByIds(homeExploreIds);
+let featuredGame: Game | undefined;
+let suggestedGames: Game[] = [];
 
 function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
 	return performGameAction(
@@ -26,9 +24,12 @@ function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
 
 $: featuredGame =
 	$continuePlayingGames[0] ||
-	getAllGames().find((game) => game.inLibrary !== false) ||
-	getGameById(homeExploreIds[0]) ||
-	getGameById("sekiro");
+	$games.find((game) => game.inLibrary !== false) ||
+	$games.find((game) => game.id === homeExploreIds[0]) ||
+	$games.find((game) => game.id === "sekiro");
+$: suggestedGames = homeExploreIds
+	.map((id) => $games.find((game) => game.id === id))
+	.filter((game): game is Game => Boolean(game));
 </script>
 
 {#if featuredGame}

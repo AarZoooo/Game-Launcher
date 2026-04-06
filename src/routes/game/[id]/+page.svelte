@@ -2,11 +2,16 @@
 import { page } from "$app/stores";
 import GameDetails from "$lib/components/game/GameDetails.svelte";
 import { pageLabels } from "$lib/data/labels";
-import { getGameById, getGamesByIds } from "$lib/stores/libraryStore";
+import { games } from "$lib/stores/libraryStore";
+import type { Game } from "$lib/types/Game";
 
 $: gameId = $page.params.id || "ghost-yotei";
-$: game = getGameById(gameId) || getGameById("ghost-yotei");
-$: similarGames = getGamesByIds(game?.similarIds || []);
+$: game =
+	$games.find((entry) => entry.id === gameId) ||
+	$games.find((entry) => entry.id === "ghost-yotei");
+$: similarGames = (game?.similarIds || [])
+	.map((id) => $games.find((entry) => entry.id === id))
+	.filter((entry): entry is Game => Boolean(entry));
 $: requestedBackHref = $page.url.searchParams.get("from") || "/";
 $: backHref = requestedBackHref.startsWith("/") ? requestedBackHref : "/";
 </script>

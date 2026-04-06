@@ -9,14 +9,14 @@ import { performGameAction } from "$lib/services/gameService";
 import {
 	explorePrimaryIds,
 	exploreSecondaryIds,
-	getGamesByIds,
+	games,
 } from "$lib/stores/libraryStore";
 import type { Game } from "$lib/types/Game";
 import type { GameMenuActionId } from "$lib/types/Menu";
 
-const primary = getGamesByIds(explorePrimaryIds);
-const primaryGrid = primary.slice(1);
-const secondary = getGamesByIds(exploreSecondaryIds);
+let primary: Game[] = [];
+let primaryGrid: Game[] = [];
+let secondary: Game[] = [];
 let isOnline = true;
 let prompt = recommendationPrompt;
 
@@ -26,6 +26,14 @@ function handleAction(event: CustomEvent<{ id: string; game: Game }>) {
 		event.detail.game,
 	);
 }
+
+$: primary = explorePrimaryIds
+	.map((id) => $games.find((game) => game.id === id))
+	.filter((game): game is Game => Boolean(game));
+$: primaryGrid = primary.slice(1);
+$: secondary = exploreSecondaryIds
+	.map((id) => $games.find((game) => game.id === id))
+	.filter((game): game is Game => Boolean(game));
 
 onMount(() => {
 	if (!browser) return;
