@@ -1,9 +1,11 @@
 <script lang="ts">
+import { onMount } from "svelte";
 import { browser } from "$app/environment";
 import { page } from "$app/stores";
 import Loader from "$lib/components/common/Loader.svelte";
 import Sidebar from "$lib/components/layout/Sidebar.svelte";
 import { footerColumns, routeAccents } from "$lib/data/navigation";
+import { appMetaStore } from "$lib/stores/appMetaStore";
 import { continuePlayingGames, games } from "$lib/stores/libraryStore";
 import {
 	effectiveUIMode,
@@ -47,6 +49,10 @@ function pageToAccentSource(pathname: string, gameId?: string) {
 
 	return { accent: routeAccents[pathname] || "silver" };
 }
+
+onMount(() => {
+	void appMetaStore.loadVersion();
+});
 </script>
 
 <div class="shell" data-mode={$effectiveUIMode}>

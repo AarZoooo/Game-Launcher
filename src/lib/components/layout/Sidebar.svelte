@@ -6,8 +6,11 @@ import Icon from "$lib/components/common/Icon.svelte";
 import Tooltip from "$lib/components/common/Tooltip.svelte";
 import { pageLabels } from "$lib/data/labels";
 import { appBrand, navItems, sidebarProfile } from "$lib/data/navigation";
+import { appVersion } from "$lib/stores/appMetaStore";
 import { games } from "$lib/stores/libraryStore";
 import { libraryBusy } from "$lib/stores/uiStore";
+
+$: displayedVersion = $appVersion ? `v${$appVersion}` : appBrand.version;
 
 async function refreshInstalledMedia() {
 	try {
@@ -22,7 +25,7 @@ async function refreshInstalledMedia() {
   <div class="brand-row">
     <button type="button" class="brand" on:click={() => goto('/')}>
       <strong>{appBrand.name}</strong>
-      <span>{appBrand.version}</span>
+      <span>{displayedVersion}</span>
     </button>
   </div>
 

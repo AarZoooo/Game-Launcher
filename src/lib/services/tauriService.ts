@@ -80,6 +80,10 @@ export async function getTodayPlaytime(): Promise<TodayPlaytimeEntry[]> {
 	return invoke<TodayPlaytimeEntry[]>("get_today_playtime");
 }
 
+export async function getAppVersion(): Promise<string> {
+	return invoke<string>("get_app_version");
+}
+
 export async function searchIgdbGame(
 	title: string,
 ): Promise<IgdbSearchResult[]> {

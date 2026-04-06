@@ -1,11 +1,15 @@
 ﻿<script lang="ts">
 import GlassSelect from "$lib/components/common/GlassSelect.svelte";
 import { pageLabels, settingsSections } from "$lib/data/labels";
+import { appBrand } from "$lib/data/navigation";
+import { appVersion } from "$lib/stores/appMetaStore";
 import type { SelectOption } from "$lib/types/UI";
 
 function toOptions(options: string[] = []): SelectOption[] {
 	return options.map((option) => ({ label: option, value: option }));
 }
+
+$: displayedVersion = $appVersion ? `v${$appVersion}` : appBrand.version;
 </script>
 
 <div class="settings">
@@ -31,6 +35,8 @@ function toOptions(options: string[] = []): SelectOption[] {
       </div>
     </section>
   {/each}
+
+  <p class="app-version">App version {displayedVersion}</p>
 </div>
 
 <style>
@@ -86,6 +92,12 @@ function toOptions(options: string[] = []): SelectOption[] {
     display: flex;
     align-items: center;
     color: var(--text-secondary);
+  }
+
+  .app-version {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
   }
 
   @media (max-width: 820px) {
