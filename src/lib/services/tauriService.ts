@@ -20,6 +20,9 @@ export interface StoredGame {
 	status: string;
 	genres: string[];
 	description: string;
+	rating: string;
+	coop: string;
+	completion: string;
 	sessions?: GameSession[];
 }
 

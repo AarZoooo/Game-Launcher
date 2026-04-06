@@ -300,9 +300,9 @@ function mapStoredGame(game: StoredGame, existing?: Game): Game {
 			platform: formatPlatformLabel(game.platform),
 			platformType,
 			genres,
-			rating: existing?.rating || "0.0",
-			coop: existing?.coop || "Unknown",
-			completion: existing?.completion || "Unknown",
+			rating: game.rating || existing?.rating || "0.0",
+			coop: game.coop || existing?.coop || "Unknown",
+			completion: game.completion || existing?.completion || "Unknown",
 			coverVertical: game.coverVertical || game.coverArt,
 			coverHorizontal: game.coverHorizontal,
 			banner: game.banner,
@@ -401,6 +401,9 @@ function toStoredGame(game: Game): StoredGame {
 			? game.storageGenres
 			: splitGenres(game.genres),
 		description: game.storageDescription ?? game.blurb ?? "",
+		rating: game.rating,
+		coop: game.coop,
+		completion: game.completion,
 		sessions: game.storageSessions,
 	};
 }
