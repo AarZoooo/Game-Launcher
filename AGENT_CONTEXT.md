@@ -26,7 +26,7 @@ Desktop game library manager built with Tauri v2 (Rust) + SvelteKit (TypeScript)
 | `db/` | SQLite schema, migrations, and query functions |
 | `launch/` | Game process spawning |
 | `tracking/` | Process monitoring, playtime session recording |
-| `media/` | Cover art resolution (IGDB provider, local files, placeholders) |
+| `media/` | Cover art resolution (IGDB provider, scoped local install-file fallback, placeholders) |
 | `perf/` | Dev-only resource monitor |
 | `models/` | Shared Rust data structures |
 
