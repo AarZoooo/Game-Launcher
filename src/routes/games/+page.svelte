@@ -1,4 +1,5 @@
 <script lang="ts">
+import { onDestroy, onMount, tick } from "svelte";
 import Button from "$lib/components/common/Button.svelte";
 import EmptyState from "$lib/components/common/EmptyState.svelte";
 import GlassSelect from "$lib/components/common/GlassSelect.svelte";
@@ -29,6 +30,7 @@ import type { GameMenuActionId } from "$lib/types/Menu";
 import type { GameFilterState, ScanPlatform } from "$lib/types/UI";
 
 let showFilters = false;
+let showAddGameModal = false;
 let sortBy = "default";
 let scannedPlatform: ScanPlatform = "steam";
 let showImportModal = false;
@@ -41,6 +43,8 @@ let igdbDebugResults: IgdbSearchResult[] = [];
 let filteredInstalledGames: Game[] = [];
 let filteredCatalogGames: Game[] = [];
 let filters: GameFilterState = { ...defaultGameFilters };
+let addGameMenuRoot: HTMLDivElement | undefined;
+let firstAddGameAction: HTMLButtonElement | undefined;
 
 async function runIgdbDebugSearch() {
 	igdbDebugLoading = true;
@@ -60,6 +64,7 @@ async function runIgdbDebugSearch() {
 }
 
 async function startScan(platform: "steam" | "epic") {
+	showAddGameModal = false;
 	scannedPlatform = platform;
 	scanError = "";
 	scanResults = [];
@@ -82,6 +87,7 @@ function startAutoSearch() {
 		return;
 	}
 
+	showAddGameModal = false;
 	scannedPlatform = "local";
 	showImportModal = true;
 	scanError = "";
@@ -106,6 +112,7 @@ function startAutoSearch() {
 
 async function addManualGame() {
 	try {
+		showAddGameModal = false;
 		const candidate = await pickManualImportCandidate();
 		if (!candidate || hasDuplicateGame(candidate)) {
 			return;
@@ -117,6 +124,15 @@ async function addManualGame() {
 		scanError =
 			error instanceof Error ? error.message : pageLabels.games.manualAddFailed;
 	}
+}
+
+function toggleAddGameMenu(event?: MouseEvent) {
+	event?.stopPropagation();
+	showAddGameModal = !showAddGameModal;
+}
+
+$: if (showAddGameModal) {
+	void tick().then(() => firstAddGameAction?.focus());
 }
 
 async function addManualFromImportModal() {
@@ -192,6 +208,33 @@ function sortGames(items: Game[]) {
 
 $: filteredInstalledGames = sortGames(filterGames($installedGames));
 $: filteredCatalogGames = sortGames(filterGames($catalogGames));
+
+onMount(() => {
+	const handleWindowClick = (event: MouseEvent) => {
+		const target = event.target as Node | null;
+		if (showAddGameModal && target && !addGameMenuRoot?.contains(target)) {
+			showAddGameModal = false;
+		}
+	};
+
+	const handleWindowKeydown = (event: KeyboardEvent) => {
+		if (event.key === "Escape" && showAddGameModal) {
+			showAddGameModal = false;
+		}
+	};
+
+	window.addEventListener("click", handleWindowClick);
+	window.addEventListener("keydown", handleWindowKeydown);
+
+	return () => {
+		window.removeEventListener("click", handleWindowClick);
+		window.removeEventListener("keydown", handleWindowKeydown);
+	};
+});
+
+onDestroy(() => {
+	showAddGameModal = false;
+});
 </script>
 
 <div class="games">
@@ -199,16 +242,40 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     <h1>{pageLabels.games.title}</h1>
 
     <div class="controls">
-      <Button quiet compact on:click={() => startScan('steam')}>
-        {$scanningState.steam ? pageLabels.importModal.scanning : pageLabels.games.importSteam}
-      </Button>
-      <Button quiet compact on:click={() => startScan('epic')}>
-        {$scanningState.epic ? pageLabels.importModal.scanning : pageLabels.games.importEpic}
-      </Button>
-      <Button quiet compact on:click={startAutoSearch}>
-        {$scanningState.local ? pageLabels.games.searching : pageLabels.games.autoSearch}
-      </Button>
-      <Button quiet compact on:click={addManualGame}>{pageLabels.games.addManually}</Button>
+      <div bind:this={addGameMenuRoot} class="add-game-menu-root">
+        <Button
+          compact
+          aria-expanded={showAddGameModal}
+          ariaLabel={pageLabels.games.addGame}
+          on:click={toggleAddGameMenu}
+        >
+          {pageLabels.games.addGame}
+        </Button>
+
+        {#if showAddGameModal}
+          <div
+            class="add-game-menu menu-panel"
+            role="menu"
+            aria-label={pageLabels.games.addGameTitle}
+            on:click|stopPropagation
+          >
+            <div class="add-game-actions menu-group">
+              <Button bind:this={firstAddGameAction} quiet wide on:click={() => startScan('steam')}>
+                {$scanningState.steam ? pageLabels.importModal.scanning : pageLabels.games.importSteam}
+              </Button>
+              <Button quiet wide on:click={() => startScan('epic')}>
+                {$scanningState.epic ? pageLabels.importModal.scanning : pageLabels.games.importEpic}
+              </Button>
+              <Button quiet wide on:click={startAutoSearch}>
+                {$scanningState.local ? pageLabels.games.searching : pageLabels.games.autoSearch}
+              </Button>
+              <Button quiet wide on:click={addManualGame}>
+                {pageLabels.games.addManually}
+              </Button>
+            </div>
+          </div>
+        {/if}
+      </div>
 
       <label>
         <span>{pageLabels.games.sortBy}</span>
@@ -326,7 +393,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   h1 {
@@ -344,7 +411,7 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .section-header p,
@@ -364,6 +431,31 @@ $: filteredCatalogGames = sortGames(filterGames($catalogGames));
     align-items: center;
     flex-wrap: wrap;
     gap: var(--space-3);
+  }
+
+  .add-game-menu-root {
+    position: relative;
+  }
+
+  .add-game-menu {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    right: 0;
+    min-width: 14rem;
+    padding: var(--space-2);
+  }
+
+  .add-game-actions {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .add-game-actions :global(.app-button) {
+    width: 100%;
+    min-width: 100%;
+    justify-content: flex-start;
+    padding-inline: var(--space-4);
+    box-shadow: none;
   }
 
   label,

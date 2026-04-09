@@ -15,6 +15,10 @@ export let ariaLabel: string | undefined = undefined;
 
 let element: HTMLButtonElement;
 
+export function focus() {
+	element?.focus();
+}
+
 $: accentPresentation = resolveAccentPresentation({
 	accent,
 	accentColor,

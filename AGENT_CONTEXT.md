@@ -138,3 +138,4 @@ npm run check           # Svelte type checking
 10. **Commit granularly.** One logical change per commit, one-liner messages, no co-authored-by sections.
 
 Additional note: Home page empty/loading states now use a shared `libraryHydrated` frontend store signal so skeletons only show before backend hydration, and loaded-empty sections render reusable `EmptyState` variants instead of collapsing.
+Additional note: The shared frontend `Modal` component now handles focus trapping, ESC dismissal, backdrop dismissal, and focus restoration, so new dialogs should reuse it instead of reimplementing modal behavior.

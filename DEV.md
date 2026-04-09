@@ -75,3 +75,4 @@ _Nothing currently in progress._
 ## Recent Updates
 
 - Home page empty states now use hydrated-data checks, reusable `EmptyState` variants, and skeleton loading for Continue Playing / Recently Played.
+- All Games header actions are now consolidated into a single Add Game modal, and the shared modal component now includes focus trapping, ESC handling, backdrop close, and an inline close button.

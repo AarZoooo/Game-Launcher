@@ -23,6 +23,9 @@ export const pageLabels = {
 	},
 	games: {
 		title: "All Games",
+		addGame: "Add Game",
+		addGameTitle: "Add Game",
+		addGameSubtitle: "Choose how you'd like to add games to your library.",
 		sortBy: "Sort by:",
 		filters: "Filters",
 		importSteam: "Import Steam",
