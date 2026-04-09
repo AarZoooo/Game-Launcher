@@ -1,6 +1,7 @@
 use reqwest::blocking::Client;
 use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
+use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
 use crate::media::matching::title::{match_score, normalize_title};
@@ -10,6 +11,8 @@ const TWITCH_TOKEN_URL: &str = "https://id.twitch.tv/oauth2/token";
 const IGDB_GAMES_URL: &str = "https://api.igdb.com/v4/games";
 const IGDB_CONNECT_TIMEOUT: Duration = Duration::from_secs(3);
 const IGDB_REQUEST_TIMEOUT: Duration = Duration::from_secs(8);
+
+static SESSION_TWITCH_TOKEN: OnceLock<Mutex<Option<String>>> = OnceLock::new();
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -93,6 +96,10 @@ struct IgdbGame {
     rating: Option<f64>,
     screenshots: Option<Vec<IgdbImage>>,
     total_rating: Option<f64>,
+}
+
+fn session_twitch_token() -> &'static Mutex<Option<String>> {
+    SESSION_TWITCH_TOKEN.get_or_init(|| Mutex::new(None))
 }
 
 #[derive(Debug, Clone)]
@@ -208,7 +215,19 @@ fn build_client_and_headers() -> Result<(Client, HeaderMap), String> {
         .timeout(IGDB_REQUEST_TIMEOUT)
         .build()
         .map_err(|error| format!("Failed to build IGDB HTTP client: {error}"))?;
-    let access_token = twitch_access_token(&client, &client_id, &client_secret)?;
+    let access_token = {
+        let mut cached = session_twitch_token()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+
+        if let Some(existing) = cached.clone() {
+            existing
+        } else {
+            let fetched = twitch_access_token(&client, &client_id, &client_secret)?;
+            *cached = Some(fetched.clone());
+            fetched
+        }
+    };
     let headers = games_headers(&client_id, &access_token)?;
     Ok((client, headers))
 }
@@ -358,6 +377,39 @@ fn query_time_to_beat(
         .map(|mut items| items.pop())
 }
 
+fn query_screenshots(
+    client: &Client,
+    headers: &HeaderMap,
+    game_id: i64,
+) -> Result<Vec<String>, String> {
+    let query = format!("fields screenshots.image_id; where id = {game_id}; limit 1;");
+
+    let response = client
+        .post(IGDB_GAMES_URL)
+        .headers(headers.clone())
+        .body(query)
+        .send()
+        .map_err(|error| format!("Failed to query IGDB screenshots: {error}"))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().unwrap_or_default();
+        return Err(format!("IGDB screenshots lookup failed with {status}: {body}"));
+    }
+
+    let mut games = response
+        .json::<Vec<IgdbGame>>()
+        .map_err(|error| format!("Failed to parse IGDB screenshots response: {error}"))?;
+
+    Ok(games
+        .pop()
+        .and_then(|game| game.screenshots)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|image| build_screenshot_url(&image.image_id))
+        .collect())
+}
+
 fn query_games(
     client: &Client,
     headers: &HeaderMap,
@@ -365,7 +417,7 @@ fn query_games(
 ) -> Result<Vec<IgdbSearchCandidate>, String> {
     let escaped_title = search_title.replace('\\', "\\\\").replace('"', "\\\"");
     let query = format!(
-        "search \"{escaped_title}\"; fields name,slug,summary,genres.name,game_modes.name,multiplayer_modes.campaigncoop,multiplayer_modes.dropin,multiplayer_modes.lancoop,multiplayer_modes.offlinecoop,multiplayer_modes.offlinecoopmax,multiplayer_modes.onlinecoop,multiplayer_modes.onlinecoopmax,multiplayer_modes.splitscreen,multiplayer_modes.splitscreenonline,cover.image_id,artworks.image_id,screenshots.image_id,total_rating,aggregated_rating,rating; limit 5;"
+        "search \"{escaped_title}\"; fields name,slug,summary,genres.name,game_modes.name,multiplayer_modes.campaigncoop,multiplayer_modes.dropin,multiplayer_modes.lancoop,multiplayer_modes.offlinecoop,multiplayer_modes.offlinecoopmax,multiplayer_modes.onlinecoop,multiplayer_modes.onlinecoopmax,multiplayer_modes.splitscreen,multiplayer_modes.splitscreenonline,cover.image_id,artworks.image_id,total_rating,aggregated_rating,rating; limit 5;"
     );
     println!("[media] igdb api call: search title='{}'", search_title);
 
@@ -407,12 +459,7 @@ fn query_games(
                         .into_iter()
                         .map(|image| build_artwork_url(&image.image_id))
                         .collect(),
-                    screenshot_urls: game
-                        .screenshots
-                        .unwrap_or_default()
-                        .into_iter()
-                        .map(|image| build_screenshot_url(&image.image_id))
-                        .collect(),
+                    screenshot_urls: Vec::new(),
                     summary: game.summary,
                 },
                 aggregated_rating: game.aggregated_rating,
@@ -543,6 +590,11 @@ pub fn search_best_match(title: &str) -> Result<Option<IgdbBestMatch>, String> {
             let time_to_beat = query_time_to_beat(&client, &headers, candidate.result.id).ok().flatten();
             let completion =
                 derive_completion(&candidate.game_modes, &candidate.result.genres, time_to_beat.as_ref(), &coop);
+            let screenshot_urls = if candidate.result.artwork_urls.is_empty() {
+                query_screenshots(&client, &headers, candidate.result.id).unwrap_or_default()
+            } else {
+                Vec::new()
+            };
             (
                 score,
                 index,
@@ -551,7 +603,7 @@ pub fn search_best_match(title: &str) -> Result<Option<IgdbBestMatch>, String> {
                     genres: candidate.result.genres,
                     cover_url: candidate.result.cover_url,
                     artwork_urls: candidate.result.artwork_urls,
-                    screenshot_urls: candidate.result.screenshot_urls,
+                    screenshot_urls,
                     summary: candidate.result.summary,
                     rating: format_rating(
                         candidate.total_rating,

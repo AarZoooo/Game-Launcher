@@ -303,22 +303,6 @@ fn resolve_media(game: &Game, force_refresh: bool) -> Game {
     resolved
 }
 
-fn resolve_and_persist_media(
-    app: &AppHandle,
-    connection: &rusqlite::Connection,
-    game: Game,
-    force_refresh: bool,
-) -> Result<(), String> {
-    let updated_game = resolve_media(&game, force_refresh);
-
-    if updated_game != game {
-        game_db::update_game_media(connection, &updated_game)?;
-        emit_game_media_updated(app, &updated_game);
-    }
-
-    Ok(())
-}
-
 pub fn queue_media_resolution(app: AppHandle, games: Vec<Game>, force_refresh: bool) {
     let pending_games = games
         .into_iter()
@@ -335,6 +319,17 @@ pub fn queue_media_resolution(app: AppHandle, games: Vec<Game>, force_refresh: b
             emit_game_media_resolution_state(&app, &game.id, &game.exe_path, "started");
         }
 
+        let workers = pending_games
+            .iter()
+            .cloned()
+            .map(|game| {
+                thread::spawn(move || {
+                    let updated = resolve_media(&game, force_refresh);
+                    (game, updated)
+                })
+            })
+            .collect::<Vec<_>>();
+
         let connection = match database::open_database(&app) {
             Ok(connection) => connection,
             Err(error) => {
@@ -347,13 +342,24 @@ pub fn queue_media_resolution(app: AppHandle, games: Vec<Game>, force_refresh: b
             }
         };
 
-        for game in pending_games {
-            if let Err(error) = resolve_and_persist_media(&app, &connection, game.clone(), force_refresh)
-            {
-                println!(
-                    "[media] background resolution failed game_id={} title='{}' error={}",
-                    game.id, game.title, error
-                );
+        for worker in workers {
+            let (game, updated_game) = match worker.join() {
+                Ok(result) => result,
+                Err(_) => {
+                    println!("[media] background resolution worker panicked");
+                    continue;
+                }
+            };
+
+            if updated_game != game {
+                if let Err(error) = game_db::update_game_media(&connection, &updated_game) {
+                    println!(
+                        "[media] background resolution failed game_id={} title='{}' error={}",
+                        game.id, game.title, error
+                    );
+                } else {
+                    emit_game_media_updated(&app, &updated_game);
+                }
             }
 
             emit_game_media_resolution_state(&app, &game.id, &game.exe_path, "finished");
