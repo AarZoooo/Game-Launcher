@@ -19,13 +19,26 @@ pub struct LocalMediaSelection {
 struct Candidate {
     path: PathBuf,
     file_name: String,
+    search_rank: usize,
     width: u32,
     height: u32,
 }
 
-const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "webp"];
+const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "webp", "bmp"];
+const TECHNICAL_DIRECTORY_MARKERS: &[&str] = &[
+    "binaries",
+    "bin",
+    "win64",
+    "win32",
+    "shipping",
+    "x64",
+    "x86",
+    "windows",
+    "linux",
+    "macos",
+];
 
-fn collect_candidate_files(root: &Path, depth: usize, results: &mut Vec<PathBuf>) {
+fn collect_candidate_files(root: &Path, depth: usize, search_rank: usize, results: &mut Vec<(PathBuf, usize)>) {
     if depth > 2 || !root.exists() {
         return;
     }
@@ -41,7 +54,7 @@ fn collect_candidate_files(root: &Path, depth: usize, results: &mut Vec<PathBuf>
         };
 
         if file_type.is_dir() {
-            collect_candidate_files(&path, depth + 1, results);
+            collect_candidate_files(&path, depth + 1, search_rank, results);
             continue;
         }
 
@@ -52,9 +65,60 @@ fn collect_candidate_files(root: &Path, depth: usize, results: &mut Vec<PathBuf>
                 .map(|value| IMAGE_EXTENSIONS.iter().any(|extension| value.eq_ignore_ascii_case(extension)))
                 .unwrap_or(false)
         {
-            results.push(path);
+            results.push((path, search_rank));
         }
     }
+}
+
+fn normalized_name(value: &str) -> String {
+    normalize_title(value).replace(' ', "")
+}
+
+fn is_technical_directory(path: &Path, exe_stem: &str) -> bool {
+    let directory_name = path
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or_default();
+    let normalized = normalized_name(directory_name);
+
+    !normalized.is_empty()
+        && (TECHNICAL_DIRECTORY_MARKERS.contains(&normalized.as_str())
+            || (!exe_stem.is_empty() && normalized == format!("{exe_stem}data")))
+}
+
+fn collect_search_roots(exe: &Path) -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    let mut seen = Vec::new();
+    let exe_stem = exe
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .map(normalized_name)
+        .unwrap_or_default();
+
+    let Some(parent) = exe.parent() else {
+        return roots;
+    };
+
+    let mut current = parent.to_path_buf();
+    loop {
+        let normalized = current.to_string_lossy().to_ascii_lowercase();
+        if !seen.contains(&normalized) {
+            seen.push(normalized);
+            roots.push(current.clone());
+        }
+
+        let Some(ancestor) = current.parent() else {
+            break;
+        };
+
+        if !is_technical_directory(&current, &exe_stem) {
+            break;
+        }
+
+        current = ancestor.to_path_buf();
+    }
+
+    roots
 }
 
 fn image_dimensions(path: &Path) -> Option<(u32, u32)> {
@@ -66,11 +130,12 @@ fn image_dimensions(path: &Path) -> Option<(u32, u32)> {
         .ok()
 }
 
-fn candidate_from_path(path: PathBuf) -> Option<Candidate> {
+fn candidate_from_path(path: PathBuf, search_rank: usize) -> Option<Candidate> {
     let (width, height) = image_dimensions(&path)?;
     Some(Candidate {
         file_name: path.file_name()?.to_string_lossy().to_ascii_lowercase(),
         path,
+        search_rank,
         width,
         height,
     })
@@ -80,6 +145,7 @@ fn mime_for_path(path: &Path) -> &'static str {
     match path.extension().and_then(|value| value.to_str()).unwrap_or_default().to_ascii_lowercase().as_str() {
         "jpg" | "jpeg" => "image/jpeg",
         "webp" => "image/webp",
+        "bmp" => "image/bmp",
         _ => "image/png",
     }
 }
@@ -94,8 +160,8 @@ fn data_url_from_path(path: &Path) -> Option<String> {
 }
 
 fn title_bonus(file_name: &str, title: &str) -> i32 {
-    let normalized_title = normalize_title(title).replace(' ', "");
-    let normalized_file = normalize_title(file_name).replace(' ', "");
+    let normalized_title = normalized_name(title);
+    let normalized_file = normalized_name(file_name);
 
     if normalized_title.is_empty() {
         0
@@ -108,9 +174,18 @@ fn title_bonus(file_name: &str, title: &str) -> i32 {
     }
 }
 
+fn proximity_bonus(candidate: &Candidate) -> i32 {
+    match candidate.search_rank {
+        0 => 32,
+        1 => 18,
+        2 => 8,
+        _ => 0,
+    }
+}
+
 fn portrait_score(candidate: &Candidate, title: &str) -> i32 {
     let ratio = candidate.width as f32 / candidate.height as f32;
-    let mut score = title_bonus(&candidate.file_name, title);
+    let mut score = title_bonus(&candidate.file_name, title) + proximity_bonus(candidate);
 
     if (0.55..=0.8).contains(&ratio) {
         score += 24;
@@ -126,12 +201,12 @@ fn portrait_score(candidate: &Candidate, title: &str) -> i32 {
 
 fn horizontal_score(candidate: &Candidate, title: &str) -> i32 {
     let ratio = candidate.width as f32 / candidate.height as f32;
-    let mut score = title_bonus(&candidate.file_name, title);
+    let mut score = title_bonus(&candidate.file_name, title) + proximity_bonus(candidate);
 
     if ratio >= 1.4 {
         score += 18;
     }
-    if ["header", "wide", "landscape", "horizontal", "screenshot"]
+    if ["header", "wide", "landscape", "horizontal", "screenshot", "logo"]
         .iter()
         .any(|needle| candidate.file_name.contains(needle))
     {
@@ -142,12 +217,12 @@ fn horizontal_score(candidate: &Candidate, title: &str) -> i32 {
 
 fn banner_score(candidate: &Candidate, title: &str) -> i32 {
     let ratio = candidate.width as f32 / candidate.height as f32;
-    let mut score = title_bonus(&candidate.file_name, title);
+    let mut score = title_bonus(&candidate.file_name, title) + proximity_bonus(candidate);
 
     if ratio >= 2.0 {
         score += 22;
     }
-    if ["banner", "hero", "background", "splash", "keyart"]
+    if ["banner", "hero", "background", "splash", "keyart", "logo"]
         .iter()
         .any(|needle| candidate.file_name.contains(needle))
     {
@@ -158,7 +233,7 @@ fn banner_score(candidate: &Candidate, title: &str) -> i32 {
 
 fn icon_score(candidate: &Candidate, title: &str) -> i32 {
     let ratio = candidate.width.max(candidate.height) as f32 / candidate.width.min(candidate.height) as f32;
-    let mut score = title_bonus(&candidate.file_name, title);
+    let mut score = title_bonus(&candidate.file_name, title) + proximity_bonus(candidate);
 
     if ratio <= 1.2 {
         score += 18;
@@ -183,16 +258,13 @@ pub fn find_local_media(exe_path: &str, title: &str) -> LocalMediaSelection {
     let mut paths = Vec::new();
     let exe = Path::new(exe_path);
 
-    if let Some(parent) = exe.parent() {
-        collect_candidate_files(parent, 0, &mut paths);
-        if let Some(grandparent) = parent.parent() {
-            collect_candidate_files(grandparent, 1, &mut paths);
-        }
+    for (search_rank, root) in collect_search_roots(exe).into_iter().enumerate() {
+        collect_candidate_files(&root, 0, search_rank, &mut paths);
     }
 
     let candidates = paths
         .into_iter()
-        .filter_map(candidate_from_path)
+        .filter_map(|(path, search_rank)| candidate_from_path(path, search_rank))
         .collect::<Vec<_>>();
 
     let cover_vertical = best_candidate(&candidates, |candidate| portrait_score(candidate, title))
@@ -215,13 +287,14 @@ pub fn find_local_media(exe_path: &str, title: &str) -> LocalMediaSelection {
 
 #[cfg(test)]
 mod tests {
-    use super::{Candidate, banner_score, icon_score, portrait_score};
-    use std::path::PathBuf;
+    use super::{Candidate, banner_score, collect_search_roots, icon_score, portrait_score};
+    use std::path::{Path, PathBuf};
 
-    fn candidate(name: &str, width: u32, height: u32) -> Candidate {
+    fn candidate(name: &str, search_rank: usize, width: u32, height: u32) -> Candidate {
         Candidate {
             path: PathBuf::from(name),
             file_name: name.to_ascii_lowercase(),
+            search_rank,
             width,
             height,
         }
@@ -229,16 +302,49 @@ mod tests {
 
     #[test]
     fn prefers_vertical_cover_like_names_for_portraits() {
-        let portrait = candidate("satisfactory-cover.png", 600, 900);
-        let screenshot = candidate("satisfactory-screenshot.png", 1280, 720);
+        let portrait = candidate("satisfactory-cover.png", 0, 600, 900);
+        let screenshot = candidate("satisfactory-screenshot.png", 0, 1280, 720);
         assert!(portrait_score(&portrait, "Satisfactory") > portrait_score(&screenshot, "Satisfactory"));
     }
 
     #[test]
     fn prefers_banner_and_icon_shapes() {
-        let banner = candidate("hero-banner.png", 1600, 500);
-        let icon = candidate("game-icon.png", 512, 512);
+        let banner = candidate("hero-banner.png", 0, 1600, 500);
+        let icon = candidate("game-icon.png", 0, 512, 512);
         assert!(banner_score(&banner, "Satisfactory") > icon_score(&banner, "Satisfactory"));
         assert!(icon_score(&icon, "Satisfactory") > icon_score(&banner, "Satisfactory"));
+    }
+
+    #[test]
+    fn generic_cover_name_beats_unrelated_title_when_local() {
+        let local_cover = candidate("cover.png", 0, 600, 900);
+        let unrelated_sibling = candidate("naughty-dog-cover.png", 2, 600, 900);
+        assert!(portrait_score(&local_cover, "Hell Let Loose") > portrait_score(&unrelated_sibling, "Hell Let Loose"));
+    }
+
+    #[test]
+    fn search_roots_stop_before_shared_library_folder() {
+        let exe = Path::new(r"D:\Games\Hell Let Loose\HellLetLoose.exe");
+        let roots = collect_search_roots(exe);
+        assert_eq!(roots, vec![PathBuf::from(r"D:\Games\Hell Let Loose")]);
+    }
+
+    #[test]
+    fn search_roots_expand_out_of_technical_subfolders_only() {
+        let exe = Path::new(r"D:\Games\Hell Let Loose\Binaries\Win64\HLL-Win64-Shipping.exe");
+        let roots = collect_search_roots(exe);
+        assert_eq!(
+            roots,
+            vec![
+                PathBuf::from(r"D:\Games\Hell Let Loose\Binaries\Win64"),
+                PathBuf::from(r"D:\Games\Hell Let Loose\Binaries"),
+                PathBuf::from(r"D:\Games\Hell Let Loose"),
+            ]
+        );
+    }
+
+    #[test]
+    fn bmp_extension_is_supported() {
+        assert_eq!(super::mime_for_path(Path::new("cover.bmp")), "image/bmp");
     }
 }

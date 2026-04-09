@@ -10,6 +10,7 @@
 - [x] **M1.6 Game Auto-Detection** — Directory scanning with depth limits, exe scoring, duplicate detection, platform identification
 - [x] **M1.7 Cover Art** — IGDB fetch with Twitch OAuth (2x covers, 1080p artworks), local file fallback, placeholder generation
   - [ ] Custom cover art upload from UI (file picker not implemented)
+  - [x] Local fallback scan now stays inside each game's install subtree, handles generic names like `cover.png` or `logo.png`, and supports `.bmp`
 
 ## Phase 2 — Game Tracker
 

@@ -20,6 +20,9 @@ struct ResolvedMedia {
     cover_horizontal: Option<String>,
     banner: Option<String>,
     icon: Option<String>,
+    provider_cover_vertical: bool,
+    provider_cover_horizontal: bool,
+    provider_banner: bool,
     accent_color: Option<String>,
     genres: Vec<String>,
     description: Option<String>,
@@ -73,6 +76,10 @@ fn is_placeholder_media(value: &str) -> bool {
     value.starts_with("data:image/svg+xml;base64,")
 }
 
+fn is_remote_media(value: &str) -> bool {
+    value.starts_with("http://") || value.starts_with("https://")
+}
+
 fn should_replace_media(value: Option<&String>) -> bool {
     value
         .map(|item| item.trim().is_empty() || is_placeholder_media(item))
@@ -92,6 +99,18 @@ fn has_default_genres(genres: &[String]) -> bool {
 fn has_resolved_media(game: &Game) -> bool {
     !should_replace_media(game.cover_vertical.as_ref())
         && !should_replace_media(game.cover_horizontal.as_ref())
+}
+
+fn has_provider_priority_media(game: &Game) -> bool {
+    game.cover_vertical
+        .as_deref()
+        .map(is_remote_media)
+        .unwrap_or(false)
+        && game
+            .cover_horizontal
+            .as_deref()
+            .map(is_remote_media)
+            .unwrap_or(false)
 }
 
 fn has_default_rating(rating: &str) -> bool {
@@ -118,14 +137,29 @@ fn media_query_signature(game: &Game) -> String {
 }
 
 fn needs_media_resolution(game: &Game, force_refresh: bool) -> bool {
-    force_refresh
-        || (!has_resolved_media(game)
-            && game.media_query_signature.as_deref() != Some(media_query_signature(game).as_str()))
+    if force_refresh {
+        return true;
+    }
+
+    if !has_resolved_media(game) {
+        return true;
+    }
+
+    if !has_provider_priority_media(game) {
+        return true;
+    }
+
+    game
+        .media_query_signature
+        .as_deref()
+        .map(|signature| signature != media_query_signature(game))
+        .unwrap_or(false)
 }
 
 fn apply_provider_media(game: &Game, media: &mut ResolvedMedia) {
     if let Ok(Some(best_match)) = igdb::search_best_match(&game.title) {
         media.cover_vertical = best_match.cover_url.clone();
+        media.provider_cover_vertical = media.cover_vertical.is_some();
         media.cover_horizontal = best_match
             .artwork_urls
             .first()
@@ -137,11 +171,13 @@ fn apply_provider_media(game: &Game, media: &mut ResolvedMedia) {
             .cloned()
             })
             .or_else(|| best_match.cover_url.clone());
+        media.provider_cover_horizontal = media.cover_horizontal.is_some();
         media.banner = best_match
             .artwork_urls
             .first()
             .cloned()
             .or_else(|| media.cover_horizontal.clone());
+        media.provider_banner = media.banner.is_some();
         media.genres = best_match.genres.clone();
         media.description = best_match.summary.clone();
         media.rating = Some(best_match.rating.clone());
@@ -176,13 +212,13 @@ fn finalize_media(game: &mut Game) {
 }
 
 fn merge_media(mut game: Game, media: ResolvedMedia) -> Game {
-    if should_replace_media(game.cover_vertical.as_ref()) {
+    if media.provider_cover_vertical || should_replace_media(game.cover_vertical.as_ref()) {
         game.cover_vertical = media.cover_vertical;
     }
-    if should_replace_media(game.cover_horizontal.as_ref()) {
+    if media.provider_cover_horizontal || should_replace_media(game.cover_horizontal.as_ref()) {
         game.cover_horizontal = media.cover_horizontal;
     }
-    if should_replace_media(game.banner.as_ref()) {
+    if media.provider_banner || should_replace_media(game.banner.as_ref()) {
         game.banner = media.banner.or_else(|| game.cover_horizontal.clone());
     }
     if should_replace_media(game.icon.as_ref()) {
@@ -328,7 +364,7 @@ pub fn queue_media_resolution(app: AppHandle, games: Vec<Game>, force_refresh: b
 
 #[cfg(test)]
 mod tests {
-    use super::{ResolvedMedia, merge_media, needs_media_resolution};
+    use super::{ResolvedMedia, media_query_signature, merge_media, needs_media_resolution};
     use crate::models::game::{default_completion, default_coop, default_rating};
     use crate::models::game::Game;
 
@@ -384,6 +420,44 @@ mod tests {
     }
 
     #[test]
+    fn retries_placeholder_media_on_future_reads_even_with_same_signature() {
+        let mut game = empty_game();
+        game.cover_vertical = Some("data:image/svg+xml;base64,placeholder".into());
+        game.cover_horizontal = Some("data:image/svg+xml;base64,placeholder".into());
+        game.media_query_signature = Some(media_query_signature(&game));
+
+        assert!(needs_media_resolution(&game, false));
+    }
+
+    #[test]
+    fn retries_when_media_is_missing_even_with_same_signature() {
+        let mut game = empty_game();
+        game.media_query_signature = Some(media_query_signature(&game));
+
+        assert!(needs_media_resolution(&game, false));
+    }
+
+    #[test]
+    fn retries_when_current_media_is_local_data_url_even_with_same_signature() {
+        let mut game = empty_game();
+        game.cover_vertical = Some("data:image/png;base64,localcover".into());
+        game.cover_horizontal = Some("data:image/png;base64,localhero".into());
+        game.media_query_signature = Some(media_query_signature(&game));
+
+        assert!(needs_media_resolution(&game, false));
+    }
+
+    #[test]
+    fn retries_when_query_signature_changes_for_resolved_media() {
+        let mut game = empty_game();
+        game.cover_vertical = Some("https://example.com/cover.png".into());
+        game.cover_horizontal = Some("https://example.com/hero.png".into());
+        game.media_query_signature = Some("old|signature".into());
+
+        assert!(needs_media_resolution(&game, false));
+    }
+
+    #[test]
     fn replaces_placeholder_media_and_default_genres() {
         let mut game = empty_game();
         game.cover_vertical = Some("data:image/svg+xml;base64,placeholder".into());
@@ -408,5 +482,39 @@ mod tests {
         assert_eq!(merged.banner.as_deref(), Some("https://example.com/banner.png"));
         assert_eq!(merged.cover_art, "https://example.com/cover.png");
         assert_eq!(merged.genres, vec!["Factory".to_string(), "Simulation".to_string()]);
+    }
+
+    #[test]
+    fn provider_media_replaces_existing_local_fallback_media() {
+        let mut game = empty_game();
+        game.cover_vertical = Some("data:image/png;base64,localcover".into());
+        game.cover_horizontal = Some("data:image/png;base64,localhero".into());
+        game.banner = Some("data:image/png;base64,localbanner".into());
+
+        let merged = merge_media(
+            game,
+            ResolvedMedia {
+                cover_vertical: Some("https://example.com/provider-cover.png".into()),
+                cover_horizontal: Some("https://example.com/provider-hero.png".into()),
+                banner: Some("https://example.com/provider-banner.png".into()),
+                provider_cover_vertical: true,
+                provider_cover_horizontal: true,
+                provider_banner: true,
+                ..ResolvedMedia::default()
+            },
+        );
+
+        assert_eq!(
+            merged.cover_vertical.as_deref(),
+            Some("https://example.com/provider-cover.png")
+        );
+        assert_eq!(
+            merged.cover_horizontal.as_deref(),
+            Some("https://example.com/provider-hero.png")
+        );
+        assert_eq!(
+            merged.banner.as_deref(),
+            Some("https://example.com/provider-banner.png")
+        );
     }
 }
