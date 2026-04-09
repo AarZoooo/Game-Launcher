@@ -136,3 +136,5 @@ npm run check           # Svelte type checking
    - Code comments for non-obvious logic
 
 10. **Commit granularly.** One logical change per commit, one-liner messages, no co-authored-by sections.
+
+Additional note: Home page empty/loading states now use a shared `libraryHydrated` frontend store signal so skeletons only show before backend hydration, and loaded-empty sections render reusable `EmptyState` variants instead of collapsing.

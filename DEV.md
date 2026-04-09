@@ -70,3 +70,7 @@
 ## In Progress
 
 _Nothing currently in progress._
+
+## Recent Updates
+
+- Home page empty states now use hydrated-data checks, reusable `EmptyState` variants, and skeleton loading for Continue Playing / Recently Played.
