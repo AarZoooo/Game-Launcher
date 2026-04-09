@@ -1,6 +1,7 @@
 import epicIcon from "$lib/assets/icons/platforms/epic.svg";
 import steamIcon from "$lib/assets/icons/platforms/steam.svg";
 import backIcon from "$lib/assets/icons/ui/back.svg";
+import emptySlotIcon from "$lib/assets/icons/ui/empty-slot.svg";
 import moreIcon from "$lib/assets/icons/ui/more.svg";
 import playIcon from "$lib/assets/icons/ui/play.svg";
 import refreshIcon from "$lib/assets/icons/ui/refresh.svg";
@@ -11,6 +12,7 @@ import noResultsIllustration from "$lib/assets/illustrations/no-results.svg";
 export const appIcons = {
 	ui: {
 		back: backIcon,
+		emptySlot: emptySlotIcon,
 		more: moreIcon,
 		play: playIcon,
 		refresh: refreshIcon,

@@ -18,6 +18,8 @@ export const pageLabels = {
 		recentlyPlayed: "Recently Played",
 		exploreNew: "Explore New",
 		seeMore: "See more",
+		recentlyPlayedEmptyTitle: "No recently played games",
+		recentlyPlayedEmptySubtitle: "Your recently played games will appear here",
 	},
 	games: {
 		title: "All Games",
@@ -101,6 +103,8 @@ export const pageLabels = {
 	},
 	continuePlaying: {
 		eyebrow: "Continue playing",
+		emptyTitle: "No recent activity",
+		emptySubtitle: "Start playing a game to see it here",
 	},
 	actions: {
 		play: "Play",

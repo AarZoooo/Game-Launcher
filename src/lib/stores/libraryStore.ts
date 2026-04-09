@@ -590,9 +590,16 @@ function createGameStore() {
 
 	return {
 		subscribe,
-		reset: () => set(fallbackGames),
+		reset: () => {
+			libraryHydratedState.set(false);
+			set(fallbackGames);
+		},
 		async loadFromBackend() {
-			set(await readBackendSnapshot());
+			try {
+				set(await readBackendSnapshot());
+			} finally {
+				libraryHydratedState.set(true);
+			}
 		},
 		async resolveIgdbCovers() {
 			const items = get(games);
@@ -885,7 +892,12 @@ function createGameStore() {
 	};
 }
 
+const libraryHydratedState = writable(false);
 export const games = createGameStore();
+export const libraryHydrated = derived(
+	libraryHydratedState,
+	($libraryHydratedState) => $libraryHydratedState,
+);
 export const installedGames = derived(games, ($games) =>
 	$games.filter((game) => game.inLibrary === true),
 );
